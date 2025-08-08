@@ -1,0 +1,71 @@
+# =========================
+# ▶ IDE/Editor
+# =========================
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.classpath
+*.project
+*.settings/
+*.sublime*
+
+# =========================
+# ▶ Java/Spring Boot Build
+# =========================
+target/
+build/
+out/
+*.class
+
+# =========================
+# ▶ Logs
+# =========================
+*.log
+logs/
+*.pid
+hs_err_pid*
+replay_pid*
+*.lombok.log
+
+# =========================
+# ▶ OS Files
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.swp
+*.swo
+
+# =========================
+# ▶ Application Settings (보안상 제외)
+# =========================
+application.properties
+application.yml
+application-*.properties
+application-*.yml
+.env
+.mtj.tmp/
+
+# =========================
+# ▶ Archive / Package Files
+# =========================
+*.jar
+*.war
+*.zip
+*.tar.gz
+
+# =========================
+# ▶ Maven Wrapper
+# =========================
+.mvn/
+!mvnw
+!mvnw.cmd
+
+# =========================
+# ▶ Spring Initializr 기본 파일
+# =========================
+HELP.md
