@@ -1,10 +1,10 @@
-package com.alpha_note.core.controller;
+package com.alpha_note.core.auth.controller;
 
+import com.alpha_note.core.auth.dto.AuthResponse;
+import com.alpha_note.core.auth.dto.LoginRequest;
+import com.alpha_note.core.auth.dto.RegisterRequest;
+import com.alpha_note.core.auth.service.AuthService;
 import com.alpha_note.core.common.response.ApiResponse;
-import com.alpha_note.core.dto.AuthResponse;
-import com.alpha_note.core.dto.LoginRequest;
-import com.alpha_note.core.dto.RegisterRequest;
-import com.alpha_note.core.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

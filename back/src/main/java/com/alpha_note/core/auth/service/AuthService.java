@@ -1,16 +1,15 @@
-package com.alpha_note.core.service;
+package com.alpha_note.core.auth.service;
 
-import com.alpha_note.core.common.response.ApiResponse;
-import com.alpha_note.core.dto.AuthResponse;
-import com.alpha_note.core.dto.LoginRequest;
-import com.alpha_note.core.dto.RegisterRequest;
-import com.alpha_note.core.entity.AuthProvider;
-import com.alpha_note.core.entity.Role;
-import com.alpha_note.core.entity.User;
-import com.alpha_note.core.exception.CustomException;
-import com.alpha_note.core.exception.ErrorCode;
-import com.alpha_note.core.repository.UserRepository;
-import com.alpha_note.core.util.JwtUtil;
+import com.alpha_note.core.auth.dto.AuthResponse;
+import com.alpha_note.core.auth.dto.LoginRequest;
+import com.alpha_note.core.auth.dto.RegisterRequest;
+import com.alpha_note.core.common.exception.CustomException;
+import com.alpha_note.core.common.exception.ErrorCode;
+import com.alpha_note.core.user.entity.AuthProvider;
+import com.alpha_note.core.user.entity.Role;
+import com.alpha_note.core.user.entity.User;
+import com.alpha_note.core.user.repository.UserRepository;
+import com.alpha_note.core.security.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;

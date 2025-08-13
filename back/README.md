@@ -99,37 +99,57 @@ app.oauth2.authorized-redirect-uri=http://localhost:3000/oauth2/redirect
 - `GET /api/test/protected` - 보호된 테스트
 - `GET /api/test/user-info` - 사용자 정보
 
-## 🏗 프로젝트 구조
+## 🏗 프로젝트 구조 (Feature 기반)
 
 ```
-src/
-├── main/
-│   ├── java/com/alpha_note/core/
-│   │   ├── CoreApplication.java
-│   │   ├── config/
-│   │   │   └── SecurityConfig.java       # Spring Security + OAuth2 설정
-│   │   ├── controller/
-│   │   │   ├── AuthController.java       # 일반 인증 API
-│   │   │   ├── OAuth2Controller.java     # OAuth2 관련 API
-│   │   │   └── TestController.java       # 테스트 API
-│   │   ├── dto/                          # 데이터 전송 객체
-│   │   ├── entity/
-│   │   │   ├── User.java                 # 사용자 엔티티
-│   │   │   ├── Role.java                 # 역할 enum
-│   │   │   └── AuthProvider.java         # 인증 제공자 enum
-│   │   ├── repository/
-│   │   │   └── UserRepository.java       # 사용자 데이터 접근
-│   │   ├── security/
-│   │   │   ├── JwtAuthenticationFilter.java
-│   │   │   └── oauth2/                   # OAuth2 관련 클래스들
-│   │   ├── service/
-│   │   │   ├── AuthService.java          # 인증 비즈니스 로직
-│   │   │   └── CustomUserDetailsService.java
-│   │   └── util/
-│   │       └── JwtUtil.java              # JWT 유틸리티
-│   └── resources/
-│       └── application.properties
-└── test/
+src/main/java/com/alpha_note/core/
+├── CoreApplication.java
+├── auth/                          # 🎯 인증 기능
+│   ├── controller/
+│   │   ├── AuthController.java
+│   │   └── OAuth2Controller.java
+│   ├── service/
+│   │   └── AuthService.java
+│   └── dto/
+│       ├── AuthResponse.java
+│       ├── LoginRequest.java
+│       └── RegisterRequest.java
+├── user/                          # 👤 사용자 관리 기능
+│   ├── entity/
+│   │   ├── User.java
+│   │   ├── Role.java
+│   │   └── AuthProvider.java
+│   ├── repository/
+│   │   └── UserRepository.java
+│   └── service/
+│       └── CustomUserDetailsService.java
+├── test/                          # 🧪 테스트 기능
+│   └── controller/
+│       └── TestController.java
+├── common/                        # 🔧 공통 기능
+│   ├── constants/
+│   │   └── SecurityConstants.java
+│   ├── exception/
+│   │   ├── CustomException.java
+│   │   ├── ErrorCode.java
+│   │   └── GlobalExceptionHandler.java
+│   └── response/
+│       └── ApiResponse.java
+├── security/                      # 🔒 보안 관련
+│   ├── filter/
+│   │   └── JwtAuthenticationFilter.java
+│   ├── jwt/
+│   │   └── JwtUtil.java
+│   └── oauth2/
+│       ├── CustomOAuth2UserService.java
+│       ├── GoogleOAuth2UserInfo.java
+│       ├── OAuth2AuthenticationFailureHandler.java
+│       ├── OAuth2AuthenticationSuccessHandler.java
+│       ├── OAuth2UserInfo.java
+│       ├── OAuth2UserInfoFactory.java
+│       └── UserPrincipal.java
+└── config/                        # ⚙️ 설정
+    └── SecurityConfig.java
 ```
 
 ## 🔧 개발 환경

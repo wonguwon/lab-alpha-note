@@ -1,6 +1,6 @@
 package com.alpha_note.core.security.oauth2;
 
-import com.alpha_note.core.entity.AuthProvider;
+import com.alpha_note.core.user.entity.AuthProvider;
 
 import java.util.Map;
 

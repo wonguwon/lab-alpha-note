@@ -1,6 +1,6 @@
 package com.alpha_note.core.security.oauth2;
 
-import com.alpha_note.core.util.JwtUtil;
+import com.alpha_note.core.security.jwt.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

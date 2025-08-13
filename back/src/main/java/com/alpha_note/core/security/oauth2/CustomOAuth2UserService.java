@@ -1,9 +1,9 @@
 package com.alpha_note.core.security.oauth2;
 
-import com.alpha_note.core.entity.AuthProvider;
-import com.alpha_note.core.entity.Role;
-import com.alpha_note.core.entity.User;
-import com.alpha_note.core.repository.UserRepository;
+import com.alpha_note.core.user.entity.AuthProvider;
+import com.alpha_note.core.user.entity.Role;
+import com.alpha_note.core.user.entity.User;
+import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
