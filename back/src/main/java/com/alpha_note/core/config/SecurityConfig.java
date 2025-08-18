@@ -5,6 +5,7 @@ import com.alpha_note.core.security.oauth2.CustomOAuth2UserService;
 import com.alpha_note.core.security.oauth2.OAuth2AuthenticationFailureHandler;
 import com.alpha_note.core.security.oauth2.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,11 +26,15 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    
+    @Value("#{'${app.cors.allowed-origins}'.split(',')}")
+    private List<String> allowedOrigins;
     
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
@@ -74,18 +79,12 @@ public class SecurityConfig {
         return http.build();
     }
     
-    /**
-     * CORS 설정: React 개발 서버 및 프로덕션 환경 허용
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 허용할 origin 설정 (개발/프로덕션 환경 모두 고려)
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",      // React 개발 서버
-            "https://your-domain.com"     // 프로덕션 도메인 (추후 수정)
-        ));
+        // 설정 파일에서 허용할 origin 가져오기
+        configuration.setAllowedOrigins(allowedOrigins);
         
         // 모든 HTTP 메서드 허용
         configuration.setAllowedMethods(Arrays.asList("*"));
