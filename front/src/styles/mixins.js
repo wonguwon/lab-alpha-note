@@ -1,36 +1,42 @@
 import { css } from 'styled-components';
 
-// Flexbox mixins
+// Flexbox 레이아웃 믹스인
+/* 요소를 수평/수직 중앙 정렬 */
 export const flexCenter = css`
   display: flex;
   align-items: center;
   justify-content: center;
 `;
 
+/* 요소들을 양 끝으로 배치하고 세로 중앙 정렬 */
 export const flexBetween = css`
   display: flex;
   align-items: center;
   justify-content: space-between;
 `;
 
+/* 세로 방향으로 요소 배치 */
 export const flexColumn = css`
   display: flex;
   flex-direction: column;
 `;
 
+/* 세로 방향으로 요소를 배치하고 중앙 정렬 */
 export const flexColumnCenter = css`
   ${flexColumn}
   align-items: center;
   justify-content: center;
 `;
 
-// Typography mixins
+// 텍스트 스타일링 믹스인
+/* 텍스트가 길면 말줄임표(...) 처리 */
 export const truncate = css`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
 
+/* 지정한 줄 수를 넘으면 말줄임표 처리 */
 export const lineClamp = (lines) => css`
   display: -webkit-box;
   -webkit-line-clamp: ${lines};
@@ -38,7 +44,8 @@ export const lineClamp = (lines) => css`
   overflow: hidden;
 `;
 
-// Card mixins
+// 카드 컴포넌트 믹스인
+/* 기본 카드 스타일 (테두리, 그림자, 둥근 모서리) */
 export const card = css`
   background: ${props => props.theme.colors.white};
   border: 1px solid ${props => props.theme.colors.gray[200]};
@@ -46,6 +53,7 @@ export const card = css`
   box-shadow: ${props => props.theme.shadows.sm};
 `;
 
+/* 호버 효과가 있는 카드 (마우스 올리면 떠오르는 효과) */
 export const cardHover = css`
   ${card}
   transition: all ${props => props.theme.transitions.base};
@@ -57,7 +65,8 @@ export const cardHover = css`
   }
 `;
 
-// Button mixins
+// 버튼 컴포넌트 믹스인
+/* 모든 버튼의 기본 스타일 */
 export const buttonBase = css`
   display: inline-flex;
   align-items: center;
@@ -78,6 +87,7 @@ export const buttonBase = css`
   }
 `;
 
+/* 주요 동작용 버튼 (파란색 배경) */
 export const buttonPrimary = css`
   ${buttonBase}
   background: ${props => props.theme.colors.primary[500]};
@@ -92,6 +102,7 @@ export const buttonPrimary = css`
   }
 `;
 
+/* 보조 동작용 버튼 (회색 배경) */
 export const buttonSecondary = css`
   ${buttonBase}
   background: ${props => props.theme.colors.gray[100]};
@@ -106,6 +117,7 @@ export const buttonSecondary = css`
   }
 `;
 
+/* 테두리만 있는 버튼 (배경 투명) */
 export const buttonOutline = css`
   ${buttonBase}
   background: transparent;
@@ -122,7 +134,8 @@ export const buttonOutline = css`
   }
 `;
 
-// Input mixins
+// 입력 필드 믹스인
+/* 텍스트 입력 필드의 기본 스타일 */
 export const inputBase = css`
   width: 100%;
   padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[4]};
@@ -150,26 +163,9 @@ export const inputBase = css`
   }
 `;
 
-// Responsive mixins
-export const mobile = (content) => css`
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
-    ${content}
-  }
-`;
 
-export const tablet = (content) => css`
-  @media (min-width: ${props => props.theme.breakpoints.md}) and (max-width: ${props => props.theme.breakpoints.lg}) {
-    ${content}
-  }
-`;
-
-export const desktop = (content) => css`
-  @media (min-width: ${props => props.theme.breakpoints.lg}) {
-    ${content}
-  }
-`;
-
-// Animation mixins
+// 애니메이션 믹스인
+/* 페이드 인 애니메이션 (서서히 나타남) */
 export const fadeIn = css`
   animation: fadeIn ${props => props.theme.transitions.base};
   
@@ -179,6 +175,7 @@ export const fadeIn = css`
   }
 `;
 
+/* 아래에서 위로 슬라이드 애니메이션 */
 export const slideUp = css`
   animation: slideUp ${props => props.theme.transitions.base};
   
@@ -194,7 +191,8 @@ export const slideUp = css`
   }
 `;
 
-// Layout mixins
+// 레이아웃 믹스인
+/* 컨테이너 래퍼 (최대 너비 제한, 중앙 정렬) */
 export const container = css`
   width: 100%;
   max-width: 1200px;
@@ -202,6 +200,7 @@ export const container = css`
   padding: 0 ${props => props.theme.spacing[5]};
 `;
 
+/* 스크린 리더 전용 텍스트 (화면에는 숨김) */
 export const srOnly = css`
   position: absolute;
   width: 1px;
@@ -214,7 +213,8 @@ export const srOnly = css`
   border: 0;
 `;
 
-// Loading skeleton
+// 로딩 스켈레톤 믹스인
+/* 콘텐츠 로딩 중 보여줄 스켈레톤 애니메이션 */
 export const skeleton = css`
   background: linear-gradient(
     90deg,

@@ -47,16 +47,26 @@ const GlobalStyle = createGlobalStyle`
     border: none;
     background: transparent;
     cursor: pointer;
+    font: inherit;
   }
 
   input, textarea, select {
     font-family: inherit;
     font-size: inherit;
+    border: none;
+    outline: none;
   }
 
   img {
     max-width: 100%;
     height: auto;
+    vertical-align: middle;
+  }
+
+  /* 테이블 스타일 초기화 */
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
   }
 
   /* Focus styles */
@@ -88,6 +98,11 @@ const GlobalStyle = createGlobalStyle`
   ::selection {
     background: ${props => props.theme.colors.primary[100]};
     color: ${props => props.theme.colors.primary[900]};
+  }
+
+  /* 기본 애니메이션 */
+  * {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
 
   /* Accessibility */

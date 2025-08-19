@@ -1,78 +1,90 @@
 import React from 'react';
-import { FiGithub, FiTwitter, FiMail, FiHeart } from 'react-icons/fi';
-import * as S from './Footer.styled';
+import {
+  FooterContainer,
+  FooterContent,
+  FooterTop,
+  FooterLogo,
+  FooterLogoText,
+  FooterDescription,
+  FooterLinks,
+  FooterSection,
+  FooterSectionTitle,
+  FooterLink,
+  FooterBottom,
+  Copyright,
+  SocialLinks,
+  SocialLink
+} from './Footer.styled';
 
-function Footer() {
+const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <S.FooterContainer>
-      <S.FooterContent>
-        <S.FooterGrid>
-          <S.FooterSection>
-            <S.SectionTitle>AlphaNote</S.SectionTitle>
-            <S.Description>
-              개발자들을 위한 지식 공유 커뮤니티입니다. 
-              질문하고, 답변하고, 함께 성장해요.
-            </S.Description>
-            <S.SocialLinks>
-              <S.SocialButton href="#" aria-label="GitHub">
-                <FiGithub size={20} />
-              </S.SocialButton>
-              <S.SocialButton href="#" aria-label="Twitter">
-                <FiTwitter size={20} />
-              </S.SocialButton>
-              <S.SocialButton href="#" aria-label="Email">
-                <FiMail size={20} />
-              </S.SocialButton>
-            </S.SocialLinks>
-          </S.FooterSection>
+    <FooterContainer>
+      <FooterContent>
+        <FooterTop>
+          {/* 로고 및 설명 */}
+          <FooterLogo>
+            <FooterLogoText>Alpha Note</FooterLogoText>
+            <FooterDescription>
+              혁신적인 노트 앱으로 당신의 아이디어를 체계적으로 관리하고 
+              창의적인 작업을 더욱 효율적으로 만들어보세요.
+            </FooterDescription>
+          </FooterLogo>
 
-          <S.FooterSection>
-            <S.SectionTitle>커뮤니티</S.SectionTitle>
-            <S.LinkList>
-              <li><S.FooterLink href="#questions">질문 & 답변</S.FooterLink></li>
-              <li><S.FooterLink href="#community">커뮤니티</S.FooterLink></li>
-              <li><S.FooterLink href="#knowledge">지식</S.FooterLink></li>
-              <li><S.FooterLink href="#notice">공지사항</S.FooterLink></li>
-              <li><S.FooterLink href="#tags">태그</S.FooterLink></li>
-            </S.LinkList>
-          </S.FooterSection>
+          {/* 링크 섹션들 */}
+          <FooterLinks>
+            <FooterSection>
+              <FooterSectionTitle>제품</FooterSectionTitle>
+              <FooterLink href="/features">기능</FooterLink>
+              <FooterLink href="/pricing">가격</FooterLink>
+              <FooterLink href="/updates">업데이트</FooterLink>
+              <FooterLink href="/download">다운로드</FooterLink>
+            </FooterSection>
 
-          <S.FooterSection>
-            <S.SectionTitle>정보</S.SectionTitle>
-            <S.LinkList>
-              <li><S.FooterLink href="#about">소개</S.FooterLink></li>
-              <li><S.FooterLink href="#rules">이용약관</S.FooterLink></li>
-              <li><S.FooterLink href="#privacy">개인정보처리방침</S.FooterLink></li>
-              <li><S.FooterLink href="#contact">문의하기</S.FooterLink></li>
-              <li><S.FooterLink href="#api">API</S.FooterLink></li>
-            </S.LinkList>
-          </S.FooterSection>
+            <FooterSection>
+              <FooterSectionTitle>회사</FooterSectionTitle>
+              <FooterLink href="/about">회사소개</FooterLink>
+              <FooterLink href="/careers">채용</FooterLink>
+              <FooterLink href="/blog">블로그</FooterLink>
+              <FooterLink href="/contact">연락처</FooterLink>
+            </FooterSection>
 
-          <S.FooterSection>
-            <S.SectionTitle>도움말</S.SectionTitle>
-            <S.LinkList>
-              <li><S.FooterLink href="#help">도움말 센터</S.FooterLink></li>
-              <li><S.FooterLink href="#guide">사용 가이드</S.FooterLink></li>
-              <li><S.FooterLink href="#markdown">마크다운 가이드</S.FooterLink></li>
-              <li><S.FooterLink href="#faq">자주 묻는 질문</S.FooterLink></li>
-              <li><S.FooterLink href="#report">신고하기</S.FooterLink></li>
-            </S.LinkList>
-          </S.FooterSection>
-        </S.FooterGrid>
+            <FooterSection>
+              <FooterSectionTitle>지원</FooterSectionTitle>
+              <FooterLink href="/help">도움말</FooterLink>
+              <FooterLink href="/faq">자주 묻는 질문</FooterLink>
+              <FooterLink href="/community">커뮤니티</FooterLink>
+              <FooterLink href="/feedback">피드백</FooterLink>
+            </FooterSection>
+          </FooterLinks>
+        </FooterTop>
 
-        <S.FooterBottom>
-          <S.Copyright>
-            © 2024 AlphaNote. Made with <FiHeart size={16} color="#ef4444" /> by developers.
-          </S.Copyright>
-          <S.BottomLinks>
-            <S.FooterLink href="#terms">이용약관</S.FooterLink>
-            <S.FooterLink href="#privacy">개인정보보호</S.FooterLink>
-            <S.FooterLink href="#cookies">쿠키 정책</S.FooterLink>
-          </S.BottomLinks>
-        </S.FooterBottom>
-      </S.FooterContent>
-    </S.FooterContainer>
+        <FooterBottom>
+          {/* 저작권 정보 */}
+          <Copyright>
+            © {currentYear} Alpha Note. All rights reserved.
+          </Copyright>
+
+          {/* 소셜 미디어 링크 */}
+          <SocialLinks>
+            <SocialLink href="#" aria-label="Facebook">
+              📘
+            </SocialLink>
+            <SocialLink href="#" aria-label="Twitter">
+              🐦
+            </SocialLink>
+            <SocialLink href="#" aria-label="Instagram">
+              📷
+            </SocialLink>
+            <SocialLink href="#" aria-label="GitHub">
+              💻
+            </SocialLink>
+          </SocialLinks>
+        </FooterBottom>
+      </FooterContent>
+    </FooterContainer>
   );
-}
+};
 
 export default Footer;
