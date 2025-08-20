@@ -26,7 +26,7 @@ const Header = () => {
         <CenterSection>
           {/* 내비게이션 영역 */}
           <Navigation>
-            <NavLink href="/" className="active">Q&A</NavLink>
+            <NavLink href="/">Q&A</NavLink>
             <NavLink href="/community">커뮤니티</NavLink>
             <NavLink href="/records">기록</NavLink>
           </Navigation>
