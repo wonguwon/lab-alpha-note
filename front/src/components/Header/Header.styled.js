@@ -25,6 +25,7 @@ export const LogoText = styled.h1`
   color: ${props => props.theme.colors.primary[600]};
   margin: 0;
   cursor: pointer;
+  text-decoration: none;
   
   &:hover {
     color: ${props => props.theme.colors.primary[700]};

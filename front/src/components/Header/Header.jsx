@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   HeaderWrapper,
   HeaderContainer,
@@ -19,7 +20,7 @@ const Header = () => {
       <HeaderContainer>
         {/* 로고 영역 */}
         <LogoSection>
-          <LogoText>AlphaNote</LogoText>
+          <LogoText as={Link} to="/">AlphaNote</LogoText>
         </LogoSection>
 
         {/* 중앙 영역 (네비게이션) */}
@@ -34,8 +35,8 @@ const Header = () => {
 
         {/* 사용자 영역 */}
         <UserSection>
-          <UserButton>로그인</UserButton>
-          <UserButton className="primary">회원가입</UserButton>
+          <UserButton as={Link} to="/login">로그인</UserButton>
+          <UserButton as={Link} to="/signup" className="primary">회원가입</UserButton>
         </UserSection>
       </HeaderContainer>
 
