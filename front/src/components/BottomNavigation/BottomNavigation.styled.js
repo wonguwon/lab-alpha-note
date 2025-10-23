@@ -137,10 +137,10 @@ export const MenuContent = styled.div`
   background: ${props => props.theme.colors.white};
   width: 100%;
   border-radius: ${props => props.theme.borderRadius.lg} ${props => props.theme.borderRadius.lg} 0 0;
-  padding: ${props => props.theme.spacing[4]};
+  padding: ${props => props.theme.spacing[6]} ${props => props.theme.spacing[4]} ${props => props.theme.spacing[4]};
   position: relative;
   animation: slideUp 0.3s ease-out;
-  
+
   @keyframes slideUp {
     from {
       transform: translateY(100%);
@@ -154,19 +154,24 @@ export const MenuContent = styled.div`
 /* 메뉴 닫기 버튼 */
 export const MenuCloseButton = styled.button`
   position: absolute;
-  top: ${props => props.theme.spacing[4]};
-  right: ${props => props.theme.spacing[4]};
+  top: ${props => props.theme.spacing[2]};
+  right: ${props => props.theme.spacing[2]};
   background: transparent;
   border: none;
-  font-size: ${props => props.theme.fonts.size.xl};
-  color: ${props => props.theme.colors.gray[500]};
+  padding: ${props => props.theme.spacing[1]};
+  font-size: 24px;
+  color: ${props => props.theme.colors.gray[400]};
   cursor: pointer;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   ${flexCenter}
-  
+  border-radius: 50%;
+  transition: all ${props => props.theme.transitions.base};
+  z-index: 1;
+
   &:hover {
-    color: ${props => props.theme.colors.gray[700]};
+    background: ${props => props.theme.colors.gray[100]};
+    color: ${props => props.theme.colors.gray[600]};
   }
 `;
 

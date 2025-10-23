@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../../store/authStore';
 import {
   BottomNavContainer,
   NavList,
@@ -10,13 +12,14 @@ import {
   MenuButton,
   MenuOverlay,
   MenuContent,
-  MenuCloseButton,
   MenuButtonItem
 } from './BottomNavigation.styled';
 
 const BottomNavigation = ({ activeTab = 'qa', onTabChange, onAddClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
+  const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuthStore();
+
   const handleTabClick = (tabId) => {
     if (onTabChange) {
       onTabChange(tabId);
@@ -28,13 +31,29 @@ const BottomNavigation = ({ activeTab = 'qa', onTabChange, onAddClick }) => {
       onAddClick();
     }
   };
-  
+
   const handleMenuToggle = () => {
     setIsMenuOpen(!isMenuOpen);
   };
-  
+
   const handleMenuClose = () => {
     setIsMenuOpen(false);
+  };
+
+  const handleLoginClick = () => {
+    handleMenuClose();
+    navigate('/login');
+  };
+
+  const handleSignupClick = () => {
+    handleMenuClose();
+    navigate('/signup');
+  };
+
+  const handleLogoutClick = () => {
+    logout();
+    handleMenuClose();
+    navigate('/');
   };
 
   return (
@@ -86,9 +105,21 @@ const BottomNavigation = ({ activeTab = 'qa', onTabChange, onAddClick }) => {
       {isMenuOpen && (
         <MenuOverlay onClick={handleMenuClose}>
           <MenuContent onClick={(e) => e.stopPropagation()}>
-            <MenuCloseButton onClick={handleMenuClose}>×</MenuCloseButton>
-            <MenuButtonItem>로그인</MenuButtonItem>
-            <MenuButtonItem className="primary">회원가입</MenuButtonItem>
+            {isAuthenticated ? (
+              <>
+                <MenuButtonItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
+                  프로필
+                </MenuButtonItem>
+                <MenuButtonItem onClick={handleLogoutClick}>
+                  로그아웃
+                </MenuButtonItem>
+              </>
+            ) : (
+              <>
+                <MenuButtonItem onClick={handleLoginClick}>로그인</MenuButtonItem>
+                <MenuButtonItem className="primary" onClick={handleSignupClick}>회원가입</MenuButtonItem>
+              </>
+            )}
           </MenuContent>
         </MenuOverlay>
       )}

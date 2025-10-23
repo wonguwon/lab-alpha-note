@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import useAuthStore from '../../store/authStore';
 import {
   HeaderWrapper,
   HeaderContainer,
@@ -13,6 +14,13 @@ import {
 } from './Header.styled';
 
 const Header = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <HeaderWrapper>
@@ -35,8 +43,19 @@ const Header = () => {
 
         {/* 사용자 영역 */}
         <UserSection>
-          <UserButton as={Link} to="/login">로그인</UserButton>
-          <UserButton as={Link} to="/signup" className="primary">회원가입</UserButton>
+          {isAuthenticated ? (
+            <>
+              <UserButton as={Link} to="/profile">
+                {user?.name || user?.email || '프로필'}
+              </UserButton>
+              <UserButton onClick={handleLogout}>로그아웃</UserButton>
+            </>
+          ) : (
+            <>
+              <UserButton as={Link} to="/login">로그인</UserButton>
+              <UserButton as={Link} to="/signup" className="primary">회원가입</UserButton>
+            </>
+          )}
         </UserSection>
       </HeaderContainer>
 

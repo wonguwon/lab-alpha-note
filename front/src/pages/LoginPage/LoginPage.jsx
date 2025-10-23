@@ -1,5 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useInput from '../../hooks/useInput';
+import useAuthStore from '../../store/authStore';
+import { authService } from '../../api/services';
 import GoogleIcon from '../../assets/icons/google_login.svg';
 import {
   LoginContainer,
@@ -19,16 +22,37 @@ import {
 } from './LoginPage.styled';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const email = useInput('');
   const password = useInput('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  const { login, setLoading, setError, isLoading } = useAuthStore();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // 로그인 로직 구현
-    console.log('Login attempt:', {
-      email: email.value,
-      password: password.value
-    });
+    setErrorMessage('');
+    setLoading(true);
+
+    try {
+      // API 로그인 호출
+      const response = await authService.login({
+        email: email.value,
+        password: password.value
+      });
+
+      // Zustand 스토어에 로그인 정보 저장
+      await login(response.token, response.user);
+
+      // 홈페이지로 리다이렉트
+      navigate('/');
+    } catch (error) {
+      const message = error.response?.data?.message || '로그인에 실패했습니다.';
+      setErrorMessage(message);
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -72,8 +96,14 @@ const LoginPage = () => {
             />
           </InputGroup>
 
-          <LoginButton type="submit">
-            로그인
+          {errorMessage && (
+            <div style={{ color: '#ef4444', fontSize: '14px', marginTop: '8px' }}>
+              {errorMessage}
+            </div>
+          )}
+
+          <LoginButton type="submit" disabled={isLoading}>
+            {isLoading ? '로그인 중...' : '로그인'}
           </LoginButton>
         </LoginForm>
 

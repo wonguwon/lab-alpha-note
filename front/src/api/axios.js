@@ -1,23 +1,26 @@
 import axios from 'axios';
 import { API_CONFIG } from './config';
 
-// 토큰 관리 유틸리티
-const getToken = () => localStorage.getItem('token');
-const setToken = (token) => localStorage.setItem('token', token);
-const clearToken = () => localStorage.removeItem('token');
-
 const api = axios.create({
   baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
   headers: API_CONFIG.HEADERS,
 });
 
+// Zustand 스토어를 동적으로 가져오는 함수 (순환 참조 방지)
+let getAuthStore = null;
+export const setAuthStoreGetter = (getter) => {
+  getAuthStore = getter;
+};
+
 // Request 인터셉터 - 토큰 자동 첨부
 api.interceptors.request.use(
   (config) => {
-    const token = getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (getAuthStore) {
+      const token = getAuthStore().token;
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -30,11 +33,13 @@ api.interceptors.response.use(
   (error) => {
     if (error.response) {
       const { status, data } = error.response;
-      
+
       switch (status) {
         case 401:
-          // 인증 에러 - 토큰 제거 후 로그인 페이지로
-          clearToken();
+          // 인증 에러 - Zustand 스토어의 logout 호출
+          if (getAuthStore) {
+            getAuthStore().logout();
+          }
           window.location.href = '/login';
           break;
         case 403:
@@ -62,8 +67,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// 토큰 관리 함수들도 export
-export { getToken, setToken, clearToken };
 
 export default api;

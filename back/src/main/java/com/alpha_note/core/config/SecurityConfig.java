@@ -28,16 +28,21 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Spring Security 설정
+ * - JWT 기반 인증 (일반 로그인)
+ * - Google OAuth2 로그인
+ * - REST API를 위한 Stateless 세션 정책
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    
-    @Value("#{'${app.cors.allowed-origins}'.split(',')}")
+
+    @Value("${app.cors.allowed-origins}")
     private List<String> allowedOrigins;
-    
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final UserDetailsService userDetailsService;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
@@ -45,21 +50,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            // CORS 설정
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // REST API이므로 CSRF 비활성화
             .csrf(AbstractHttpConfigurer::disable)
+            // HTTP Basic 인증 비활성화 (JWT 사용)
             .httpBasic(AbstractHttpConfigurer::disable)
+            // REST API를 위한 Stateless 세션 정책 (세션 사용 안함)
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
+            // 요청별 인증 규칙
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/api/auth/**",      // 일반 인증 API
+                    "/api/auth/**",      // 일반 인증 API (회원가입, 로그인)
                     "/api/public/**",    // 공개 API
-                    "/oauth2/**",        // OAuth2 관련 경로
+                    "/oauth2/**",        // OAuth2 관련 경로 (Google 로그인)
                     "/error"             // 에러 페이지
                 ).permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().authenticated()  // 나머지는 인증 필요
             )
+            // Google OAuth2 로그인 설정
             .oauth2Login(oauth2 -> oauth2
                 .authorizationEndpoint(authorization -> authorization
                     .baseUri("/oauth2/authorize")
@@ -73,9 +84,11 @@ public class SecurityConfig {
                 .successHandler(oAuth2AuthenticationSuccessHandler)
                 .failureHandler(oAuth2AuthenticationFailureHandler)
             )
+            // 일반 로그인을 위한 인증 제공자
             .authenticationProvider(authenticationProvider())
+            // JWT 검증 필터 추가 (UsernamePasswordAuthenticationFilter 전에 실행)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
     
@@ -101,20 +114,24 @@ public class SecurityConfig {
         return source;
     }
     
+    // 비밀번호 암호화를 위한 인코더
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    //실제 인증수행
+    // 일반 로그인을 위한 인증 제공자
     @Bean
-    public AuthenticationProvider authenticationProvider() {
+    public AuthenticationProvider authenticationProvider(
+            UserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }
-    
+
+    // 인증 관리자 (일반 로그인 시 사용)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

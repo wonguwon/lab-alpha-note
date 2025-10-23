@@ -1,25 +1,34 @@
 package com.alpha_note.core.user.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * 사용자 엔티티
+ * - 일반 로그인: UserDetails 구현
+ * - OAuth2 로그인: OAuth2User 구현
+ */
 @Entity
 @Table(name = "users")
-@Data
-@NoArgsConstructor
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class User implements UserDetails {
+public class User implements UserDetails, OAuth2User {
+
+    @Transient
+    private Map<String, Object> attributes;
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,57 +56,88 @@ public class User implements UserDetails {
     
     @Column(name = "profile_image_url")
     private String profileImageUrl;
-    
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-    
+
+    // 계정 상태 관리 필드
+    @Builder.Default
+    @Column(name = "account_locked", nullable = false)
+    private boolean accountLocked = false;  // 계정 잠김 여부 (관리자가 정지)
+
+    @Column(name = "password_expired_at")
+    private Instant passwordExpiredAt;  // 비밀번호 만료일 (null이면 만료 없음)
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;  // UTC 기준 생성 시간 (Hibernate가 자동 설정)
+
+    @UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    private Instant updatedAt;  // UTC 기준 수정 시간 (Hibernate가 자동 갱신)
     
     // UserDetails 구현
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
-    
-    @Override
-    public String getPassword() {
-        return password;
-    }
-    
-    @Override
-    public String getUsername() {
-        return username;
-    }
-    
+
     @Override
     public boolean isAccountNonExpired() {
+        // 계정 만료 기능은 현재 사용하지 않음
         return true;
     }
-    
+
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        // accountLocked가 false여야 정상 (잠기지 않음)
+        return !accountLocked;
     }
-    
+
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        // passwordExpiredAt이 null이면 만료 없음
+        // null이 아니면 현재 시간이 만료일 이전인지 확인
+        if (passwordExpiredAt == null) {
+            return true;
+        }
+        return Instant.now().isBefore(passwordExpiredAt);
     }
-    
+
     @Override
     public boolean isEnabled() {
+        // 계정 활성화 기능은 사용하지 않음 (항상 활성화)
         return true;
+    }
+
+    @Override
+    public String getName() {
+        return String.valueOf(id);
+    }
+
+    // OAuth2 로그인 시 attributes 설정
+    public void setOAuth2Attributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
+    }
+
+    // OAuth2 로그인 시 사용자 정보 업데이트
+    public void updateOAuth2Info(String username, String profileImageUrl) {
+        this.username = username;
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    // 계정 상태 관리 메서드
+    public void lockAccount() {
+        this.accountLocked = true;
+    }
+
+    public void unlockAccount() {
+        this.accountLocked = false;
+    }
+
+    public void setPasswordExpiryDate(Instant expiryDate) {
+        this.passwordExpiredAt = expiryDate;
+    }
+
+    // 비밀번호 만료일을 N일 후로 설정
+    public void setPasswordExpiryDays(int days) {
+        this.passwordExpiredAt = Instant.now().plus(days, java.time.temporal.ChronoUnit.DAYS);
     }
 }

@@ -15,6 +15,9 @@ import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 
+/**
+ * Google OAuth2 로그인 처리 서비스
+ */
 @Service
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
@@ -33,20 +36,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) {
+        // oAuth를 통해 받은 사용자 정보 추출
         OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(
-                oAuth2UserRequest.getClientRegistration().getRegistrationId(), 
+                oAuth2UserRequest.getClientRegistration().getRegistrationId(),
                 oAuth2User.getAttributes()
         );
-        
+
         if (!StringUtils.hasText(oAuth2UserInfo.getEmail())) {
             throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
         }
 
         Optional<User> userOptional = userRepository.findByEmail(oAuth2UserInfo.getEmail());
         User user;
-        
+
         if (userOptional.isPresent()) {
             user = userOptional.get();
+            // 다른 제공자로 이미 가입된 경우 에러
             if (!user.getProvider().equals(AuthProvider.valueOf(
                     oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase()))) {
                 throw new OAuth2AuthenticationException("Looks like you're signed up with " +
@@ -58,7 +63,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo);
         }
 
-        return UserPrincipal.create(user, oAuth2User.getAttributes());
+        // User에 OAuth2 attributes 설정 후 반환
+        user.setOAuth2Attributes(oAuth2User.getAttributes());
+        return user;
     }
 
     private User registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) {
@@ -75,8 +82,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private User updateExistingUser(User existingUser, OAuth2UserInfo oAuth2UserInfo) {
-        existingUser.setUsername(oAuth2UserInfo.getName());
-        existingUser.setProfileImageUrl(oAuth2UserInfo.getImageUrl());
+        existingUser.updateOAuth2Info(oAuth2UserInfo.getName(), oAuth2UserInfo.getImageUrl());
         return userRepository.save(existingUser);
     }
 }

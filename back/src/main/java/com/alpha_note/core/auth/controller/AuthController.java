@@ -28,9 +28,4 @@ public class AuthController {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(ApiResponse.success("로그인이 성공적으로 완료되었습니다.", response));
     }
-    
-    @GetMapping("/test")
-    public ResponseEntity<ApiResponse<String>> test() {
-        return ResponseEntity.ok(ApiResponse.success("Auth test endpoint working!"));
-    }
 }
