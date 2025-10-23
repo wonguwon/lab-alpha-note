@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   BottomNavContainer,
   NavList,
@@ -6,10 +6,17 @@ import {
   NavIcon,
   NavLabel,
   AddButton,
-  Spacer
+  Spacer,
+  MenuButton,
+  MenuOverlay,
+  MenuContent,
+  MenuCloseButton,
+  MenuButtonItem
 } from './BottomNavigation.styled';
 
 const BottomNavigation = ({ activeTab = 'qa', onTabChange, onAddClick }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
   const handleTabClick = (tabId) => {
     if (onTabChange) {
       onTabChange(tabId);
@@ -20,6 +27,14 @@ const BottomNavigation = ({ activeTab = 'qa', onTabChange, onAddClick }) => {
     if (onAddClick) {
       onAddClick();
     }
+  };
+  
+  const handleMenuToggle = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+  
+  const handleMenuClose = () => {
+    setIsMenuOpen(false);
   };
 
   return (
@@ -55,20 +70,28 @@ const BottomNavigation = ({ activeTab = 'qa', onTabChange, onAddClick }) => {
           <NavLabel>기록</NavLabel>
         </NavItem>
 
-        {/* 내 정보 탭 */}
-        <NavItem 
-          className={activeTab === 'profile' ? 'active' : ''}
-          onClick={() => handleTabClick('profile')}
-        >
-          <NavIcon>👤</NavIcon>
-          <NavLabel>내정보</NavLabel>
-        </NavItem>
+        {/* 햄버거 메뉴 */}
+        <MenuButton onClick={handleMenuToggle}>
+          <NavIcon>☰</NavIcon>
+          <NavLabel>더보기</NavLabel>
+        </MenuButton>
 
         {/* 중앙 추가 버튼 */}
         <AddButton onClick={handleAddClick}>
           +
         </AddButton>
       </NavList>
+      
+      {/* 모바일 메뉴 오버레이 */}
+      {isMenuOpen && (
+        <MenuOverlay onClick={handleMenuClose}>
+          <MenuContent onClick={(e) => e.stopPropagation()}>
+            <MenuCloseButton onClick={handleMenuClose}>×</MenuCloseButton>
+            <MenuButtonItem>로그인</MenuButtonItem>
+            <MenuButtonItem className="primary">회원가입</MenuButtonItem>
+          </MenuContent>
+        </MenuOverlay>
+      )}
     </BottomNavContainer>
   );
 };

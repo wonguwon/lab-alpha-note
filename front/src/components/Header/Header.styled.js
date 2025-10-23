@@ -77,6 +77,10 @@ export const UserSection = styled.div`
   ${flexCenter}
   gap: ${props => props.theme.spacing[3]};
   flex-shrink: 0;
+  
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    display: none;
+  }
 `;
 
 /* 헤더 래퍼 (전체 너비 배경) */

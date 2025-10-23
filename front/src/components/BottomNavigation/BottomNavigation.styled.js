@@ -101,3 +101,115 @@ export const AddButton = styled.button`
 export const Spacer = styled.div`
   flex: 1;
 `;
+
+/* 햄버거 메뉴 버튼 */
+export const MenuButton = styled.button`
+  ${flexCenter}
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+  padding: ${props => props.theme.spacing[1]};
+  
+  &:hover {
+    background: ${props => props.theme.colors.gray[50]};
+  }
+`;
+
+/* 메뉴 오버레이 */
+export const MenuOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: ${props => props.theme.zIndex.modal};
+  display: flex;
+  align-items: flex-end;
+`;
+
+/* 메뉴 콘텐츠 */
+export const MenuContent = styled.div`
+  background: ${props => props.theme.colors.white};
+  width: 100%;
+  border-radius: ${props => props.theme.borderRadius.lg} ${props => props.theme.borderRadius.lg} 0 0;
+  padding: ${props => props.theme.spacing[4]};
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+`;
+
+/* 메뉴 닫기 버튼 */
+export const MenuCloseButton = styled.button`
+  position: absolute;
+  top: ${props => props.theme.spacing[4]};
+  right: ${props => props.theme.spacing[4]};
+  background: transparent;
+  border: none;
+  font-size: ${props => props.theme.fonts.size.xl};
+  color: ${props => props.theme.colors.gray[500]};
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  ${flexCenter}
+  
+  &:hover {
+    color: ${props => props.theme.colors.gray[700]};
+  }
+`;
+
+/* 메뉴 제목 */
+export const MenuTitle = styled.h3`
+  font-size: ${props => props.theme.fonts.size.lg};
+  font-weight: ${props => props.theme.fonts.weight.semibold};
+  color: ${props => props.theme.colors.gray[900]};
+  margin: 0 0 ${props => props.theme.spacing[6]} 0;
+  text-align: center;
+`;
+
+/* 메뉴 버튼 아이템 */
+export const MenuButtonItem = styled.button`
+  width: 100%;
+  padding: ${props => props.theme.spacing[4]};
+  margin-bottom: ${props => props.theme.spacing[3]};
+  border: 1px solid ${props => props.theme.colors.gray[300]};
+  border-radius: ${props => props.theme.borderRadius.base};
+  background: ${props => props.theme.colors.white};
+  color: ${props => props.theme.colors.gray[700]};
+  font-weight: ${props => props.theme.fonts.weight.medium};
+  font-size: ${props => props.theme.fonts.size.base};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+  
+  &:hover {
+    background: ${props => props.theme.colors.gray[50]};
+    border-color: ${props => props.theme.colors.gray[400]};
+  }
+  
+  &.primary {
+    background: ${props => props.theme.colors.primary[600]};
+    color: ${props => props.theme.colors.white};
+    border-color: ${props => props.theme.colors.primary[600]};
+    
+    &:hover {
+      background: ${props => props.theme.colors.primary[700]};
+      border-color: ${props => props.theme.colors.primary[700]};
+    }
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
