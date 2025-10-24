@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import OAuth2RedirectPage from './pages/OAuth2RedirectPage';
 import useAuthStore from './store/authStore';
 import { setAuthStoreGetter } from './api/axios';
 
@@ -20,6 +21,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
         </Routes>
       </Layout>
     </Router>

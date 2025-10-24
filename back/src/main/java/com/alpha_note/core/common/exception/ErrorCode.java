@@ -26,7 +26,15 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),
     DUPLICATE_USERNAME(HttpStatus.CONFLICT, "U002", "이미 존재하는 사용자명입니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U003", "이미 존재하는 이메일입니다."),
-    
+
+    // 이메일 인증 관련 에러
+    EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "E001", "이메일 전송에 실패했습니다."),
+    EMAIL_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "E002", "인증 코드가 만료되었습니다."),
+    EMAIL_CODE_INVALID(HttpStatus.BAD_REQUEST, "E003", "잘못된 인증 코드입니다."),
+    EMAIL_CODE_ATTEMPTS_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "E004", "인증 시도 횟수를 초과했습니다. 코드를 재전송해주세요."),
+    EMAIL_SEND_COOLDOWN(HttpStatus.TOO_MANY_REQUESTS, "E005", "이메일은 60초마다 전송할 수 있습니다."),
+    EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "E006", "이메일 인증이 완료되지 않았습니다."),
+
     // 노트 관련 에러 (향후 추가)
     NOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "노트를 찾을 수 없습니다."),
     NOTE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N002", "노트에 접근할 권한이 없습니다.");

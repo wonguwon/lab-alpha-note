@@ -2,6 +2,7 @@ package com.alpha_note.core.config;
 
 import com.alpha_note.core.security.filter.JwtAuthenticationFilter;
 import com.alpha_note.core.security.oauth2.CustomOAuth2UserService;
+import com.alpha_note.core.security.oauth2.CustomOidcUserService;
 import com.alpha_note.core.security.oauth2.OAuth2AuthenticationFailureHandler;
 import com.alpha_note.core.security.oauth2.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,8 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomOidcUserService customOidcUserService;
+    private final UserDetailsService userDetailsService;
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     
@@ -63,23 +66,21 @@ public class SecurityConfig {
             // 요청별 인증 규칙
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/api/auth/**",      // 일반 인증 API (회원가입, 로그인)
-                    "/api/public/**",    // 공개 API
-                    "/oauth2/**",        // OAuth2 관련 경로 (Google 로그인)
-                    "/error"             // 에러 페이지
+                    "/api/v1/auth/register",     // 회원가입
+                    "/api/v1/auth/login",        // 로그인
+                    "/api/v1/auth/email/**",     // 이메일 인증 (send, verify)
+                    "/api/public/**",            // 공개 API
+                    "/oauth2/**",                // OAuth2 관련 경로 (Google 로그인)
+                    "/login/oauth2/**",          // 콜백
+                    "/error"                     // 에러 페이지
                 ).permitAll()
-                .anyRequest().authenticated()  // 나머지는 인증 필요
+                .anyRequest().authenticated()  // 나머지는 인증 필요 (/api/v1/auth/me 포함)
             )
             // Google OAuth2 로그인 설정
             .oauth2Login(oauth2 -> oauth2
-                .authorizationEndpoint(authorization -> authorization
-                    .baseUri("/oauth2/authorize")
-                )
-                .redirectionEndpoint(redirection -> redirection
-                    .baseUri("/oauth2/callback/*")
-                )
                 .userInfoEndpoint(userInfo -> userInfo
-                    .userService(customOAuth2UserService)
+                    .userService(customOAuth2UserService)      // 일반 OAuth2 (카카오, GitHub 등)
+                    .oidcUserService(customOidcUserService)     // OIDC (Google 등)
                 )
                 .successHandler(oAuth2AuthenticationSuccessHandler)
                 .failureHandler(oAuth2AuthenticationFailureHandler)
@@ -91,7 +92,7 @@ public class SecurityConfig {
 
         return http.build();
     }
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -122,12 +123,10 @@ public class SecurityConfig {
 
     // 일반 로그인을 위한 인증 제공자
     @Bean
-    public AuthenticationProvider authenticationProvider(
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder) {
+    public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder);
+        authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
 

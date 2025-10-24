@@ -63,7 +63,7 @@ const useAuthStore = create(
         token: state.token,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
-      }), // persist할 상태만 선택
+      }),
     }
   )
 );

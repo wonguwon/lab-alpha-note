@@ -1,9 +1,7 @@
 package com.alpha_note.core.security.oauth2;
 
 import com.alpha_note.core.user.entity.AuthProvider;
-import com.alpha_note.core.user.entity.Role;
 import com.alpha_note.core.user.entity.User;
-import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -11,21 +9,21 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.util.Optional;
 
 /**
- * Google OAuth2 로그인 처리 서비스
+ * 일반 OAuth2 로그인 처리 서비스 (카카오, GitHub 등)
+ * - OAuth2User를 로드하고 DB와 동기화
+ * - AppUserPrincipal로 래핑하여 반환
  */
 @Service
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final UserRepository userRepository;
+    private final OAuth2UserSynchronizer userSynchronizer;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
+        // Spring Security의 기본 DefaultOAuth2UserService로 사용자 정보 로드
         OAuth2User oAuth2User = super.loadUser(oAuth2UserRequest);
 
         try {
@@ -35,54 +33,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
     }
 
+    /**
+     * OAuth2 사용자 정보를 DB와 동기화하고 AppUserPrincipal로 래핑
+     */
     private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) {
-        // oAuth를 통해 받은 사용자 정보 추출
-        OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(
-                oAuth2UserRequest.getClientRegistration().getRegistrationId(),
-                oAuth2User.getAttributes()
-        );
+        // Provider 추출 (google, kakao, github 등)
+        String registrationId = oAuth2UserRequest.getClientRegistration().getRegistrationId();
+        AuthProvider provider = AuthProvider.fromRegistrationId(registrationId);
 
-        if (!StringUtils.hasText(oAuth2UserInfo.getEmail())) {
-            throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
-        }
+        // 사용자 정보 동기화 (신규 등록 또는 업데이트)
+        User user = userSynchronizer.synchronizeUser(provider, oAuth2User.getAttributes());
 
-        Optional<User> userOptional = userRepository.findByEmail(oAuth2UserInfo.getEmail());
-        User user;
-
-        if (userOptional.isPresent()) {
-            user = userOptional.get();
-            // 다른 제공자로 이미 가입된 경우 에러
-            if (!user.getProvider().equals(AuthProvider.valueOf(
-                    oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase()))) {
-                throw new OAuth2AuthenticationException("Looks like you're signed up with " +
-                        user.getProvider() + " account. Please use your " + user.getProvider() +
-                        " account to login.");
-            }
-            user = updateExistingUser(user, oAuth2UserInfo);
-        } else {
-            user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo);
-        }
-
-        // User에 OAuth2 attributes 설정 후 반환
-        user.setOAuth2Attributes(oAuth2User.getAttributes());
-        return user;
-    }
-
-    private User registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) {
-        User user = User.builder()
-                .provider(AuthProvider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase()))
-                .providerId(oAuth2UserInfo.getId())
-                .username(oAuth2UserInfo.getName())
-                .email(oAuth2UserInfo.getEmail())
-                .profileImageUrl(oAuth2UserInfo.getImageUrl())
-                .role(Role.USER)
-                .build();
-
-        return userRepository.save(user);
-    }
-
-    private User updateExistingUser(User existingUser, OAuth2UserInfo oAuth2UserInfo) {
-        existingUser.updateOAuth2Info(oAuth2UserInfo.getName(), oAuth2UserInfo.getImageUrl());
-        return userRepository.save(existingUser);
+        // AppUserPrincipal로 래핑하여 반환 (일반 OAuth2 생성자 사용)
+        return new AppUserPrincipal(user, oAuth2User);
     }
 }

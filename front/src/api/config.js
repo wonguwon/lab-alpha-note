@@ -1,7 +1,7 @@
-const { 
-  VITE_API_URL = 'http://localhost:8080', 
-  VITE_API_TIMEOUT = '5000', 
-  VITE_API_VERSION = 'v1' 
+const {
+  VITE_API_URL = 'http://localhost:8001',
+  VITE_API_TIMEOUT = '5000',
+  VITE_API_VERSION = 'v1'
 } = import.meta.env;
 
 export const API_CONFIG = {
@@ -21,6 +21,7 @@ export const API_ENDPOINTS = {
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
     REGISTER: '/auth/register',
+    ME: '/auth/me',
   },
   // 사용자 관련
   USER: {

@@ -7,17 +7,15 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 사용자 엔티티
  * - 일반 로그인: UserDetails 구현
- * - OAuth2 로그인: OAuth2User 구현
+ * - OAuth2 로그인: AppUserPrincipal에서 래핑하여 사용
  */
 @Entity
 @Table(name = "users")
@@ -25,10 +23,7 @@ import java.util.Map;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class User implements UserDetails, OAuth2User {
-
-    @Transient
-    private Map<String, Object> attributes;
+public class User implements UserDetails {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -105,16 +100,6 @@ public class User implements UserDetails, OAuth2User {
     public boolean isEnabled() {
         // 계정 활성화 기능은 사용하지 않음 (항상 활성화)
         return true;
-    }
-
-    @Override
-    public String getName() {
-        return String.valueOf(id);
-    }
-
-    // OAuth2 로그인 시 attributes 설정
-    public void setOAuth2Attributes(Map<String, Object> attributes) {
-        this.attributes = attributes;
     }
 
     // OAuth2 로그인 시 사용자 정보 업데이트

@@ -43,8 +43,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) {
 
-        // 인증된 사용자(User)의 정보로 JWT 토큰 생성
-        User user = (User) authentication.getPrincipal();
+        // AppUserPrincipal에서 User 엔티티 추출
+        AppUserPrincipal principal = (AppUserPrincipal) authentication.getPrincipal();
+        User user = principal.getUser();
+
+        // User 정보로 JWT 토큰 생성
         String token = jwtUtil.generateToken(user);
 
         // UriComponentsBuilder를 사용하여 안전하게 URL 생성

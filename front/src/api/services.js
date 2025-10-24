@@ -20,10 +20,17 @@ export const authService = {
     const response = await api.post(API_ENDPOINTS.AUTH.LOGOUT);
     return response.data;
   },
+
+  // 현재 로그인한 사용자 정보 조회 (토큰 기반)
+  getUserInfo: async () => {
+    const response = await api.get(API_ENDPOINTS.AUTH.ME);
+    return response.data;
+  },
 };
 
 // 사용자 관련 API 서비스
 export const userService = {
+
   // 프로필 조회
   getProfile: async () => {
     const response = await api.get(API_ENDPOINTS.USER.PROFILE);
