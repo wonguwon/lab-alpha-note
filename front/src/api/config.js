@@ -22,6 +22,8 @@ export const API_ENDPOINTS = {
     REFRESH: '/auth/refresh',
     REGISTER: '/auth/register',
     ME: '/auth/me',
+    EMAIL_SEND: '/auth/email/send',
+    EMAIL_VERIFY: '/auth/email/verify',
   },
   // 사용자 관련
   USER: {

@@ -26,6 +26,18 @@ export const authService = {
     const response = await api.get(API_ENDPOINTS.AUTH.ME);
     return response.data;
   },
+
+  // 이메일 인증 코드 발송
+  sendEmailVerification: async (email) => {
+    const response = await api.post(API_ENDPOINTS.AUTH.EMAIL_SEND, { email });
+    return response.data;
+  },
+
+  // 이메일 인증 코드 확인
+  verifyEmail: async (email, code) => {
+    const response = await api.post(API_ENDPOINTS.AUTH.EMAIL_VERIFY, { email, code });
+    return response.data;
+  },
 };
 
 // 사용자 관련 API 서비스

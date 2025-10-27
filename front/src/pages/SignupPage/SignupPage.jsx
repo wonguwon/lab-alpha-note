@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import useInput from '../../hooks/useInput';
+import { authService } from '../../api/services';
 import {
   SignupContainer,
   SignupCard,
@@ -23,32 +23,83 @@ import {
 } from './SignupPage.styled';
 
 const SignupPage = () => {
-  const email = useInput('');
-  const password = useInput('');
-  const confirmPassword = useInput('');
-  const nickname = useInput('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isCodeSent, setIsCodeSent] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
   const [emailNewsletterConsent, setEmailNewsletterConsent] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // 이메일이 변경되면 인증 상태 초기화
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    if (e.target.value !== verifiedEmail) {
+      setIsCodeSent(false);
+      setIsEmailVerified(false);
+      setVerificationCode('');
+      setErrorMessage('');
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // 회원가입 로직 구현
     console.log('Signup attempt:', {
-      email: email.value,
-      password: password.value,
-      confirmPassword: confirmPassword.value,
-      nickname: nickname.value,
+      email,
+      password,
+      confirmPassword,
+      nickname,
       isEmailVerified,
       emailNewsletterConsent
     });
   };
 
-  const handleEmailVerification = () => {
-    // 이메일 인증 로직 구현
-    console.log('Email verification for:', email.value);
-    setIsEmailVerified(true);
+  const handleSendVerificationCode = async () => {
+    if (!email) {
+      setErrorMessage('이메일을 입력해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+
+    try {
+      await authService.sendEmailVerification(email);
+      setIsCodeSent(true);
+      alert('인증 코드가 이메일로 전송되었습니다.');
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || '인증 코드 전송에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode) {
+      setErrorMessage('인증 코드를 입력해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+
+    try {
+      await authService.verifyEmail(email, verificationCode);
+      setIsEmailVerified(true);
+      setVerifiedEmail(email);
+      alert('이메일 인증이 완료되었습니다.');
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || '인증 코드가 올바르지 않습니다.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleTermsClick = () => {
@@ -79,19 +130,56 @@ const SignupPage = () => {
                 name="email"
                 type="email"
                 placeholder="이메일을 입력하세요"
-                {...email.bind}
+                value={email}
+                onChange={handleEmailChange}
                 required
                 style={{ flex: 1 }}
               />
-              <VerifyButton 
-                type="button" 
-                onClick={handleEmailVerification}
-                disabled={!email.value || isEmailVerified}
+              <VerifyButton
+                type="button"
+                onClick={handleSendVerificationCode}
+                disabled={!email || isCodeSent || isLoading || isEmailVerified}
               >
-                {isEmailVerified ? '인증완료' : '인증'}
+                {isLoading ? '발송 중...' : isCodeSent ? '전송완료' : '인증코드 발송'}
               </VerifyButton>
             </div>
+            {errorMessage && (
+              <div style={{ color: '#e74c3c', fontSize: '0.875rem', marginTop: '4px' }}>
+                {errorMessage}
+              </div>
+            )}
           </EmailInputGroup>
+
+          {isCodeSent && !isEmailVerified && (
+            <EmailInputGroup>
+              <Label htmlFor="verificationCode">인증 코드</Label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <Input
+                  id="verificationCode"
+                  name="verificationCode"
+                  type="text"
+                  placeholder="인증 코드를 입력하세요"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  required
+                  style={{ flex: 1 }}
+                />
+                <VerifyButton
+                  type="button"
+                  onClick={handleVerifyCode}
+                  disabled={!verificationCode || isLoading}
+                >
+                  {isLoading ? '확인 중...' : '확인'}
+                </VerifyButton>
+              </div>
+            </EmailInputGroup>
+          )}
+
+          {isEmailVerified && (
+            <div style={{ color: '#27ae60', fontSize: '0.875rem', marginTop: '-8px', marginBottom: '16px' }}>
+              ✓ 이메일 인증이 완료되었습니다.
+            </div>
+          )}
 
           <InputGroup>
             <Label htmlFor="password">비밀번호</Label>
@@ -100,7 +188,8 @@ const SignupPage = () => {
               name="password"
               type="password"
               placeholder="비밀번호를 입력하세요"
-              {...password.bind}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </InputGroup>
@@ -112,7 +201,8 @@ const SignupPage = () => {
               name="confirmPassword"
               type="password"
               placeholder="비밀번호를 다시 입력하세요"
-              {...confirmPassword.bind}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
           </InputGroup>
@@ -124,7 +214,8 @@ const SignupPage = () => {
               name="nickname"
               type="text"
               placeholder="닉네임을 입력하세요"
-              {...nickname.bind}
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
               required
             />
           </InputGroup>
