@@ -108,20 +108,70 @@ export const UserButton = styled.button`
   transition: all ${props => props.theme.transitions.base};
   height: 36px;
   white-space: nowrap;
-  
+
   &:hover {
     background: ${props => props.theme.colors.gray[50]};
     border-color: ${props => props.theme.colors.gray[400]};
   }
-  
+
   &.primary {
     background: ${props => props.theme.colors.primary[600]};
     color: ${props => props.theme.colors.white};
     border-color: ${props => props.theme.colors.primary[600]};
-    
+
     &:hover {
       background: ${props => props.theme.colors.primary[700]};
       border-color: ${props => props.theme.colors.primary[700]};
     }
+  }
+`;
+
+/* 프로필 이미지 버튼 */
+export const ProfileButton = styled.button`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid ${props => props.theme.colors.gray[200]};
+  background: ${props => props.theme.colors.white};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+  overflow: hidden;
+  padding: 0;
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary[500]};
+  }
+`;
+
+/* 프로필 이미지 */
+export const ProfileImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+/* 아이콘 버튼 */
+export const IconButton = styled.button`
+  width: 36px;
+  height: 36px;
+  border-radius: ${props => props.theme.borderRadius.base};
+  border: 1px solid ${props => props.theme.colors.gray[200]};
+  background: ${props => props.theme.colors.white};
+  color: ${props => props.theme.colors.gray[600]};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: ${props => props.theme.colors.gray[50]};
+    border-color: ${props => props.theme.colors.gray[300]};
+    color: ${props => props.theme.colors.gray[900]};
   }
 `;

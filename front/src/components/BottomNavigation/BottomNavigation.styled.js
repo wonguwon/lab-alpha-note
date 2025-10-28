@@ -68,7 +68,7 @@ export const NavLabel = styled.span`
   }
 `;
 
-/* 중앙 추가 버튼 */
+/* 중앙 프로필 버튼 */
 export const AddButton = styled.button`
   ${flexCenter}
   position: absolute;
@@ -77,24 +77,31 @@ export const AddButton = styled.button`
   transform: translate(-50%, -50%);
   width: 48px;
   height: 48px;
-  background: ${props => props.theme.colors.primary[600]};
-  color: ${props => props.theme.colors.white};
-  border: none;
+  background: ${props => props.theme.colors.white};
+  border: 2px solid ${props => props.theme.colors.gray[200]};
   border-radius: 50%;
-  font-size: ${props => props.theme.fonts.size.xl};
   box-shadow: ${props => props.theme.shadows.md};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.base};
   z-index: 1;
-  
+  padding: 0;
+  overflow: hidden;
+
   &:hover {
-    background: ${props => props.theme.colors.primary[700]};
+    border-color: ${props => props.theme.colors.primary[500]};
     transform: translate(-50%, -50%) scale(1.05);
   }
-  
+
   &:active {
     transform: translate(-50%, -50%) scale(0.95);
   }
+`;
+
+/* 프로필 이미지 */
+export const ProfileImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 /* 스페이서 (중앙 버튼 공간 확보) */
@@ -102,8 +109,8 @@ export const Spacer = styled.div`
   flex: 1;
 `;
 
-/* 햄버거 메뉴 버튼 */
-export const MenuButton = styled.button`
+/* 아이콘 버튼 (알림, 로그아웃) */
+export const IconButton = styled.button`
   ${flexCenter}
   flex-direction: column;
   flex: 1;
@@ -113,7 +120,14 @@ export const MenuButton = styled.button`
   cursor: pointer;
   transition: all ${props => props.theme.transitions.base};
   padding: ${props => props.theme.spacing[1]};
-  
+  color: ${props => props.theme.colors.gray[600]};
+
+  svg {
+    width: 22px;
+    height: 22px;
+    margin-bottom: ${props => props.theme.spacing[1]};
+  }
+
   &:hover {
     background: ${props => props.theme.colors.gray[50]};
   }
