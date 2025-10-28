@@ -21,11 +21,12 @@ import java.time.Instant;
 public class UserResponse {
 
     private Long id;
-    private String username;
+    private String nickname;
     private String email;
     private Role role;
     private AuthProvider provider;
     private String profileImageUrl;
+    private boolean emailSubscribed;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -35,11 +36,12 @@ public class UserResponse {
     public static UserResponse from(User user) {
         return UserResponse.builder()
                 .id(user.getId())
-                .username(user.getUsername())
+                .nickname(user.getNickname())
                 .email(user.getEmail())
                 .role(user.getRole())
                 .provider(user.getProvider())
                 .profileImageUrl(user.getProfileImageUrl())
+                .emailSubscribed(user.isEmailSubscribed())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

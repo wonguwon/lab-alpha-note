@@ -24,6 +24,7 @@ export const API_ENDPOINTS = {
     ME: '/auth/me',
     EMAIL_SEND: '/auth/email/send',
     EMAIL_VERIFY: '/auth/email/verify',
+    EMAIL_CHECK: '/auth/email/check',
   },
   // 사용자 관련
   USER: {

@@ -27,20 +27,26 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response 인터셉터 - 에러 처리
+// Response 인터셉터 - 에러 처리 및 응답 형식 통일
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // 성공 응답: { success: true, message, data, errorCode }
+    // response.data만 반환하여 컴포넌트에서 바로 사용 가능하도록 함
+    return response.data;
+  },
   (error) => {
     if (error.response) {
       const { status, data } = error.response;
 
       switch (status) {
         case 401:
-          // 인증 에러 - Zustand 스토어의 logout 호출
-          if (getAuthStore) {
+          // 로그인 페이지에서의 401은 interceptor에서 처리하지 않음 (컴포넌트에서 처리)
+          // 다른 페이지에서의 401만 로그인 페이지로 리다이렉트
+          const isLoginPage = window.location.pathname === '/login';
+          if (!isLoginPage && getAuthStore) {
             getAuthStore().logout();
+            window.location.href = '/login';
           }
-          window.location.href = '/login';
           break;
         case 403:
           console.error('접근 권한이 없습니다.');

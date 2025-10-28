@@ -40,7 +40,7 @@ public class OAuth2UserSynchronizer {
 
         // 이메일 필수 체크
         if (!StringUtils.hasText(userInfo.getEmail())) {
-            throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
+            throw new OAuth2AuthenticationException("OAuth2 제공자로부터 이메일 정보를 받지 못했습니다.");
         }
 
         // 이메일로 기존 사용자 조회
@@ -51,9 +51,10 @@ public class OAuth2UserSynchronizer {
             user = userOptional.get();
             // 다른 제공자로 이미 가입된 경우 에러
             if (!user.getProvider().equals(provider)) {
+                String providerName = getProviderDisplayName(user.getProvider());
                 throw new OAuth2AuthenticationException(
-                        "Looks like you're signed up with " + user.getProvider() +
-                        " account. Please use your " + user.getProvider() + " account to login."
+                        "이미 " + providerName + "로 가입된 계정입니다. " +
+                        providerName + " 로그인을 사용해주세요."
                 );
             }
             // 기존 사용자 정보 업데이트
@@ -73,9 +74,10 @@ public class OAuth2UserSynchronizer {
         User user = User.builder()
                 .provider(provider)
                 .providerId(userInfo.getId())
-                .username(userInfo.getName())
+                .nickname(userInfo.getName())
                 .email(userInfo.getEmail())
                 .profileImageUrl(userInfo.getImageUrl())
+                .emailSubscribed(false) // OAuth2 가입 시 기본값 false
                 .role(Role.USER)
                 .build();
 
@@ -88,5 +90,15 @@ public class OAuth2UserSynchronizer {
     private User updateExistingUser(User existingUser, OAuth2UserInfo userInfo) {
         existingUser.updateOAuth2Info(userInfo.getName(), userInfo.getImageUrl());
         return userRepository.save(existingUser);
+    }
+
+    /**
+     * Provider의 한국어 표시명 반환
+     */
+    private String getProviderDisplayName(AuthProvider provider) {
+        return switch (provider) {
+            case LOCAL -> "이메일";
+            case GOOGLE -> "Google";
+        };
     }
 }

@@ -1,6 +1,8 @@
 package com.alpha_note.core.auth.controller;
 
 import com.alpha_note.core.auth.dto.AuthResponse;
+import com.alpha_note.core.auth.dto.EmailCheckRequest;
+import com.alpha_note.core.auth.dto.EmailCheckResponse;
 import com.alpha_note.core.auth.dto.LoginRequest;
 import com.alpha_note.core.auth.dto.RegisterRequest;
 import com.alpha_note.core.auth.service.AuthService;
@@ -19,6 +21,18 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+
+    @PostMapping("/email/check")
+    public ResponseEntity<ApiResponse<EmailCheckResponse>> checkEmail(@Valid @RequestBody EmailCheckRequest request) {
+        boolean available = authService.checkEmailAvailability(request.getEmail());
+
+        EmailCheckResponse response = EmailCheckResponse.builder()
+                .available(available)
+                .message(available ? "사용 가능한 이메일입니다." : "이미 사용 중인 이메일입니다.")
+                .build();
+
+        return ResponseEntity.ok(ApiResponse.success("이메일 중복 검사가 완료되었습니다.", response));
+    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {

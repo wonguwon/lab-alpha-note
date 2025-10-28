@@ -23,7 +23,7 @@ public enum AuthProvider {
 
     /**
      * registrationId로부터 Provider 찾기
-     * @param registrationId OAuth2 클라이언트 등록 ID (예: "google", "kakao")
+     * @param registrationId OAuth2 클라이언트 등록 ID (예: "google")
      * @return 매칭되는 AuthProvider
      * @throws IllegalArgumentException 지원하지 않는 Provider인 경우
      */

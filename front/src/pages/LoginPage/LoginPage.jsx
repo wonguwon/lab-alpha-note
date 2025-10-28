@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import useInput from '../../hooks/useInput';
 import useAuthStore from '../../store/authStore';
 import { authService } from '../../api/services';
@@ -9,7 +9,6 @@ import {
   LoginCard,
   LoginHeader,
   LogoText,
-  LoginTitle,
   LoginDescription,
   LoginForm,
   InputGroup,
@@ -36,17 +35,25 @@ const LoginPage = () => {
 
     try {
       // API 로그인 호출
+      // 응답 형식: { success, message, data: { token, user }, errorCode }
       const response = await authService.login({
         email: email.value,
         password: password.value
       });
 
-      // Zustand 스토어에 로그인 정보 저장
-      await login(response.token, response.user);
+      if (response.success && response.data) {
+        // Zustand 스토어에 로그인 정보 저장
+        await login(response.data.token, response.data.user);
 
-      // 홈페이지로 리다이렉트
-      navigate('/');
+        // 홈페이지로 리다이렉트
+        navigate('/');
+      } else {
+        // success가 false인 경우
+        setErrorMessage(response.message || '로그인에 실패했습니다.');
+        setError(response.message || '로그인에 실패했습니다.');
+      }
     } catch (error) {
+      // 서버 에러 응답: { success: false, message, data: null, errorCode }
       const message = error.response?.data?.message || '로그인에 실패했습니다.';
       setErrorMessage(message);
       setError(message);
@@ -118,7 +125,7 @@ const LoginPage = () => {
 
         <SignupLink>
           <span>아직 계정이 없으신가요?</span>
-          <a href="/signup">회원가입</a>
+          <Link to="/signup">회원가입</Link>
         </SignupLink>
       </LoginCard>
     </LoginContainer>

@@ -24,6 +24,9 @@ const OAuth2RedirectPage = () => {
         // URL에서 토큰 추출
         const token = searchParams.get('token');
         const error = searchParams.get('error');
+        
+        alert("time")
+        console.log(searchParams)
 
         // 에러가 있는 경우
         if (error) {

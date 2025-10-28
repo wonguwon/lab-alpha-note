@@ -20,11 +20,11 @@ public enum ErrorCode {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "유효하지 않은 토큰입니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A003", "만료된 토큰입니다."),
-    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A004", "잘못된 인증 정보입니다."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A004", "잘못된 아이디/비밀번호입니다."),
     
     // 사용자 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),
-    DUPLICATE_USERNAME(HttpStatus.CONFLICT, "U002", "이미 존재하는 사용자명입니다."),
+    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "U002", "이미 존재하는 닉네임입니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U003", "이미 존재하는 이메일입니다."),
 
     // 이메일 인증 관련 에러

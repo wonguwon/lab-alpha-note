@@ -28,29 +28,33 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(unique = true, nullable = false)
-    private String username;
-    
+
+    @Column
+    private String nickname;
+
     @Column(unique = true, nullable = false)
     private String email;
-    
+
     @Column
     private String password; // OAuth2 사용자는 비밀번호가 없을 수 있음
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AuthProvider provider;
-    
+
     @Column(name = "provider_id")
     private String providerId;
-    
+
     @Column(name = "profile_image_url")
     private String profileImageUrl;
+
+    @Builder.Default
+    @Column(name = "email_subscribed", nullable = false)
+    private boolean emailSubscribed = false; // 이메일 이벤트 정보 수신 동의
 
     // 계정 상태 관리 필드
     @Builder.Default
@@ -69,6 +73,12 @@ public class User implements UserDetails {
     private Instant updatedAt;  // UTC 기준 수정 시간 (Hibernate가 자동 갱신)
     
     // UserDetails 구현
+    @Override
+    public String getUsername() {
+        // Spring Security에서 사용하는 username은 email을 반환
+        return email;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
@@ -103,8 +113,8 @@ public class User implements UserDetails {
     }
 
     // OAuth2 로그인 시 사용자 정보 업데이트
-    public void updateOAuth2Info(String username, String profileImageUrl) {
-        this.username = username;
+    public void updateOAuth2Info(String nickname, String profileImageUrl) {
+        this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
     }
 

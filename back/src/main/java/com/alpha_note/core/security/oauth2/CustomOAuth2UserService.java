@@ -28,7 +28,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         try {
             return processOAuth2User(oAuth2UserRequest, oAuth2User);
+        } catch (OAuth2AuthenticationException ex) {
+            // OAuth2 인증 예외는 그대로 던져서 사용자에게 명확한 메시지 전달
+            throw ex;
         } catch (Exception ex) {
+            // 예상치 못한 시스템 오류만 Internal 예외로 변환
             throw new InternalAuthenticationServiceException(ex.getMessage(), ex.getCause());
         }
     }

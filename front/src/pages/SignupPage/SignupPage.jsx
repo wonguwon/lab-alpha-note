@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import useInput from '../../hooks/useInput';
 import { authService } from '../../api/services';
 import {
   SignupContainer,
@@ -23,15 +25,17 @@ import {
 } from './SignupPage.styled';
 
 const SignupPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
+  const navigate = useNavigate();
+  const email = useInput('');
+  const password = useInput('');
+  const confirmPassword = useInput('');
+  const nickname = useInput('');
+  const verificationCode = useInput('');
+
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [verifiedEmail, setVerifiedEmail] = useState('');
-  const [emailNewsletterConsent, setEmailNewsletterConsent] = useState(true);
+  const [emailSubscribed, setEmailSubscribed] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,30 +43,73 @@ const SignupPage = () => {
 
   // 이메일이 변경되면 인증 상태 초기화
   const handleEmailChange = (e) => {
-    setEmail(e.target.value);
+    email.bind.onChange(e);
     if (e.target.value !== verifiedEmail) {
       setIsCodeSent(false);
       setIsEmailVerified(false);
-      setVerificationCode('');
+      verificationCode.reset();
       setErrorMessage('');
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // 회원가입 로직 구현
-    console.log('Signup attempt:', {
-      email,
-      password,
-      confirmPassword,
-      nickname,
-      isEmailVerified,
-      emailNewsletterConsent
-    });
+
+    // 유효성 검사
+    if (!isEmailVerified) {
+      setErrorMessage('이메일 인증을 완료해주세요.');
+      return;
+    }
+
+    if (password.value !== confirmPassword.value) {
+      setErrorMessage('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    if (password.value.length < 6) {
+      setErrorMessage('비밀번호는 최소 6자 이상이어야 합니다.');
+      return;
+    }
+
+    if (!nickname.value.trim()) {
+      setErrorMessage('닉네임을 입력해주세요.');
+      return;
+    }
+
+    if (nickname.value.length > 20) {
+      setErrorMessage('닉네임은 최대 20자까지 입력 가능합니다.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+
+    try {
+      const registerData = {
+        email: email.value,
+        password: password.value,
+        nickname: nickname.value,
+        emailSubscribed
+      };
+
+      // 응답 형식: { success, message, data, errorCode }
+      const response = await authService.register(registerData);
+
+      if (response.success) {
+        alert(response.message || '회원가입이 완료되었습니다.');
+        navigate('/login');
+      } else {
+        setErrorMessage(response.message || '회원가입에 실패했습니다.');
+      }
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || '회원가입에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSendVerificationCode = async () => {
-    if (!email) {
+    if (!email.value) {
       setErrorMessage('이메일을 입력해주세요.');
       return;
     }
@@ -71,9 +118,30 @@ const SignupPage = () => {
     setErrorMessage('');
 
     try {
-      await authService.sendEmailVerification(email);
-      setIsCodeSent(true);
-      alert('인증 코드가 이메일로 전송되었습니다.');
+      // 이메일 중복 확인
+      // 응답 형식: { success, message, data: { available }, errorCode }
+      const checkResponse = await authService.checkEmailAvailability(email.value);
+
+      if (checkResponse.success && checkResponse.data) {
+        if (!checkResponse.data.available) {
+          setErrorMessage(checkResponse.message || '이미 가입된 이메일입니다.');
+          setIsLoading(false);
+          return;
+        }
+
+        // 중복이 아닐 경우 인증 코드 발송
+        // 응답 형식: { success, message, data, errorCode }
+        const sendResponse = await authService.sendEmailVerification(email.value);
+
+        if (sendResponse.success) {
+          setIsCodeSent(true);
+          alert(sendResponse.message || '인증 코드가 이메일로 전송되었습니다.');
+        } else {
+          setErrorMessage(sendResponse.message || '인증 코드 전송에 실패했습니다.');
+        }
+      } else {
+        setErrorMessage(checkResponse.message || '이메일 확인에 실패했습니다.');
+      }
     } catch (error) {
       setErrorMessage(error.response?.data?.message || '인증 코드 전송에 실패했습니다.');
     } finally {
@@ -82,7 +150,7 @@ const SignupPage = () => {
   };
 
   const handleVerifyCode = async () => {
-    if (!verificationCode) {
+    if (!verificationCode.value) {
       setErrorMessage('인증 코드를 입력해주세요.');
       return;
     }
@@ -91,10 +159,16 @@ const SignupPage = () => {
     setErrorMessage('');
 
     try {
-      await authService.verifyEmail(email, verificationCode);
-      setIsEmailVerified(true);
-      setVerifiedEmail(email);
-      alert('이메일 인증이 완료되었습니다.');
+      // 응답 형식: { success, message, data, errorCode }
+      const response = await authService.verifyEmail(email.value, verificationCode.value);
+
+      if (response.success) {
+        setIsEmailVerified(true);
+        setVerifiedEmail(email.value);
+        alert(response.message || '이메일 인증이 완료되었습니다.');
+      } else {
+        setErrorMessage(response.message || '인증 코드가 올바르지 않습니다.');
+      }
     } catch (error) {
       setErrorMessage(error.response?.data?.message || '인증 코드가 올바르지 않습니다.');
     } finally {
@@ -130,7 +204,7 @@ const SignupPage = () => {
                 name="email"
                 type="email"
                 placeholder="이메일을 입력하세요"
-                value={email}
+                value={email.value}
                 onChange={handleEmailChange}
                 required
                 style={{ flex: 1 }}
@@ -138,7 +212,7 @@ const SignupPage = () => {
               <VerifyButton
                 type="button"
                 onClick={handleSendVerificationCode}
-                disabled={!email || isCodeSent || isLoading || isEmailVerified}
+                disabled={!email.value || isCodeSent || isLoading || isEmailVerified}
               >
                 {isLoading ? '발송 중...' : isCodeSent ? '전송완료' : '인증코드 발송'}
               </VerifyButton>
@@ -159,15 +233,14 @@ const SignupPage = () => {
                   name="verificationCode"
                   type="text"
                   placeholder="인증 코드를 입력하세요"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
+                  {...verificationCode.bind}
                   required
                   style={{ flex: 1 }}
                 />
                 <VerifyButton
                   type="button"
                   onClick={handleVerifyCode}
-                  disabled={!verificationCode || isLoading}
+                  disabled={!verificationCode.value || isLoading}
                 >
                   {isLoading ? '확인 중...' : '확인'}
                 </VerifyButton>
@@ -188,8 +261,7 @@ const SignupPage = () => {
               name="password"
               type="password"
               placeholder="비밀번호를 입력하세요"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              {...password.bind}
               required
             />
           </InputGroup>
@@ -201,8 +273,7 @@ const SignupPage = () => {
               name="confirmPassword"
               type="password"
               placeholder="비밀번호를 다시 입력하세요"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              {...confirmPassword.bind}
               required
             />
           </InputGroup>
@@ -214,8 +285,7 @@ const SignupPage = () => {
               name="nickname"
               type="text"
               placeholder="닉네임을 입력하세요"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
+              {...nickname.bind}
               required
             />
           </InputGroup>
@@ -224,8 +294,8 @@ const SignupPage = () => {
             <CheckboxLabel>
               <Checkbox
                 type="checkbox"
-                checked={emailNewsletterConsent}
-                onChange={(e) => setEmailNewsletterConsent(e.target.checked)}
+                checked={emailSubscribed}
+                onChange={(e) => setEmailSubscribed(e.target.checked)}
               />
               <span>AlphaNote에서 주최하는 다양한 이벤트, 정보성 뉴스레터 및 광고를 받아보겠습니다.</span>
             </CheckboxLabel>
@@ -237,14 +307,14 @@ const SignupPage = () => {
             </TermsText>
           </TermsSection>
 
-          <SignupButton type="submit" disabled={!isEmailVerified}>
-            회원가입
+          <SignupButton type="submit" disabled={!isEmailVerified || isLoading}>
+            {isLoading ? '가입 중...' : '회원가입'}
           </SignupButton>
         </SignupForm>
 
         <LoginLink>
           <span>이미 계정이 있으신가요?</span>
-          <a href="/login">로그인</a>
+          <Link to="/login">로그인</Link>
         </LoginLink>
       </SignupCard>
 

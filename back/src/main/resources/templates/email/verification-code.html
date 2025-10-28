@@ -1,283 +1,162 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AlphaNote 이메일 인증</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-
-        .email-wrapper {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-        }
-
-        .email-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px 30px;
-            text-align: center;
-            border-radius: 16px 16px 0 0;
-        }
-
-        .logo {
-            font-size: 36px;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .logo-emoji {
-            font-size: 40px;
-            margin-right: 8px;
-        }
-
-        .header-subtitle {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 14px;
-            letter-spacing: 1px;
-        }
-
-        .email-content {
-            padding: 50px 40px;
-            background: white;
-        }
-
-        .greeting {
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .message {
-            color: #666;
-            font-size: 16px;
-            text-align: center;
-            margin-bottom: 30px;
-            line-height: 1.8;
-        }
-
-        .code-container {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-            border: 3px dashed #667eea;
-            border-radius: 12px;
-            padding: 40px;
-            margin: 40px 0;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        .code-label {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 15px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .verification-code {
-            font-size: 48px;
-            font-weight: bold;
-            letter-spacing: 12px;
-            color: #667eea;
-            font-family: 'Courier New', Consolas, monospace;
-            text-align: center;
-            user-select: all;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
-        }
-
-        .info-section {
-            background: #fff9e6;
-            border-left: 4px solid #ffd93d;
-            padding: 20px;
-            margin: 30px 0;
-            border-radius: 4px;
-        }
-
-        .info-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #d49b00;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        .info-title::before {
-            content: '⏰';
-            margin-right: 8px;
-            font-size: 20px;
-        }
-
-        .info-text {
-            color: #8b7800;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .warning-section {
-            background: #ffe8e8;
-            border-left: 4px solid #ff6b6b;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-
-        .warning-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #c92a2a;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        .warning-title::before {
-            content: '⚠️';
-            margin-right: 8px;
-            font-size: 20px;
-        }
-
-        .warning-text {
-            color: #a61e1e;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .email-footer {
-            background: #2c3e50;
-            padding: 30px;
-            text-align: center;
-            border-radius: 0 0 16px 16px;
-        }
-
-        .footer-text {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 13px;
-            line-height: 1.8;
-        }
-
-        .footer-links {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .footer-link {
-            color: #667eea;
-            text-decoration: none;
-            margin: 0 10px;
-            font-size: 12px;
-        }
-
-        .footer-link:hover {
-            text-decoration: underline;
-        }
-
-        .divider {
-            height: 1px;
-            background: linear-gradient(to right, transparent, #ddd, transparent);
-            margin: 30px 0;
-        }
-
-        @media only screen and (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-
-            .email-content {
-                padding: 30px 20px;
-            }
-
-            .verification-code {
-                font-size: 36px;
-                letter-spacing: 8px;
-            }
-
-            .logo {
-                font-size: 28px;
-            }
-        }
-    </style>
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
 </head>
-<body>
-    <div class="email-wrapper">
-        <!-- Header -->
-        <div class="email-header">
-            <div class="logo">
-                <span class="logo-emoji">📝</span>AlphaNote
-            </div>
-            <div class="header-subtitle">YOUR SMART NOTE ASSISTANT</div>
-        </div>
+<body style="margin:0; padding:0; background-color:#f4f4f4;">
+<!-- full wrapper -->
+<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse; background-color:#f4f4f4;">
+    <tr>
+        <td align="center" style="padding:20px 10px;">
+            <!-- card -->
+            <table role="presentation" width="600" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse; width:600px; background-color:#ffffff;">
+                <!-- header -->
+                <tr>
+                    <td align="center" style="padding:32px 24px; background-color:#667eea;">
+                        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                            <tr>
+                                <td align="center" style="font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:28px; line-height:34px; color:#ffffff; font-weight:bold;">
+                                    <span style="font-size:28px; margin-right:6px;">📝</span>AlphaNote
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="padding-top:8px; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:12px; line-height:18px; color:#eef2ff; letter-spacing:0.5px;">
+                                    YOUR SMART NOTE ASSISTANT
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
 
-        <!-- Content -->
-        <div class="email-content">
-            <h1 class="greeting">이메일 인증 코드</h1>
+                <!-- content -->
+                <tr>
+                    <td align="left" style="padding:32px 28px 8px 28px; background-color:#ffffff;">
+                        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                            <tr>
+                                <td align="center" style="font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:22px; line-height:30px; color:#333333; font-weight:600;">
+                                    이메일 인증 코드
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="padding-top:14px; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:15px; line-height:24px; color:#666666;">
+                                    AlphaNote 회원가입을 환영합니다!<br>
+                                    아래의 인증 코드를 입력하여 이메일 인증을 완료해주세요.
+                                </td>
+                            </tr>
 
-            <p class="message">
-                AlphaNote 회원가입을 환영합니다!<br>
-                아래의 인증 코드를 입력하여 이메일 인증을 완료해주세요.
-            </p>
+                            <!-- code box -->
+                            <tr>
+                                <td align="center" style="padding:24px 0 24px 0;">
+                                    <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse; width:100%;">
+                                        <tr>
+                                            <td align="center" style="padding:24px; border:3px dashed #667eea; background-color:#f5f7fa;">
+                                                <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                                                    <tr>
+                                                        <td align="center" style="font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:12px; line-height:18px; color:#888888; letter-spacing:0.5px;">
+                                                            Verification Code
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td align="center" style="padding-top:10px; font-family:'Courier New', Consolas, monospace; font-size:36px; line-height:44px; color:#667eea; letter-spacing:8px; background-color:#ffffff; padding:14px 18px;">
+                                                            <span th:text="${code}">123456</span>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
 
-            <div class="code-container">
-                <div class="code-label">Verification Code</div>
-                <div class="verification-code" th:text="${code}">123456</div>
-            </div>
+                            <!-- info section -->
+                            <tr>
+                                <td align="left" style="padding:12px 0;">
+                                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse; background-color:#fff9e6;">
+                                        <tr>
+                                            <td style="padding:16px 16px 8px 16px; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:15px; line-height:22px; color:#d49b00; font-weight:600;">
+                                                ⏰ 유효 시간
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:0 16px 16px 16px; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:13px; line-height:20px; color:#8b7800;">
+                                                이 인증 코드는 발송 시점으로부터 <strong style="font-weight:700;">5분간 유효</strong>합니다.<br>
+                                                시간이 초과된 경우 새로운 인증 코드를 요청해주세요.
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
 
-            <div class="info-section">
-                <div class="info-title">유효 시간</div>
-                <div class="info-text">
-                    이 인증 코드는 발송 시점으로부터 <strong>5분간 유효</strong>합니다.<br>
-                    시간이 초과된 경우 새로운 인증 코드를 요청해주세요.
-                </div>
-            </div>
+                            <!-- warning section -->
+                            <tr>
+                                <td align="left" style="padding:8px 0 4px 0;">
+                                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse; background-color:#ffe8e8;">
+                                        <tr>
+                                            <td style="padding:16px 16px 8px 16px; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:15px; line-height:22px; color:#c92a2a; font-weight:600;">
+                                                ⚠️ 보안 안내
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:0 16px 16px 16px; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:13px; line-height:20px; color:#a61e1e;">
+                                                본인이 요청하지 않은 인증 코드라면 이 이메일을 무시하세요.<br>
+                                                인증 코드는 절대 타인과 공유하지 마세요.
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
 
-            <div class="warning-section">
-                <div class="warning-title">보안 안내</div>
-                <div class="warning-text">
-                    본인이 요청하지 않은 인증 코드라면 이 이메일을 무시하세요.<br>
-                    인증 코드는 절대 타인과 공유하지 마세요.
-                </div>
-            </div>
+                            <!-- divider -->
+                            <tr>
+                                <td style="padding:20px 0;">
+                                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                                        <tr>
+                                            <td style="height:1px; background-color:#dddddd; line-height:1px; font-size:0;">&nbsp;</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
 
-            <div class="divider"></div>
+                            <!-- help text -->
+                            <tr>
+                                <td align="center" style="padding:8px 0 8px 0; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:13px; line-height:20px; color:#999999;">
+                                    문의사항이 있으시면 언제든지 연락주세요.<br>
+                                    감사합니다.
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
 
-            <p class="message" style="font-size: 14px; color: #999; margin-top: 30px;">
-                문의사항이 있으시면 언제든지 연락주세요.<br>
-                감사합니다.
-            </p>
-        </div>
+                <!-- footer -->
+                <tr>
+                    <td align="center" style="background-color:#2c3e50; padding:22px 16px;">
+                        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                            <tr>
+                                <td align="center" style="font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:12px; line-height:20px; color:#cbd5e1;">
+                                    © 2025 AlphaNote. All rights reserved.<br>
+                                    이 이메일은 AlphaNote 회원가입 과정에서 자동으로 발송되었습니다.
+                                </td>
+                            </tr>
+<!--                            <tr>-->
+<!--                                <td align="center" style="padding-top:12px;">-->
+<!--                                    <a href="#" style="font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:12px; color:#8fb0ff; text-decoration:none; margin:0 8px;">이용약관</a>-->
+<!--                                    <a href="#" style="font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:12px; color:#8fb0ff; text-decoration:none; margin:0 8px;">개인정보처리방침</a>-->
+<!--                                    <a href="#" style="font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:12px; color:#8fb0ff; text-decoration:none; margin:0 8px;">고객센터</a>-->
+<!--                                </td>-->
+<!--                            </tr>-->
+                        </table>
+                    </td>
+                </tr>
 
-        <!-- Footer -->
-        <div class="email-footer">
-            <p class="footer-text">
-                © 2025 AlphaNote. All rights reserved.<br>
-                이 이메일은 AlphaNote 회원가입 과정에서 자동으로 발송되었습니다.
-            </p>
-            <div class="footer-links">
-                <a href="#" class="footer-link">이용약관</a>
-                <a href="#" class="footer-link">개인정보처리방침</a>
-                <a href="#" class="footer-link">고객센터</a>
-            </div>
-        </div>
-    </div>
+            </table>
+            <!-- /card -->
+        </td>
+    </tr>
+</table>
+<!-- /full wrapper -->
 </body>
 </html>
