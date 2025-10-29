@@ -64,6 +64,17 @@ public class User implements UserDetails {
     @Column(name = "password_expired_at")
     private Instant passwordExpiredAt;  // 비밀번호 만료일 (null이면 만료 없음)
 
+    // 회원 탈퇴 관리 필드 (Soft Delete)
+    @Builder.Default
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;  // 탈퇴 신청 여부
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;  // 탈퇴 신청 시간
+
+    @Column(name = "deletion_scheduled_at")
+    private Instant deletionScheduledAt;  // 완전 삭제 예정일 (탈퇴 신청 + 60일)
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;  // UTC 기준 생성 시간 (Hibernate가 자동 설정)
@@ -118,6 +129,27 @@ public class User implements UserDetails {
         this.profileImageUrl = profileImageUrl;
     }
 
+    // 프로필 업데이트 메서드
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
+    public void updateProfileImage(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public void deleteProfileImage() {
+        this.profileImageUrl = null;
+    }
+
     // 계정 상태 관리 메서드
     public void lockAccount() {
         this.accountLocked = true;
@@ -134,5 +166,28 @@ public class User implements UserDetails {
     // 비밀번호 만료일을 N일 후로 설정
     public void setPasswordExpiryDays(int days) {
         this.passwordExpiredAt = Instant.now().plus(days, java.time.temporal.ChronoUnit.DAYS);
+    }
+
+    // 회원 탈퇴 관리 메서드
+    public void markForDeletion(int retentionDays) {
+        this.isDeleted = true;
+        this.deletedAt = Instant.now();
+        this.deletionScheduledAt = Instant.now().plus(retentionDays, java.time.temporal.ChronoUnit.DAYS);
+        this.accountLocked = true;  // 탈퇴 신청 후 계정 잠금
+    }
+
+    public boolean canBeRecovered() {
+        return isDeleted && deletionScheduledAt != null && Instant.now().isBefore(deletionScheduledAt);
+    }
+
+    public void recover() {
+        this.isDeleted = false;
+        this.deletedAt = null;
+        this.deletionScheduledAt = null;
+        this.accountLocked = false;
+    }
+
+    public boolean isPermanentDeletionDue() {
+        return isDeleted && deletionScheduledAt != null && Instant.now().isAfter(deletionScheduledAt);
     }
 }

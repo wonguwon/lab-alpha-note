@@ -92,17 +92,11 @@ const SignupPage = () => {
         emailSubscribed
       };
 
-      // 응답 형식: { success, message, data, errorCode }
-      const response = await authService.register(registerData);
-
-      if (response.success) {
-        alert(response.message || '회원가입이 완료되었습니다.');
-        navigate('/login');
-      } else {
-        setErrorMessage(response.message || '회원가입에 실패했습니다.');
-      }
+      await authService.register(registerData);
+      alert('회원가입이 완료되었습니다.');
+      navigate('/login');
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || '회원가입에 실패했습니다. 다시 시도해주세요.');
+      setErrorMessage(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -118,32 +112,21 @@ const SignupPage = () => {
     setErrorMessage('');
 
     try {
-      // 이메일 중복 확인
-      // 응답 형식: { success, message, data: { available }, errorCode }
-      const checkResponse = await authService.checkEmailAvailability(email.value);
+      // 이메일 중복 확인 - 반환: { available }
+      const checkData = await authService.checkEmailAvailability(email.value);
 
-      if (checkResponse.success && checkResponse.data) {
-        if (!checkResponse.data.available) {
-          setErrorMessage(checkResponse.message || '이미 가입된 이메일입니다.');
-          setIsLoading(false);
-          return;
-        }
-
-        // 중복이 아닐 경우 인증 코드 발송
-        // 응답 형식: { success, message, data, errorCode }
-        const sendResponse = await authService.sendEmailVerification(email.value);
-
-        if (sendResponse.success) {
-          setIsCodeSent(true);
-          alert(sendResponse.message || '인증 코드가 이메일로 전송되었습니다.');
-        } else {
-          setErrorMessage(sendResponse.message || '인증 코드 전송에 실패했습니다.');
-        }
-      } else {
-        setErrorMessage(checkResponse.message || '이메일 확인에 실패했습니다.');
+      if (!checkData.available) {
+        setErrorMessage('이미 가입된 이메일입니다.');
+        setIsLoading(false);
+        return;
       }
+
+      // 중복이 아닐 경우 인증 코드 발송
+      await authService.sendEmailVerification(email.value);
+      setIsCodeSent(true);
+      alert('인증 코드가 이메일로 전송되었습니다.');
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || '인증 코드 전송에 실패했습니다.');
+      setErrorMessage(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -159,18 +142,12 @@ const SignupPage = () => {
     setErrorMessage('');
 
     try {
-      // 응답 형식: { success, message, data, errorCode }
-      const response = await authService.verifyEmail(email.value, verificationCode.value);
-
-      if (response.success) {
-        setIsEmailVerified(true);
-        setVerifiedEmail(email.value);
-        alert(response.message || '이메일 인증이 완료되었습니다.');
-      } else {
-        setErrorMessage(response.message || '인증 코드가 올바르지 않습니다.');
-      }
+      await authService.verifyEmail(email.value, verificationCode.value);
+      setIsEmailVerified(true);
+      setVerifiedEmail(email.value);
+      alert('이메일 인증이 완료되었습니다.');
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || '인증 코드가 올바르지 않습니다.');
+      setErrorMessage(error.message);
     } finally {
       setIsLoading(false);
     }

@@ -30,48 +30,90 @@ api.interceptors.request.use(
 // Response 인터셉터 - 에러 처리 및 응답 형식 통일
 api.interceptors.response.use(
   (response) => {
-    // 성공 응답: { success: true, message, data, errorCode }
-    // response.data만 반환하여 컴포넌트에서 바로 사용 가능하도록 함
-    return response.data;
+    const data = response.data;
+
+    // 서버 응답 형식: { status: 'success'|'error', message, data, code }
+    // 또는 구 형식: { success: true|false, message, data, errorCode }
+
+    const isSuccess = data.status === 'success' || data.success === true;
+
+    if (!isSuccess) {
+      // 성공이 아닌 응답을 에러로 변환
+      const error = new Error(data.message || '요청 처리 실패');
+      error.response = {
+        data: {
+          message: data.message,
+          code: data.code || data.errorCode,
+          status: response.status
+        }
+      };
+      return Promise.reject(error);
+    }
+
+    // 성공 시 data만 반환 (컴포넌트에서 바로 사용)
+    return data.data;
   },
   (error) => {
     if (error.response) {
       const { status, data } = error.response;
 
-      switch (status) {
-        case 401:
-          // 로그인 페이지에서의 401은 interceptor에서 처리하지 않음 (컴포넌트에서 처리)
-          // 다른 페이지에서의 401만 로그인 페이지로 리다이렉트
-          const isLoginPage = window.location.pathname === '/login';
-          if (!isLoginPage && getAuthStore) {
-            getAuthStore().logout();
-            window.location.href = '/login';
-          }
-          break;
-        case 403:
-          console.error('접근 권한이 없습니다.');
-          break;
-        case 404:
-          console.error('요청한 리소스를 찾을 수 없습니다.');
-          break;
-        case 422:
-          console.error('입력 데이터 검증 오류:', data.message || data);
-          break;
-        case 500:
-          console.error('서버 내부 오류가 발생했습니다.');
-          break;
-        default:
-          console.error('API 오류:', data?.message || data);
+      // 401 Unauthorized - 인증 오류
+      if (status === 401) {
+        const isLoginPage = window.location.pathname === '/login';
+        const isSignupPage = window.location.pathname === '/signup';
+
+        // 로그인/회원가입 페이지가 아닌 경우에만 자동 로그아웃
+        if (!isLoginPage && !isSignupPage && getAuthStore) {
+          getAuthStore().logout();
+          window.location.href = '/login';
+        }
       }
+
+      // 에러 메시지 표준화
+      const errorMessage = data?.message || getDefaultErrorMessage(status);
+
+      // 에러 객체 표준화
+      const standardError = new Error(errorMessage);
+      standardError.response = {
+        data: {
+          message: errorMessage,
+          code: data?.code || data?.errorCode,
+          status: status
+        }
+      };
+
+      return Promise.reject(standardError);
     } else if (error.request) {
       // 네트워크 오류
-      console.error('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
+      const networkError = new Error('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
+      networkError.response = {
+        data: {
+          message: networkError.message,
+          code: 'NETWORK_ERROR'
+        }
+      };
+      return Promise.reject(networkError);
     } else {
-      console.error('요청 설정 오류:', error.message);
+      // 요청 설정 오류
+      return Promise.reject(error);
     }
-
-    return Promise.reject(error);
   }
 );
+
+// 상태 코드별 기본 에러 메시지
+const getDefaultErrorMessage = (status) => {
+  const messages = {
+    400: '잘못된 요청입니다.',
+    401: '인증이 필요합니다.',
+    403: '접근 권한이 없습니다.',
+    404: '요청한 리소스를 찾을 수 없습니다.',
+    409: '이미 존재하는 데이터입니다.',
+    422: '입력 데이터가 올바르지 않습니다.',
+    500: '서버 오류가 발생했습니다.',
+    502: '게이트웨이 오류가 발생했습니다.',
+    503: '서비스를 사용할 수 없습니다.'
+  };
+  return messages[status] || '요청 처리 중 오류가 발생했습니다.';
+};
 
 export default api;

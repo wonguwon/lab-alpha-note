@@ -28,7 +28,10 @@ export const API_ENDPOINTS = {
   },
   // 사용자 관련
   USER: {
-    PROFILE: '/user/profile',
-    UPDATE_PROFILE: '/user/profile',
+    ME: '/users/me',
+    UPDATE_PASSWORD: '/users/me/password',
+    UPDATE_EMAIL: '/users/me/email',
+    UPLOAD_PROFILE_IMAGE: '/users/me/profile-image',
+    DELETE_PROFILE_IMAGE: '/users/me/profile-image',
   },
 };

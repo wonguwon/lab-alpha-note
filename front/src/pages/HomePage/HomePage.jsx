@@ -1,6 +1,4 @@
-import React, { useEffect } from 'react';
-import useAuthStore from '../../store/authStore';
-import { authService } from '../../api/services';
+import React from 'react';
 import {
   HomeContainer,
   HeroSection,
@@ -18,27 +16,6 @@ import {
 } from './HomePage.styled';
 
 const HomePage = () => {
-  const { isAuthenticated, user, setUser, setError, setLoading } = useAuthStore();
-
-  useEffect(() => {
-    // 로그인 상태이지만 사용자 정보가 없는 경우 API 호출
-    if (isAuthenticated && !user) {
-      const fetchUserInfo = async () => {
-        setLoading(true);
-        try {
-          const userInfo = await authService.getUserInfo();
-          setUser(userInfo);
-        } catch (error) {
-          console.error('Failed to fetch user info:', error);
-          setError('사용자 정보를 불러오는데 실패했습니다.');
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchUserInfo();
-    }
-  }, [isAuthenticated, user, setUser, setError, setLoading]);
   return (
     <HomeContainer>
       {/* 히어로 섹션 */}

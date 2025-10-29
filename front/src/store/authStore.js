@@ -11,11 +11,10 @@ const useAuthStore = create(
       isLoading: false,
       error: null,
 
-      // 로그인 액션
-      login: async (token, user) => {
+      // 로그인 액션 (토큰만 저장)
+      login: (token) => {
         set({
           token,
-          user,
           isAuthenticated: true,
           error: null
         });

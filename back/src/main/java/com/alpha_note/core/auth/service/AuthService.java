@@ -34,15 +34,34 @@ public class AuthService {
             throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
         }
 
-        // 중복 체크
+        // 이메일 중복 체크 (삭제된 계정 포함)
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+            // 삭제된 계정인지 확인
+            User existingUser = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new CustomException(ErrorCode.DUPLICATE_EMAIL));
+
+            if (existingUser.isDeleted()) {
+                // 복구 가능 기간(60일 이내)인지 확인
+                if (existingUser.canBeRecovered()) {
+                    throw new CustomException(ErrorCode.ACCOUNT_IN_GRACE_PERIOD);
+                }
+                // 60일 경과: 완전 삭제하고 재가입 허용
+                userRepository.delete(existingUser);
+            } else {
+                // 활성 계정인 경우 중복 에러
+                throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+            }
         }
 
-        // 닉네임 중복 체크 (닉네임이 제공된 경우에만)
+        // 닉네임 중복 체크 (닉네임이 제공된 경우에만, 활성 계정만)
         if (request.getNickname() != null && !request.getNickname().trim().isEmpty()) {
-            if (userRepository.existsByNickname(request.getNickname())) {
+            if (userRepository.existsByNicknameAndIsDeletedFalse(request.getNickname())) {
                 throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
+            }
+            // 삭제된 계정의 닉네임도 체크 (복구 가능 기간 중)
+            User deletedUserWithNickname = userRepository.findByNickname(request.getNickname()).orElse(null);
+            if (deletedUserWithNickname != null && deletedUserWithNickname.isDeleted() && deletedUserWithNickname.canBeRecovered()) {
+                throw new CustomException(ErrorCode.ACCOUNT_IN_GRACE_PERIOD);
             }
         }
 

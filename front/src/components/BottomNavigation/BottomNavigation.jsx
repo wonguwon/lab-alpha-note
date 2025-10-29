@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoNotificationsOutline, IoLogOutOutline, IoPersonAddOutline, IoPersonOutline } from 'react-icons/io5';
+import { IoNotificationsOutline, IoLogOutOutline, IoPersonAddOutline, IoPersonOutline, IoPersonCircle } from 'react-icons/io5';
 import useAuthStore from '../../store/authStore';
 import {
   BottomNavContainer,
@@ -45,9 +45,6 @@ const BottomNavigation = ({ activeTab = 'qa', onTabChange }) => {
   const handleSignupClick = () => {
     navigate('/signup');
   };
-
-  // 기본 프로필 이미지
-  const defaultProfileImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFNUU3RUIiLz4KPHBhdGggZD0iTTIwIDIwQzIyLjc2MTQgMjAgMjUgMTcuNzYxNCAyNSAxNUMyNSAxMi4yMzg2IDIyLjc2MTQgMTAgMjAgMTBDMTcuMjM4NiAxMCAxNSAxMi4yMzg2IDE1IDE1QzE1IDE3Ljc2MTQgMTcuMjM4NiAyMCAyMCAyMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTMwIDMyQzMwIDI3LjU4MTcgMjUuNTIyOCAyNCAyMCAyNEMxNC40NzcyIDI0IDEwIDI3LjU4MTcgMTAgMzJIMzBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPgo=';
 
   return (
     <BottomNavContainer>
@@ -102,13 +99,22 @@ const BottomNavigation = ({ activeTab = 'qa', onTabChange }) => {
         {/* 중앙 프로필 버튼 */}
         {isAuthenticated && (
           <AddButton onClick={handleProfileClick}>
-            <ProfileImage
-              src={user?.profileImageUrl || defaultProfileImage}
-              alt="프로필"
-              onError={(e) => {
-                e.target.src = defaultProfileImage;
-              }}
-            />
+            {user?.profileImageUrl ? (
+              <ProfileImage
+                src={user.profileImageUrl}
+                alt="프로필"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
+              />
+            ) : null}
+            <IoPersonCircle style={{
+              width: '50px',
+              height: '50px',
+              display: user?.profileImageUrl ? 'none' : 'block',
+              color: '#6b7280'
+            }} />
           </AddButton>
         )}
       </NavList>

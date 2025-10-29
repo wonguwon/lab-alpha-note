@@ -26,6 +26,12 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "U002", "이미 존재하는 닉네임입니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U003", "이미 존재하는 이메일입니다."),
+    INCORRECT_PASSWORD(HttpStatus.BAD_REQUEST, "U004", "현재 비밀번호가 일치하지 않습니다."),
+    OAUTH2_USER_PASSWORD_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "U005", "소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다."),
+    INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "U006", "지원하지 않는 파일 형식입니다."),
+    FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "U007", "파일 크기가 제한을 초과했습니다."),
+    USER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "U008", "이미 탈퇴 처리된 계정입니다."),
+    ACCOUNT_IN_GRACE_PERIOD(HttpStatus.CONFLICT, "U009", "해당 계정은 복구 가능 기간(60일) 중입니다. 기간 경과 후 재가입이 가능합니다."),
 
     // 이메일 인증 관련 에러
     EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "E001", "이메일 전송에 실패했습니다."),

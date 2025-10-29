@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { IoNotificationsOutline, IoLogOutOutline } from 'react-icons/io5';
+import { IoNotificationsOutline, IoLogOutOutline, IoPersonCircle } from 'react-icons/io5';
 import useAuthStore from '../../store/authStore';
 import {
   HeaderWrapper,
@@ -35,9 +35,6 @@ const Header = () => {
     console.log('알림 클릭');
   };
 
-  // 기본 프로필 이미지 (사람 모형 아이콘)
-  const defaultProfileImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFNUU3RUIiLz4KPHBhdGggZD0iTTIwIDIwQzIyLjc2MTQgMjAgMjUgMTcuNzYxNCAyNSAxNUMyNSAxMi4yMzg2IDIyLjc2MTQgMTAgMjAgMTBDMTcuMjM4NiAxMCAxNSAxMi4yMzg2IDE1IDE1QzE1IDE3Ljc2MTQgMTcuMjM4NiAyMCAyMCAyMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTMwIDMyQzMwIDI3LjU4MTcgMjUuNTIyOCAyNCAyMCAyNEMxNC40NzcyIDI0IDEwIDI3LjU4MTcgMTAgMzJIMzBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPgo=';
-
   return (
     <HeaderWrapper>
       {/* 메인 헤더 */}
@@ -68,13 +65,22 @@ const Header = () => {
                 <IoLogOutOutline />
               </IconButton>
               <ProfileButton onClick={handleProfileClick} title="프로필">
-                <ProfileImage
-                  src={user?.profileImageUrl || defaultProfileImage}
-                  alt="프로필"
-                  onError={(e) => {
-                    e.target.src = defaultProfileImage;
-                  }}
-                />
+                {user?.profileImageUrl ? (
+                  <ProfileImage
+                    src={user.profileImageUrl}
+                    alt="프로필"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'block';
+                    }}
+                  />
+                ) : null}
+                <IoPersonCircle style={{
+                  width: '32px',
+                  height: '32px',
+                  display: user?.profileImageUrl ? 'none' : 'block',
+                  color: '#6b7280'
+                }} />
               </ProfileButton>
             </>
           ) : (

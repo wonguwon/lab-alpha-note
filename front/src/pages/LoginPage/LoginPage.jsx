@@ -34,29 +34,20 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      // API 로그인 호출
-      // 응답 형식: { success, message, data: { token, user }, errorCode }
-      const response = await authService.login({
+      // API 로그인 호출 - 반환: { token, user }
+      const data = await authService.login({
         email: email.value,
         password: password.value
       });
 
-      if (response.success && response.data) {
-        // Zustand 스토어에 로그인 정보 저장
-        await login(response.data.token, response.data.user);
+      // Zustand 스토어에 토큰 저장 (사용자 정보는 App.jsx에서 자동 로드)
+      login(data.token);
 
-        // 홈페이지로 리다이렉트
-        navigate('/');
-      } else {
-        // success가 false인 경우
-        setErrorMessage(response.message || '로그인에 실패했습니다.');
-        setError(response.message || '로그인에 실패했습니다.');
-      }
+      // 홈페이지로 리다이렉트
+      navigate('/');
     } catch (error) {
-      // 서버 에러 응답: { success: false, message, data: null, errorCode }
-      const message = error.response?.data?.message || '로그인에 실패했습니다.';
-      setErrorMessage(message);
-      setError(message);
+      setErrorMessage(error.message);
+      setError(error.message);
     } finally {
       setLoading(false);
     }

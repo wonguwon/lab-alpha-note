@@ -24,9 +24,6 @@ const OAuth2RedirectPage = () => {
         // URL에서 토큰 추출
         const token = searchParams.get('token');
         const error = searchParams.get('error');
-        
-        alert("time")
-        console.log(searchParams)
 
         // 에러가 있는 경우
         if (error) {
@@ -53,8 +50,8 @@ const OAuth2RedirectPage = () => {
           return;
         }
 
-        // 토큰만 저장 (사용자 정보는 메인 페이지에서 가져옴)
-        await login(token, null);
+        // 토큰 저장 (사용자 정보는 App.jsx에서 자동 로드)
+        login(token);
 
         setMessage('로그인 성공! 메인 페이지로 이동합니다...');
 
