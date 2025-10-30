@@ -6,13 +6,9 @@ import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 /**
  * 사용자 프로필 관리 API
@@ -65,16 +61,16 @@ public class UserController {
     }
 
     /**
-     * 프로필 이미지 업로드
-     * POST /api/v1/users/me/profile-image
+     * 프로필 이미지 URL 업데이트 (S3 업로드 후 호출)
+     * PATCH /api/v1/users/me/profile-image
      */
-    @PostMapping(value = "/me/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<UserResponse>> uploadProfileImage(
+    @PatchMapping("/me/profile-image")
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfileImage(
             @AuthenticationPrincipal User user,
-            @RequestParam("file") MultipartFile file) throws IOException {
+            @Valid @RequestBody UpdateProfileImageRequest request) {
 
-        UserResponse response = userService.updateProfileImage(user.getId(), file);
-        return ResponseEntity.ok(ApiResponse.success("프로필 이미지가 성공적으로 업로드되었습니다.", response));
+        UserResponse response = userService.updateProfileImageUrl(user.getId(), request.getProfileImageUrl());
+        return ResponseEntity.ok(ApiResponse.success("프로필 이미지가 성공적으로 업데이트되었습니다.", response));
     }
 
     /**

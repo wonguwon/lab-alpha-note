@@ -40,6 +40,35 @@ export const authService = {
   },
 };
 
+// 스토리지 관련 API 서비스
+export const storageService = {
+  // Presigned URL 발급 - 반환: { uploadUrl, fileUrl, key, expiresIn }
+  getPresignedUrl: async (fileName, contentType, filePath) => {
+    return await api.post(API_ENDPOINTS.STORAGE.PRESIGNED_URL, {
+      fileName,
+      contentType,
+      filePath
+    });
+  },
+
+  // S3에 파일 직접 업로드
+  uploadToS3: async (presignedUrl, file, contentType) => {
+    const response = await fetch(presignedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': contentType,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('S3 업로드 실패');
+    }
+
+    return response;
+  },
+};
+
 // 사용자 관련 API 서비스
 // axios interceptor가 자동으로 data만 반환
 export const userService = {
@@ -63,15 +92,21 @@ export const userService = {
     });
   },
 
-  // 프로필 이미지 업로드 - 반환: User 객체
-  uploadProfileImage: async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
+  // 프로필 이미지 업로드 (S3 Presigned URL 사용) - 반환: User 객체
+  uploadProfileImage: async (file, userId) => {
+    // 1. Presigned URL 발급
+    const { uploadUrl, fileUrl } = await storageService.getPresignedUrl(
+      file.name,
+      file.type,
+      `public/profiles/user-${userId}`
+    );
 
-    return await api.post(API_ENDPOINTS.USER.UPLOAD_PROFILE_IMAGE, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    // 2. S3에 파일 직접 업로드
+    await storageService.uploadToS3(uploadUrl, file, file.type);
+
+    // 3. 백엔드에 프로필 이미지 URL 업데이트
+    return await api.patch(API_ENDPOINTS.USER.UPDATE_PROFILE_IMAGE, {
+      profileImageUrl: fileUrl
     });
   },
 

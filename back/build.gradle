@@ -35,6 +35,10 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+	// AWS SDK for S3
+	implementation 'software.amazon.awssdk:s3:2.29.31'
+	implementation 'software.amazon.awssdk:auth:2.29.31'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'

@@ -12,14 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -32,10 +24,8 @@ public class UserService {
     @Value("${app.user.deletion.retention-days:60}")
     private int retentionDays;
 
-    // 프로필 이미지 저장 경로 (추후 설정 파일로 이동 가능)
-    private static final String UPLOAD_DIR = "uploads/profile-images/";
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    private static final String[] ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif"};
+    @Value("${cloud.aws.s3.cdnBaseUrl}")
+    private String cdnBaseUrl;
 
     /**
      * 일반 프로필 정보 업데이트 (닉네임 등)
@@ -115,29 +105,22 @@ public class UserService {
     }
 
     /**
-     * 프로필 이미지 업로드
+     * 프로필 이미지 URL 업데이트 (S3 업로드 후 호출)
      */
     @Transactional
-    public UserResponse updateProfileImage(Long userId, MultipartFile file) throws IOException {
+    public UserResponse updateProfileImageUrl(Long userId, String profileImageUrl) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        // 파일 검증
-        validateImageFile(file);
-
-        // 기존 이미지 삭제 (로컬 파일인 경우)
-        if (user.getProfileImageUrl() != null && user.getProfileImageUrl().startsWith("/uploads/")) {
-            deleteImageFile(user.getProfileImageUrl());
+        // CDN URL 검증 (보안)
+        if (!isValidImageUrl(profileImageUrl)) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        // 파일 저장
-        String savedFileName = saveImageFile(file);
-        String imageUrl = "/uploads/profile-images/" + savedFileName;
-
-        user.updateProfileImage(imageUrl);
+        user.updateProfileImage(profileImageUrl);
         User updatedUser = userRepository.save(user);
 
-        log.info("Profile image updated for user: {}", user.getEmail());
+        log.info("Profile image URL updated for user: {}", user.getEmail());
         return UserResponse.from(updatedUser);
     }
 
@@ -149,11 +132,6 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        // 로컬 파일 삭제
-        if (user.getProfileImageUrl() != null && user.getProfileImageUrl().startsWith("/uploads/")) {
-            deleteImageFile(user.getProfileImageUrl());
-        }
-
         user.deleteProfileImage();
         User updatedUser = userRepository.save(user);
 
@@ -162,71 +140,22 @@ public class UserService {
     }
 
     /**
-     * 이미지 파일 검증
+     * 프로필 이미지 URL 검증 (CDN URL 또는 OAuth2 프로필 URL)
      */
-    private void validateImageFile(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+    private boolean isValidImageUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            return false;
         }
 
-        // 파일 크기 검증
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new CustomException(ErrorCode.FILE_SIZE_EXCEEDED);
+        // HTTPS로 시작해야 함
+        if (!imageUrl.startsWith("https://")) {
+            return false;
         }
 
-        // 파일 확장자 검증
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null) {
-            throw new CustomException(ErrorCode.INVALID_FILE_TYPE);
-        }
-
-        String extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
-        boolean isValidExtension = false;
-        for (String allowedExt : ALLOWED_EXTENSIONS) {
-            if (extension.equals(allowedExt)) {
-                isValidExtension = true;
-                break;
-            }
-        }
-
-        if (!isValidExtension) {
-            throw new CustomException(ErrorCode.INVALID_FILE_TYPE);
-        }
-    }
-
-    /**
-     * 이미지 파일 저장
-     */
-    private String saveImageFile(MultipartFile file) throws IOException {
-        // 업로드 디렉토리 생성
-        Path uploadPath = Paths.get(UPLOAD_DIR);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
-        // 고유한 파일명 생성
-        String originalFilename = file.getOriginalFilename();
-        String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        String savedFileName = UUID.randomUUID().toString() + extension;
-
-        // 파일 저장
-        Path filePath = uploadPath.resolve(savedFileName);
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        return savedFileName;
-    }
-
-    /**
-     * 이미지 파일 삭제
-     */
-    private void deleteImageFile(String imageUrl) {
-        try {
-            String fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-            Path filePath = Paths.get(UPLOAD_DIR + fileName);
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            log.warn("Failed to delete image file: {}", imageUrl, e);
-        }
+        // CDN URL이거나 OAuth2 제공자 URL인 경우 허용
+        return imageUrl.startsWith(cdnBaseUrl) ||
+               imageUrl.contains("googleusercontent.com") ||  // Google OAuth2
+               imageUrl.contains("graph.facebook.com");        // Facebook OAuth2 (향후 지원 시)
     }
 
     /**

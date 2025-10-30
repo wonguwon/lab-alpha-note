@@ -31,7 +31,11 @@ export const API_ENDPOINTS = {
     ME: '/users/me',
     UPDATE_PASSWORD: '/users/me/password',
     UPDATE_EMAIL: '/users/me/email',
-    UPLOAD_PROFILE_IMAGE: '/users/me/profile-image',
+    UPDATE_PROFILE_IMAGE: '/users/me/profile-image',
     DELETE_PROFILE_IMAGE: '/users/me/profile-image',
+  },
+  // 스토리지 관련
+  STORAGE: {
+    PRESIGNED_URL: '/storage/presigned-url',
   },
 };

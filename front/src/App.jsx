@@ -24,7 +24,8 @@ function App() {
       if (token) {
         try {
           const data = await authService.getUserInfo();
-          setUser(data.user);
+          console.log(data)
+          setUser(data);
         } catch (error) {
           console.error('사용자 정보 로드 실패:', error);
           // 토큰이 만료되었거나 유효하지 않으면 로그아웃

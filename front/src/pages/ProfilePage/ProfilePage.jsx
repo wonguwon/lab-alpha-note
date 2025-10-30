@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoPersonCircle, IoCloseCircle } from 'react-icons/io5';
 import useAuthStore from '../../store/authStore';
-import { userService } from '../../api/services';
+import { userService, storageService } from '../../api/services';
+import { getImageUrl } from '../../utils/imageHelper';
 import {
   ProfileContainer,
   ProfileCard,
@@ -53,7 +54,6 @@ const ProfilePage = () => {
 
   // 프로필 정보 로드
   useEffect(() => {
-    console.log(user)
     if (!user) {
       navigate('/login');
       return;
@@ -63,9 +63,9 @@ const ProfilePage = () => {
     setEmail(user.email || '');
     setNickname(user.nickname || '');
 
-    // 프로필 이미지가 있으면 설정
+    // 프로필 이미지가 있으면 설정 (URL 헬퍼 함수 사용)
     if (user.profileImageUrl) {
-      setProfileImagePreview(user.profileImageUrl);
+      setProfileImagePreview(getImageUrl(user.profileImageUrl));
     }
   }, [user, navigate]);
 
@@ -116,12 +116,13 @@ const ProfilePage = () => {
     setErrorMessage('');
 
     try {
-      const updatedUser = await userService.uploadProfileImage(file);
+      // userId가 필요하므로 user 객체에서 가져옴
+      const updatedUser = await userService.uploadProfileImage(file, user.id);
       setUser(updatedUser);
-      setProfileImagePreview(updatedUser.profileImageUrl);
+      setProfileImagePreview(getImageUrl(updatedUser.profileImageUrl));
       alert('프로필 이미지가 업로드되었습니다.');
     } catch (error) {
-      setErrorMessage(error.message);
+      setErrorMessage(error.message || '프로필 이미지 업로드에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
