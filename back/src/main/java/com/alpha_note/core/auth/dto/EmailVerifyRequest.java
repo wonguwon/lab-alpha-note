@@ -7,11 +7,11 @@ import lombok.Data;
 
 @Data
 public class EmailVerifyRequest {
-    @NotBlank(message = "Email is required")
-    @Email(message = "Please provide a valid email")
+    @NotBlank(message = "이메일을 입력해주세요.")
+    @Email(message = "올바른 이메일 형식이 아닙니다.")
     private String email;
 
-    @NotBlank(message = "Verification code is required")
-    @Pattern(regexp = "^\\d{6}$", message = "Code must be 6 digits")
+    @NotBlank(message = "인증 코드를 입력해주세요.")
+    @Pattern(regexp = "^\\d{6}$", message = "인증 코드는 6자리 숫자여야 합니다.")
     private String code;
 }

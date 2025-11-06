@@ -24,7 +24,6 @@ function App() {
       if (token) {
         try {
           const data = await authService.getUserInfo();
-          console.log(data)
           setUser(data);
         } catch (error) {
           console.error('사용자 정보 로드 실패:', error);

@@ -75,6 +75,9 @@ public class User implements UserDetails {
     @Column(name = "deletion_scheduled_at")
     private Instant deletionScheduledAt;  // 완전 삭제 예정일 (탈퇴 신청 + 60일)
 
+    @Column(name = "deletion_reason", length = 500)
+    private String deletionReason;  // 탈퇴 사유
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;  // UTC 기준 생성 시간 (Hibernate가 자동 설정)
@@ -138,10 +141,6 @@ public class User implements UserDetails {
         this.password = encodedPassword;
     }
 
-    public void updateEmail(String email) {
-        this.email = email;
-    }
-
     public void updateProfileImage(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
     }
@@ -169,10 +168,11 @@ public class User implements UserDetails {
     }
 
     // 회원 탈퇴 관리 메서드
-    public void markForDeletion(int retentionDays) {
+    public void markForDeletion(int retentionDays, String reason) {
         this.isDeleted = true;
         this.deletedAt = Instant.now();
         this.deletionScheduledAt = Instant.now().plus(retentionDays, java.time.temporal.ChronoUnit.DAYS);
+        this.deletionReason = reason;
         this.accountLocked = true;  // 탈퇴 신청 후 계정 잠금
     }
 
@@ -184,6 +184,7 @@ public class User implements UserDetails {
         this.isDeleted = false;
         this.deletedAt = null;
         this.deletionScheduledAt = null;
+        this.deletionReason = null;
         this.accountLocked = false;
     }
 

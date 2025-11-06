@@ -271,11 +271,13 @@ export const SaveButton = styled.button`
 
 /* 위험 구역 */
 export const DangerSection = styled.div`
-  margin-top: ${props => props.theme.spacing[8]};
-  padding-top: ${props => props.theme.spacing[6]};
-  border-top: 1px solid ${props => props.theme.colors.gray[200]};
-  ${flexColumn}
-  gap: ${props => props.theme.spacing[2]};
+  margin-top: ${props => props.theme.spacing[3]};
+
+  &:first-of-type {
+    margin-top: ${props => props.theme.spacing[6]};
+    padding-top: ${props => props.theme.spacing[6]};
+    border-top: 1px solid ${props => props.theme.colors.gray[200]};
+  }
 `;
 
 /* 위험 버튼 */

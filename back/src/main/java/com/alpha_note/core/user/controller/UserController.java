@@ -47,20 +47,6 @@ public class UserController {
     }
 
     /**
-     * 이메일 변경
-     * PATCH /api/v1/users/me/email
-     * TODO: 이메일 인증 프로세스 추가 필요
-     */
-    @PatchMapping("/me/email")
-    public ResponseEntity<ApiResponse<UserResponse>> updateEmail(
-            @AuthenticationPrincipal User user,
-            @Valid @RequestBody UpdateEmailRequest request) {
-
-        UserResponse response = userService.updateEmail(user.getId(), request);
-        return ResponseEntity.ok(ApiResponse.success("이메일이 성공적으로 변경되었습니다.", response));
-    }
-
-    /**
      * 프로필 이미지 URL 업데이트 (S3 업로드 후 호출)
      * PATCH /api/v1/users/me/profile-image
      */
@@ -99,17 +85,5 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(
                 "회원 탈퇴가 완료되었습니다. 계정 정보는 60일간 보관되며, 60일 경과 후 완전히 삭제됩니다.",
                 null));
-    }
-
-    /**
-     * 계정 복구 (60일 이내)
-     * POST /api/v1/users/me/recover
-     */
-    @PostMapping("/me/recover")
-    public ResponseEntity<ApiResponse<UserResponse>> recoverAccount(
-            @AuthenticationPrincipal User user) {
-
-        UserResponse response = userService.recoverAccount(user.getId());
-        return ResponseEntity.ok(ApiResponse.success("계정이 성공적으로 복구되었습니다.", response));
     }
 }

@@ -4,6 +4,9 @@ import { IoPersonCircle, IoCloseCircle } from 'react-icons/io5';
 import useAuthStore from '../../store/authStore';
 import { userService, storageService } from '../../api/services';
 import { getImageUrl } from '../../utils/imageHelper';
+import { validatePassword, PASSWORD_RULES } from '../../utils/passwordValidator';
+import { Alert, Confirm } from '../../components/common/Modal';
+import { useAlert, useConfirm } from '../../hooks/useModal';
 import {
   ProfileContainer,
   ProfileCard,
@@ -43,14 +46,33 @@ const ProfilePage = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef(null);
 
+  // Alert & Confirm hooks
+  const { isOpen: isAlertOpen, showAlert, alertProps } = useAlert();
+  const { isOpen: isConfirmOpen, showConfirm, confirmProps } = useConfirm();
+
   // 비밀번호 변경 모달 상태
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [newPasswordValidation, setNewPasswordValidation] = useState(null);
 
-  console.log(profileImagePreview)
+  // 새 비밀번호 실시간 검증
+  useEffect(() => {
+    if (newPassword) {
+      const validation = validatePassword(newPassword, user?.email);
+      setNewPasswordValidation(validation);
+    } else {
+      setNewPasswordValidation(null);
+    }
+  }, [newPassword, user?.email]);
+
+  // 회원탈퇴 모달 상태
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   // 프로필 정보 로드
   useEffect(() => {
@@ -63,7 +85,7 @@ const ProfilePage = () => {
     setEmail(user.email || '');
     setNickname(user.nickname || '');
 
-    // 프로필 이미지가 있으면 설정 (URL 헬퍼 함수 사용)
+    // 프로필 이미지가 있으면 설정
     if (user.profileImageUrl) {
       setProfileImagePreview(getImageUrl(user.profileImageUrl));
     }
@@ -78,7 +100,13 @@ const ProfilePage = () => {
   const handleDeleteProfileImage = async () => {
     if (!profileImagePreview) return;
 
-    if (!confirm('프로필 이미지를 삭제하시겠습니까?')) return;
+    const confirmed = await showConfirm('프로필 이미지를 삭제하시겠습니까?', {
+      title: '이미지 삭제',
+      confirmText: '삭제',
+      variant: 'danger'
+    });
+
+    if (!confirmed) return;
 
     setIsLoading(true);
     setErrorMessage('');
@@ -87,7 +115,7 @@ const ProfilePage = () => {
       const updatedUser = await userService.deleteProfileImage();
       setUser(updatedUser);
       setProfileImagePreview(null);
-      alert('프로필 이미지가 삭제되었습니다.');
+      showAlert('프로필 이미지가 삭제되었습니다.', { variant: 'success' });
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -120,7 +148,7 @@ const ProfilePage = () => {
       const updatedUser = await userService.uploadProfileImage(file, user.id);
       setUser(updatedUser);
       setProfileImagePreview(getImageUrl(updatedUser.profileImageUrl));
-      alert('프로필 이미지가 업로드되었습니다.');
+      showAlert('프로필 이미지가 업로드되었습니다.', { variant: 'success' });
     } catch (error) {
       setErrorMessage(error.message || '프로필 이미지 업로드에 실패했습니다.');
     } finally {
@@ -148,7 +176,7 @@ const ProfilePage = () => {
     try {
       const updatedUser = await userService.updateProfile({ nickname });
       setUser(updatedUser);
-      alert('프로필이 업데이트되었습니다.');
+      showAlert('프로필이 업데이트되었습니다.', { variant: 'success' });
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -165,13 +193,15 @@ const ProfilePage = () => {
       return;
     }
 
-    if (newPassword !== confirmNewPassword) {
-      setPasswordError('새 비밀번호가 일치하지 않습니다.');
+    // 새 비밀번호 검증
+    const passwordCheck = validatePassword(newPassword, user?.email);
+    if (!passwordCheck.isValid) {
+      setPasswordError('새 비밀번호가 보안 요구사항을 충족하지 않습니다.');
       return;
     }
 
-    if (newPassword.length < 6) {
-      setPasswordError('비밀번호는 최소 6자 이상이어야 합니다.');
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError('새 비밀번호가 일치하지 않습니다.');
       return;
     }
 
@@ -179,13 +209,41 @@ const ProfilePage = () => {
 
     try {
       await userService.updatePassword(currentPassword, newPassword);
-      alert('비밀번호가 변경되었습니다.');
       setShowPasswordModal(false);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
+      showAlert('비밀번호가 변경되었습니다.', { variant: 'success' });
     } catch (error) {
       setPasswordError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 회원탈퇴
+  const handleDeleteAccount = async () => {
+    setDeleteError('');
+
+    // LOCAL 사용자인 경우 비밀번호 확인
+    if (user?.provider === 'LOCAL') {
+      if (!deletePassword) {
+        setDeleteError('비밀번호를 입력해주세요.');
+        return;
+      }
+    }
+
+    setIsLoading(true);
+
+    try {
+      // 회원탈퇴 API 호출
+      await userService.deleteAccount(deletePassword, deleteReason);
+      // 로그아웃 및 로그인 페이지로 이동
+      useAuthStore.getState().logout();
+      navigate('/login');
+      showAlert('회원탈퇴가 완료되었습니다.');
+    } catch (error) {
+      setDeleteError(error.message || '회원탈퇴에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -306,17 +364,29 @@ const ProfilePage = () => {
           </ButtonGroup>
         </ProfileForm>
 
-        {/* 비밀번호 변경 */}
+        {/* 비밀번호 변경 (LOCAL 사용자만) */}
+        {user?.provider === 'LOCAL' && (
+          <DangerSection>
+            <DangerButton type="button" onClick={() => setShowPasswordModal(true)}>
+              비밀번호 변경
+            </DangerButton>
+          </DangerSection>
+        )}
+
+        {/* 회원탈퇴 */}
         <DangerSection>
-          <DangerButton type="button" onClick={() => setShowPasswordModal(true)}>
-            비밀번호 변경
+          <DangerButton type="button" onClick={() => setShowDeleteModal(true)} style={{ backgroundColor: '#c0392b', color: 'white', borderColor: '#c0392b' }}>
+            회원탈퇴
           </DangerButton>
         </DangerSection>
       </ProfileCard>
 
       {/* 비밀번호 변경 모달 */}
       {showPasswordModal && (
-        <ModalOverlay onClick={() => setShowPasswordModal(false)}>
+        <ModalOverlay onClick={() => {
+          setShowPasswordModal(false);
+          setPasswordError('');
+        }}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>비밀번호 변경</ModalHeader>
             <ModalBody>
@@ -339,6 +409,38 @@ const ProfilePage = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                 />
+                {/* 비밀번호 검증 규칙 표시 */}
+                {newPassword && (
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '12px',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '6px',
+                    fontSize: '0.8125rem',
+                    lineHeight: '1.6'
+                  }}>
+                    <div style={{ fontWeight: '600', marginBottom: '8px', color: '#495057' }}>
+                      비밀번호 보안 요구사항
+                    </div>
+                    {PASSWORD_RULES.map((rule) => {
+                      const isValid = newPasswordValidation?.[rule.key];
+                      return (
+                        <div key={rule.key} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          marginBottom: '4px',
+                          color: isValid ? '#27ae60' : '#95a5a6'
+                        }}>
+                          <span style={{ fontSize: '0.75rem' }}>
+                            {isValid ? '✓' : '○'}
+                          </span>
+                          <span>{rule.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </PasswordInputGroup>
               <PasswordInputGroup>
                 <Label htmlFor="confirmNewPassword">새 비밀번호 확인</Label>
@@ -349,6 +451,16 @@ const ProfilePage = () => {
                   value={confirmNewPassword}
                   onChange={(e) => setConfirmNewPassword(e.target.value)}
                 />
+                {/* 비밀번호 일치 여부 표시 */}
+                {confirmNewPassword && (
+                  <div style={{
+                    marginTop: '8px',
+                    fontSize: '0.8125rem',
+                    color: newPassword === confirmNewPassword ? '#27ae60' : '#e74c3c'
+                  }}>
+                    {newPassword === confirmNewPassword ? '✓ 비밀번호가 일치합니다' : '✗ 비밀번호가 일치하지 않습니다'}
+                  </div>
+                )}
               </PasswordInputGroup>
               {passwordError && (
                 <div style={{ color: '#e74c3c', fontSize: '0.875rem', marginTop: '8px' }}>
@@ -357,7 +469,10 @@ const ProfilePage = () => {
               )}
             </ModalBody>
             <ModalFooter>
-              <ModalButton onClick={() => setShowPasswordModal(false)}>취소</ModalButton>
+              <ModalButton onClick={() => {
+                setShowPasswordModal(false);
+                setPasswordError('');
+              }}>취소</ModalButton>
               <ModalButton $primary onClick={handlePasswordChange} disabled={isLoading}>
                 {isLoading ? '변경 중...' : '변경'}
               </ModalButton>
@@ -365,6 +480,108 @@ const ProfilePage = () => {
           </ModalContent>
         </ModalOverlay>
       )}
+
+      {/* 회원탈퇴 확인 모달 */}
+      {showDeleteModal && (
+        <ModalOverlay onClick={() => setShowDeleteModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>회원탈퇴</ModalHeader>
+            <ModalBody>
+              <div style={{ marginBottom: '12px' }}>
+                <p style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.95rem' }}>
+                  회원탈퇴 시 아래 내용을 확인해주세요.
+                </p>
+                <ul style={{
+                  margin: '0',
+                  lineHeight: '1.6',
+                  fontSize: '0.875rem',
+                  color: '#4b5563'
+                }}>
+                  <li style={{ marginBottom: '6px' }}>
+                    탈퇴 시 계정 정보(이메일, 닉네임 등)는 <strong>60일간 보관</strong>되며, 이 기간 동안 계정이 잠금 상태로 유지됩니다.
+                  </li>
+                  <li style={{ marginBottom: '6px' }}>
+                    60일 경과 후 모든 개인정보는 <strong>완전히 삭제</strong>되며 복구할 수 없습니다.
+                  </li>
+                  <li>
+                    작성한 게시물은 삭제되지 않으며, 익명 처리 후 AlphaNote에 귀속됩니다.
+                  </li>
+                </ul>
+              </div>
+
+              <div style={{
+                padding: '10px 12px',
+                backgroundColor: '#fef2f2',
+                borderRadius: '6px',
+                border: '1px solid #fecaca',
+                marginBottom: '12px'
+              }}>
+                <p style={{
+                  color: '#dc2626',
+                  fontSize: '0.875rem',
+                  margin: 0,
+                  lineHeight: '1.5',
+                  fontWeight: '500'
+                }}>
+                  이 작업은 되돌릴 수 없습니다.
+                </p>
+              </div>
+
+              {/* LOCAL 사용자만 비밀번호 입력 */}
+              {user?.provider === 'LOCAL' && (
+                <PasswordInputGroup style={{ marginBottom: '12px' }}>
+                  <Label htmlFor="deletePassword">비밀번호 확인</Label>
+                  <Input
+                    id="deletePassword"
+                    type="password"
+                    placeholder="현재 비밀번호를 입력하세요"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                  />
+                </PasswordInputGroup>
+              )}
+
+              {/* 탈퇴 사유 입력 */}
+              <InputGroup>
+                <Label htmlFor="deleteReason">탈퇴 사유 (선택)</Label>
+                <Input
+                  id="deleteReason"
+                  type="text"
+                  placeholder="탈퇴 사유를 간단히 적어주세요 (선택사항)"
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  maxLength={100}
+                />
+              </InputGroup>
+
+              {deleteError && (
+                <div style={{ color: '#e74c3c', fontSize: '0.875rem', marginTop: '8px' }}>
+                  {deleteError}
+                </div>
+              )}
+            </ModalBody>
+            <ModalFooter>
+              <ModalButton onClick={() => {
+                setShowDeleteModal(false);
+                setDeletePassword('');
+                setDeleteReason('');
+                setDeleteError('');
+              }}>취소</ModalButton>
+              <ModalButton
+                onClick={handleDeleteAccount}
+                disabled={isLoading}
+                style={{ backgroundColor: '#c0392b', color: 'white' }}
+              >
+                {isLoading ? '처리 중...' : '탈퇴하기'}
+              </ModalButton>
+            </ModalFooter>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+
+      {/* Alert 및 Confirm 컴포넌트 */}
+      <Alert isOpen={isAlertOpen} {...alertProps} />
+      <Confirm isOpen={isConfirmOpen} {...confirmProps} />
 
     </ProfileContainer>
   );

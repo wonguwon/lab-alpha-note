@@ -40,8 +40,8 @@ const Header = () => {
       {/* 메인 헤더 */}
       <HeaderContainer>
         {/* 로고 영역 */}
-        <LogoSection>
-          <LogoText as={Link} to="/">AlphaNote</LogoText>
+        <LogoSection as={Link} to="/">
+          <img src="/logo.png" alt="AlphaNote" style={{ height: '56px' }} />
         </LogoSection>
 
         {/* 중앙 영역 (네비게이션) */}

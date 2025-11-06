@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useInput from '../../hooks/useInput';
 import { authService } from '../../api/services';
+import { validatePassword, PASSWORD_RULES } from '../../utils/passwordValidator';
+import { Alert } from '../../components/common/Modal';
+import { useAlert } from '../../hooks/useModal';
+import TermsModal from './TermsModal';
+import PrivacyModal from './PrivacyModal';
 import {
   SignupContainer,
   SignupCard,
   SignupHeader,
-  LogoText,
   SignupDescription,
   SignupForm,
   InputGroup,
@@ -32,6 +36,8 @@ const SignupPage = () => {
   const nickname = useInput('');
   const verificationCode = useInput('');
 
+  const { isOpen: isAlertOpen, showAlert, alertProps } = useAlert();
+
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [verifiedEmail, setVerifiedEmail] = useState('');
@@ -40,6 +46,18 @@ const SignupPage = () => {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [passwordValidation, setPasswordValidation] = useState(null);
+  const [showPasswordRules, setShowPasswordRules] = useState(false);
+
+  // 비밀번호 실시간 검증
+  useEffect(() => {
+    if (password.value) {
+      const validation = validatePassword(password.value, email.value);
+      setPasswordValidation(validation);
+    } else {
+      setPasswordValidation(null);
+    }
+  }, [password.value, email.value]);
 
   // 이메일이 변경되면 인증 상태 초기화
   const handleEmailChange = (e) => {
@@ -61,13 +79,15 @@ const SignupPage = () => {
       return;
     }
 
-    if (password.value !== confirmPassword.value) {
-      setErrorMessage('비밀번호가 일치하지 않습니다.');
+    // 비밀번호 검증
+    const passwordCheck = validatePassword(password.value, email.value);
+    if (!passwordCheck.isValid) {
+      setErrorMessage('비밀번호가 보안 요구사항을 충족하지 않습니다.');
       return;
     }
 
-    if (password.value.length < 6) {
-      setErrorMessage('비밀번호는 최소 6자 이상이어야 합니다.');
+    if (password.value !== confirmPassword.value) {
+      setErrorMessage('비밀번호가 일치하지 않습니다.');
       return;
     }
 
@@ -93,8 +113,10 @@ const SignupPage = () => {
       };
 
       await authService.register(registerData);
-      alert('회원가입이 완료되었습니다.');
-      navigate('/login');
+      showAlert('회원가입이 완료되었습니다.', {
+        variant: 'success',
+        onClose: () => navigate('/login')
+      });
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -124,7 +146,7 @@ const SignupPage = () => {
       // 중복이 아닐 경우 인증 코드 발송
       await authService.sendEmailVerification(email.value);
       setIsCodeSent(true);
-      alert('인증 코드가 이메일로 전송되었습니다.');
+      showAlert('인증 코드가 이메일로 전송되었습니다.');
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -145,7 +167,7 @@ const SignupPage = () => {
       await authService.verifyEmail(email.value, verificationCode.value);
       setIsEmailVerified(true);
       setVerifiedEmail(email.value);
-      alert('이메일 인증이 완료되었습니다.');
+      showAlert('이메일 인증이 완료되었습니다.', { variant: 'success' });
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -165,7 +187,7 @@ const SignupPage = () => {
     <SignupContainer>
       <SignupCard>
         <SignupHeader>
-          <LogoText>AlphaNote</LogoText>
+          <img src="/logo.png" alt="AlphaNote" style={{ height: '125px', marginBottom: '16px' }} />
           <SignupDescription>
             포기하지 않은 날들을 모아,<br />
             당신만의 성장을 기록하세요.
@@ -239,8 +261,41 @@ const SignupPage = () => {
               type="password"
               placeholder="비밀번호를 입력하세요"
               {...password.bind}
+              onFocus={() => setShowPasswordRules(true)}
               required
             />
+            {/* 비밀번호 검증 규칙 표시 */}
+            {showPasswordRules && password.value && (
+              <div style={{
+                marginTop: '12px',
+                padding: '12px',
+                backgroundColor: '#f8f9fa',
+                borderRadius: '6px',
+                fontSize: '0.8125rem',
+                lineHeight: '1.6'
+              }}>
+                <div style={{ fontWeight: '600', marginBottom: '8px', color: '#495057' }}>
+                  비밀번호 보안 요구사항
+                </div>
+                {PASSWORD_RULES.map((rule) => {
+                  const isValid = passwordValidation?.[rule.key];
+                  return (
+                    <div key={rule.key} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginBottom: '4px',
+                      color: isValid ? '#27ae60' : '#95a5a6'
+                    }}>
+                      <span style={{ fontSize: '0.75rem' }}>
+                        {isValid ? '✓' : '○'}
+                      </span>
+                      <span>{rule.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </InputGroup>
 
           <InputGroup>
@@ -253,6 +308,16 @@ const SignupPage = () => {
               {...confirmPassword.bind}
               required
             />
+            {/* 비밀번호 일치 여부 표시 */}
+            {confirmPassword.value && (
+              <div style={{
+                marginTop: '8px',
+                fontSize: '0.8125rem',
+                color: password.value === confirmPassword.value ? '#27ae60' : '#e74c3c'
+              }}>
+                {password.value === confirmPassword.value ? '✓ 비밀번호가 일치합니다' : '✗ 비밀번호가 일치하지 않습니다'}
+              </div>
+            )}
           </InputGroup>
 
           <InputGroup>
@@ -295,127 +360,14 @@ const SignupPage = () => {
         </LoginLink>
       </SignupCard>
 
-      {/* 임시 약관 모달 */}
-      {showTermsModal && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}
-          onClick={() => setShowTermsModal(false)}
-        >
-          <div 
-            style={{
-              backgroundColor: 'white',
-              padding: '2rem',
-              borderRadius: '8px',
-              maxWidth: '500px',
-              maxHeight: '70vh',
-              overflow: 'auto'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2>계정 및 서비스 이용약관</h2>
-            <div style={{ marginBottom: '1rem', lineHeight: 1.6, color: '#666' }}>
-              <p><strong>제1조 (목적)</strong><br />
-              이 약관은 AlphaNote(이하 "회사")가 제공하는 서비스의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
-              
-              <p><strong>제2조 (서비스의 제공)</strong><br />
-              회사는 이용자에게 성장 기록 및 관리 서비스를 제공합니다.</p>
-              
-              <p><strong>제3조 (개인정보보호)</strong><br />
-              회사는 이용자의 개인정보를 소중히 여기며 관련 법령에 따라 보호합니다.</p>
-              
-              <p><strong>제4조 (서비스 이용의 제한)</strong><br />
-              회사는 이용자가 본 약관을 위반하거나 서비스의 정상적인 운영을 방해하는 경우 서비스 이용을 제한할 수 있습니다.</p>
-            </div>
-            <button 
-              onClick={() => setShowTermsModal(false)}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#667eea',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              확인
-            </button>
-          </div>
-        </div>
-      )}
+      {/* 약관 모달 */}
+      <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
 
-      {/* 임시 개인정보 처리방침 모달 */}
-      {showPrivacyModal && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}
-          onClick={() => setShowPrivacyModal(false)}
-        >
-          <div 
-            style={{
-              backgroundColor: 'white',
-              padding: '2rem',
-              borderRadius: '8px',
-              maxWidth: '500px',
-              maxHeight: '70vh',
-              overflow: 'auto'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2>개인정보 처리방침</h2>
-            <div style={{ marginBottom: '1rem', lineHeight: 1.6, color: '#666' }}>
-              <p><strong>1. 개인정보의 수집 및 이용목적</strong><br />
-              AlphaNote는 다음의 목적을 위해 개인정보를 수집 및 이용합니다.<br />
-              - 서비스 제공 및 관리<br />
-              - 회원 식별 및 인증<br />
-              - 고객 상담 및 지원</p>
-              
-              <p><strong>2. 수집하는 개인정보 항목</strong><br />
-              - 필수항목: 이메일, 비밀번호, 닉네임<br />
-              - 선택항목: 마케팅 수신 동의</p>
-              
-              <p><strong>3. 개인정보의 보유 및 이용기간</strong><br />
-              회원 탈퇴 시까지 보유하며, 탈퇴 후 즉시 삭제합니다.</p>
-              
-              <p><strong>4. 개인정보의 제3자 제공</strong><br />
-              회사는 이용자의 개인정보를 제3자에게 제공하지 않습니다.</p>
-            </div>
-            <button 
-              onClick={() => setShowPrivacyModal(false)}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#667eea',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              확인
-            </button>
-          </div>
-        </div>
-      )}
+      {/* 개인정보 처리방침 모달 */}
+      <PrivacyModal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
+
+      {/* Alert 컴포넌트 */}
+      <Alert isOpen={isAlertOpen} {...alertProps} />
     </SignupContainer>
   );
 };

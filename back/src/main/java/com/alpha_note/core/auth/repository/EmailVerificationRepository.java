@@ -16,9 +16,9 @@ public interface EmailVerificationRepository extends JpaRepository<EmailVerifica
     Optional<EmailVerification> findTopByEmailOrderByCreatedAtDesc(String email);
 
     /**
-     * 이메일과 인증 여부로 조회
+     * 이메일과 인증 여부로 가장 최근 인증 정보 조회
      */
-    Optional<EmailVerification> findByEmailAndVerified(String email, Boolean verified);
+    Optional<EmailVerification> findTopByEmailAndVerifiedOrderByCreatedAtDesc(String email, Boolean verified);
 
     /**
      * 만료되지 않은 인증 정보 조회
@@ -29,4 +29,9 @@ public interface EmailVerificationRepository extends JpaRepository<EmailVerifica
      * 만료된 인증 데이터 삭제 (배치 작업용)
      */
     void deleteByExpiresAtBefore(Instant expiryTime);
+
+    /**
+     * 특정 이메일의 모든 인증 데이터 삭제
+     */
+    void deleteAllByEmail(String email);
 }

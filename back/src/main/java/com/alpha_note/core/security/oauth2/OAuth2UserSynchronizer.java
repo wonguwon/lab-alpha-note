@@ -5,12 +5,15 @@ import com.alpha_note.core.user.entity.Role;
 import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
 
 /**
  * OAuth2/OIDC 로그인 시 사용자 정보를 동기화하는 컴포넌트
@@ -18,11 +21,14 @@ import java.util.Optional;
  * - 신규 사용자 등록 또는 기존 사용자 업데이트
  * - CustomOAuth2UserService와 CustomOidcUserService에서 공통으로 사용
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OAuth2UserSynchronizer {
 
     private final UserRepository userRepository;
+    private final Random random = new Random();
+    private static final int MAX_NICKNAME_RETRY = 10;
 
     /**
      * OAuth2 attributes로부터 사용자 정보를 추출하여 DB에 저장/업데이트
@@ -43,8 +49,8 @@ public class OAuth2UserSynchronizer {
             throw new OAuth2AuthenticationException("OAuth2 제공자로부터 이메일 정보를 받지 못했습니다.");
         }
 
-        // 이메일로 기존 사용자 조회
-        Optional<User> userOptional = userRepository.findByEmail(userInfo.getEmail());
+        // 활성 계정만 조회 (삭제된 계정 제외)
+        Optional<User> userOptional = userRepository.findByEmailAndIsDeletedFalse(userInfo.getEmail());
         User user;
 
         if (userOptional.isPresent()) {
@@ -57,10 +63,11 @@ public class OAuth2UserSynchronizer {
                         providerName + " 로그인을 사용해주세요."
                 );
             }
-            // 기존 사용자 정보 업데이트
-            user = updateExistingUser(user, userInfo);
+            // 기존 사용자는 정보를 업데이트하지 않음 (최초 가입 시에만 설정됨)
+            // 사용자가 앱 내에서 닉네임/프로필을 변경할 수 있도록 허용
+            log.debug("Existing OAuth2 user logged in: email={}, nickname={}", user.getEmail(), user.getNickname());
         } else {
-            // 신규 사용자 등록
+            // 신규 사용자 등록 (탈퇴한 계정이 있어도 새로 생성)
             user = registerNewUser(provider, userInfo);
         }
 
@@ -71,10 +78,13 @@ public class OAuth2UserSynchronizer {
      * 신규 사용자 등록
      */
     private User registerNewUser(AuthProvider provider, OAuth2UserInfo userInfo) {
+        // 고유한 닉네임 생성
+        String uniqueNickname = generateUniqueNickname(userInfo.getName());
+
         User user = User.builder()
                 .provider(provider)
                 .providerId(userInfo.getId())
-                .nickname(userInfo.getName())
+                .nickname(uniqueNickname)
                 .email(userInfo.getEmail())
                 .profileImageUrl(userInfo.getImageUrl())
                 .emailSubscribed(false) // OAuth2 가입 시 기본값 false
@@ -82,6 +92,46 @@ public class OAuth2UserSynchronizer {
                 .build();
 
         return userRepository.save(user);
+    }
+
+    /**
+     * 고유한 닉네임 생성
+     * 1. 기본 이름으로 시도
+     * 2. 중복 시 "이름#랜덤4자리" 형식으로 생성 (최대 10회 재시도)
+     * 3. 10회 실패 시 UUID 기반 닉네임 생성
+     *
+     * @param baseName 기본 이름
+     * @return 고유한 닉네임
+     */
+    private String generateUniqueNickname(String baseName) {
+        // null이거나 빈 문자열인 경우 기본값 사용
+        if (!StringUtils.hasText(baseName)) {
+            baseName = "user";
+        }
+
+        // 1. 기본 이름으로 먼저 시도
+        if (!userRepository.existsByNicknameAndIsDeletedFalse(baseName)) {
+            log.info("Generated unique nickname: {}", baseName);
+            return baseName;
+        }
+
+        // 2. "이름#랜덤4자리" 형식으로 재시도 (최대 10회)
+        for (int i = 0; i < MAX_NICKNAME_RETRY; i++) {
+            String randomSuffix = String.format("%04d", random.nextInt(10000));
+            String candidateNickname = baseName + "#" + randomSuffix;
+
+            if (!userRepository.existsByNicknameAndIsDeletedFalse(candidateNickname)) {
+                log.info("Generated unique nickname with suffix: {}", candidateNickname);
+                return candidateNickname;
+            }
+        }
+
+        // 3. 10회 실패 시 UUID 기반으로 생성 (거의 발생하지 않음)
+        String uuidSuffix = UUID.randomUUID().toString().substring(0, 8);
+        String fallbackNickname = baseName + "_" + uuidSuffix;
+        log.warn("Failed to generate nickname after {} retries, using UUID-based: {}",
+                MAX_NICKNAME_RETRY, fallbackNickname);
+        return fallbackNickname;
     }
 
     /**

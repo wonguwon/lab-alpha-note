@@ -38,6 +38,15 @@ export const authService = {
   checkEmailAvailability: async (email) => {
     return await api.post(API_ENDPOINTS.AUTH.EMAIL_CHECK, { email });
   },
+
+  // 계정 복구 - 반환: { token, nickname, email, role }
+  recoverAccount: async (recoveryToken) => {
+    return await api.post(API_ENDPOINTS.AUTH.RECOVER, null, {
+      headers: {
+        Authorization: `Bearer ${recoveryToken}`
+      }
+    });
+  },
 };
 
 // 스토리지 관련 API 서비스
@@ -113,6 +122,25 @@ export const userService = {
   // 프로필 이미지 삭제 - 반환: User 객체
   deleteProfileImage: async () => {
     return await api.delete(API_ENDPOINTS.USER.DELETE_PROFILE_IMAGE);
+  },
+
+  // 회원탈퇴 - 반환: null
+  deleteAccount: async (password, reason) => {
+    const requestData = {};
+
+    // password가 있는 경우에만 추가 (LOCAL 사용자)
+    if (password) {
+      requestData.password = password;
+    }
+
+    // reason이 있는 경우에만 추가
+    if (reason) {
+      requestData.reason = reason;
+    }
+
+    return await api.delete(API_ENDPOINTS.USER.ME, {
+      data: requestData
+    });
   },
 };
 

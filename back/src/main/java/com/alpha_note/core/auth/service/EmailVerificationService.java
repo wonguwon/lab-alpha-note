@@ -47,6 +47,9 @@ public class EmailVerificationService {
         // 재전송 제한 체크 (60초)
         checkResendCooldown(email);
 
+        // 기존 인증 레코드 삭제 (새 인증 코드 발송 시 이전 인증 무효화)
+        verificationRepository.deleteAllByEmail(email);
+
         // 인증 코드 생성 (6자리 숫자)
         String code = generateVerificationCode();
 
@@ -119,7 +122,7 @@ public class EmailVerificationService {
     @Transactional(readOnly = true)
     public boolean isVerified(String email) {
         Optional<EmailVerification> verification =
-                verificationRepository.findByEmailAndVerified(email, true);
+                verificationRepository.findTopByEmailAndVerifiedOrderByCreatedAtDesc(email, true);
         return verification.isPresent();
     }
 
@@ -148,5 +151,17 @@ public class EmailVerificationService {
         SecureRandom random = new SecureRandom();
         int code = random.nextInt(900000) + 100000; // 100000 ~ 999999
         return String.valueOf(code);
+    }
+
+    /**
+     * 특정 이메일의 모든 인증 레코드 삭제
+     * 회원가입 완료 시 인증 데이터 정리용
+     *
+     * @param email 이메일
+     */
+    @Transactional
+    public void deleteByEmail(String email) {
+        verificationRepository.deleteAllByEmail(email);
+        log.info("Email verification records deleted for: {}", email);
     }
 }

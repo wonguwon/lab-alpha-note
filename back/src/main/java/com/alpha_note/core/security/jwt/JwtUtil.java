@@ -25,6 +25,12 @@ public class JwtUtil {
     @Value("${jwt.expiration:86400000}") // 24 hours
     private Long expiration;
 
+    @Value("${jwt.recovery-expiration:600000}") // 10 minutes
+    private Long recoveryExpiration;
+
+    private static final String TOKEN_TYPE_ACCESS = "access";
+    private static final String TOKEN_TYPE_RECOVERY = "recovery";
+
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
@@ -57,9 +63,19 @@ public class JwtUtil {
     // User 객체로 JWT 토큰 생성 (일반 로그인, OAuth2 로그인 모두 사용)
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("type", TOKEN_TYPE_ACCESS);
         claims.put("userId", user.getId());
         claims.put("email", user.getEmail());
-        return createToken(claims, user.getUsername());
+        return createToken(claims, user.getUsername(), expiration);
+    }
+
+    // 복구 전용 토큰 생성 (탈퇴 회원 복구용, 10분 유효)
+    public String generateRecoveryToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", TOKEN_TYPE_RECOVERY);
+        claims.put("userId", user.getId());
+        claims.put("email", user.getEmail());
+        return createToken(claims, user.getUsername(), recoveryExpiration);
     }
 
     // UserDetails로 JWT 토큰 생성 (하위 호환성 유지)
@@ -68,17 +84,47 @@ public class JwtUtil {
             return generateToken((User) userDetails);
         }
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
+        claims.put("type", TOKEN_TYPE_ACCESS);
+        return createToken(claims, userDetails.getUsername(), expiration);
     }
 
-    private String createToken(Map<String, Object> claims, String subject) {
+    private String createToken(Map<String, Object> claims, String subject, Long expirationTime) {
         return Jwts.builder()
                 .claims(claims)
                 .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    // 토큰 타입 추출
+    public String extractTokenType(String token) {
+        return extractClaim(token, claims -> claims.get("type", String.class));
+    }
+
+    // userId 추출
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", Long.class));
+    }
+
+    // 복구 토큰 검증
+    public boolean isRecoveryToken(String token) {
+        try {
+            String tokenType = extractTokenType(token);
+            return TOKEN_TYPE_RECOVERY.equals(tokenType);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // 복구 토큰 유효성 검증 (만료 여부만 체크)
+    public boolean validateRecoveryToken(String token) {
+        try {
+            return isRecoveryToken(token) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {

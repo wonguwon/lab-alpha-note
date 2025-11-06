@@ -43,8 +43,9 @@ api.interceptors.response.use(
       error.response = {
         data: {
           message: data.message,
-          code: data.code || data.errorCode,
-          status: response.status
+          errorCode: data.errorCode,
+          status: response.status,
+          data: data.data
         }
       };
       return Promise.reject(error);
@@ -77,8 +78,9 @@ api.interceptors.response.use(
       standardError.response = {
         data: {
           message: errorMessage,
-          code: data?.code || data?.errorCode,
-          status: status
+          errorCode: data?.errorCode,
+          status: status,
+          data: data?.data  // 원본 data 포함 (recoveryToken 등)
         }
       };
 

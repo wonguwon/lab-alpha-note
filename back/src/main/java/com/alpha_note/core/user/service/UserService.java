@@ -79,32 +79,6 @@ public class UserService {
     }
 
     /**
-     * 이메일 변경
-     * TODO: 이메일 인증 프로세스 추가 필요
-     */
-    @Transactional
-    public UserResponse updateEmail(Long userId, UpdateEmailRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        // 이메일 중복 체크
-        if (userRepository.existsByEmail(request.getNewEmail())) {
-            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
-        }
-
-        // TODO: 이메일 인증 로직 추가
-        // 1. 새 이메일로 인증 코드 전송
-        // 2. 인증 완료 후에만 이메일 업데이트
-        // 현재는 바로 업데이트 (추후 개선 필요)
-
-        user.updateEmail(request.getNewEmail());
-        User updatedUser = userRepository.save(user);
-
-        log.info("Email updated for user: {} -> {}", userId, request.getNewEmail());
-        return UserResponse.from(updatedUser);
-    }
-
-    /**
      * 프로필 이미지 URL 업데이트 (S3 업로드 후 호출)
      */
     @Transactional
@@ -154,8 +128,7 @@ public class UserService {
 
         // CDN URL이거나 OAuth2 제공자 URL인 경우 허용
         return imageUrl.startsWith(cdnBaseUrl) ||
-               imageUrl.contains("googleusercontent.com") ||  // Google OAuth2
-               imageUrl.contains("graph.facebook.com");        // Facebook OAuth2 (향후 지원 시)
+               imageUrl.contains("googleusercontent.com");  // Google OAuth2
     }
 
     /**
@@ -181,31 +154,12 @@ public class UserService {
         // OAuth2 사용자는 비밀번호 검증 생략
 
         // 소프트 삭제 처리
-        user.markForDeletion(retentionDays);
+        user.markForDeletion(retentionDays, request.getReason());
         userRepository.save(user);
 
-        log.info("User account marked for deletion: userId={}, email={}, scheduledDeletionAt={}",
-                user.getId(), user.getEmail(), user.getDeletionScheduledAt());
+        log.info("User account marked for deletion: userId={}, email={}, reason={}, scheduledDeletionAt={}",
+                user.getId(), user.getEmail(), request.getReason(), user.getDeletionScheduledAt());
 
         // TODO: 탈퇴 알림 이메일 발송 (선택사항)
-    }
-
-    /**
-     * 계정 복구 (60일 이내)
-     */
-    @Transactional
-    public UserResponse recoverAccount(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        if (!user.canBeRecovered()) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
-
-        user.recover();
-        User recoveredUser = userRepository.save(user);
-
-        log.info("User account recovered: userId={}, email={}", user.getId(), user.getEmail());
-        return UserResponse.from(recoveredUser);
     }
 }

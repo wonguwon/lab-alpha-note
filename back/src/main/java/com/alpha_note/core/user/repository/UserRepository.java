@@ -22,6 +22,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmailAndIsDeletedFalse(String email);
     boolean existsByNicknameAndIsDeletedFalse(String nickname);
 
+    // 삭제된 계정 조회 (isDeleted = true)
+    List<User> findAllByEmailAndIsDeletedTrue(String email);
+    List<User> findAllByNicknameAndIsDeletedTrue(String nickname);
+
     // 삭제 예정인 계정 조회 (스케줄러용)
     List<User> findAllByIsDeletedTrueAndDeletionScheduledAtBefore(Instant now);
 }

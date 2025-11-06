@@ -21,6 +21,8 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "유효하지 않은 토큰입니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A003", "만료된 토큰입니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A004", "잘못된 아이디/비밀번호입니다."),
+    INVALID_RECOVERY_TOKEN(HttpStatus.UNAUTHORIZED, "A005", "유효하지 않은 복구 토큰입니다."),
+    EXPIRED_RECOVERY_TOKEN(HttpStatus.UNAUTHORIZED, "A006", "만료된 복구 토큰입니다."),
     
     // 사용자 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),
@@ -32,6 +34,9 @@ public enum ErrorCode {
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "U007", "파일 크기가 제한을 초과했습니다."),
     USER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "U008", "이미 탈퇴 처리된 계정입니다."),
     ACCOUNT_IN_GRACE_PERIOD(HttpStatus.CONFLICT, "U009", "해당 계정은 복구 가능 기간(60일) 중입니다. 기간 경과 후 재가입이 가능합니다."),
+    USER_ACCOUNT_DELETED(HttpStatus.FORBIDDEN, "U010", "탈퇴한 계정입니다. 복구를 원하시면 관리자에게 문의해주세요."),
+    ACCOUNT_NOT_RECOVERABLE(HttpStatus.BAD_REQUEST, "U011", "복구할 수 없는 계정입니다. 복구 기간(60일)이 경과했거나 탈퇴하지 않은 계정입니다."),
+    PASSWORD_CONTAINS_EMAIL(HttpStatus.BAD_REQUEST, "U012", "비밀번호에 이메일 일부를 포함할 수 없습니다."),
 
     // 이메일 인증 관련 에러
     EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "E001", "이메일 전송에 실패했습니다."),
