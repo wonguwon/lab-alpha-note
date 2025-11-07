@@ -48,8 +48,26 @@ public enum ErrorCode {
 
     // 노트 관련 에러 (향후 추가)
     NOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "노트를 찾을 수 없습니다."),
-    NOTE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N002", "노트에 접근할 권한이 없습니다.");
-    
+    NOTE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N002", "노트에 접근할 권한이 없습니다."),
+
+    // QnA 관련 에러
+    QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "질문을 찾을 수 없습니다."),
+    QUESTION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "Q002", "질문에 접근할 권한이 없습니다."),
+    ANSWER_NOT_FOUND(HttpStatus.NOT_FOUND, "Q003", "답변을 찾을 수 없습니다."),
+    ANSWER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "Q004", "답변에 접근할 권한이 없습니다."),
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "Q005", "댓글을 찾을 수 없습니다."),
+    COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "Q006", "댓글에 접근할 권한이 없습니다."),
+    TAG_NOT_FOUND(HttpStatus.NOT_FOUND, "Q007", "태그를 찾을 수 없습니다."),
+    VOTE_ALREADY_EXISTS(HttpStatus.CONFLICT, "Q008", "이미 추천한 게시물입니다."),
+    VOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "Q009", "추천 기록을 찾을 수 없습니다."),
+    ANSWER_ALREADY_ACCEPTED(HttpStatus.CONFLICT, "Q010", "이미 채택된 답변이 있습니다."),
+    ONLY_QUESTION_AUTHOR_CAN_ACCEPT(HttpStatus.FORBIDDEN, "Q011", "질문 작성자만 답변을 채택할 수 있습니다."),
+    INVALID_ACCEPTED_ANSWER(HttpStatus.BAD_REQUEST, "Q012", "해당 질문의 답변이 아닙니다."),
+    TAG_ALREADY_EXISTS(HttpStatus.CONFLICT, "Q013", "이미 존재하는 태그입니다."),
+    MAX_TAGS_EXCEEDED(HttpStatus.BAD_REQUEST, "Q014", "태그는 최대 5개까지 추가할 수 있습니다."),
+    ATTACHMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "Q015", "첨부파일을 찾을 수 없습니다."),
+    INVALID_IMAGE_TYPE(HttpStatus.BAD_REQUEST, "Q016", "지원하지 않는 이미지 형식입니다. (PNG, JPEG, WEBP만 가능)");
+
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;

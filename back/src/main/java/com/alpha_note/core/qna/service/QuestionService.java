@@ -1,0 +1,389 @@
+package com.alpha_note.core.qna.service;
+
+import com.alpha_note.core.common.exception.CustomException;
+import com.alpha_note.core.common.exception.ErrorCode;
+import com.alpha_note.core.qna.dto.request.CreateQuestionRequest;
+import com.alpha_note.core.qna.dto.request.UpdateQuestionRequest;
+import com.alpha_note.core.qna.dto.response.*;
+import com.alpha_note.core.qna.entity.*;
+import com.alpha_note.core.qna.repository.*;
+import com.alpha_note.core.user.entity.User;
+import com.alpha_note.core.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class QuestionService {
+
+    private final QuestionRepository questionRepository;
+    private final QuestionTagRepository questionTagRepository;
+    private final QuestionCommentRepository questionCommentRepository;
+    private final QuestionVoteRepository questionVoteRepository;
+    private final QuestionAttachmentRepository questionAttachmentRepository;
+    private final TagRepository tagRepository;
+    private final AnswerRepository answerRepository;
+    private final UserRepository userRepository;
+
+    /**
+     * 질문 생성
+     */
+    @Transactional
+    public QuestionDetailResponse createQuestion(Long userId, CreateQuestionRequest request) {
+        // 사용자 검증
+        if (!userRepository.existsById(userId)) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 질문 생성
+        Question question = Question.builder()
+                .userId(userId)
+                .title(request.getTitle())
+                .content(request.getContent())
+                .build();
+
+        Question savedQuestion = questionRepository.save(question);
+        log.info("질문 생성 완료 - questionId: {}, userId: {}", savedQuestion.getId(), userId);
+
+        // 태그 처리
+        if (request.getTags() != null && !request.getTags().isEmpty()) {
+            if (request.getTags().size() > 5) {
+                throw new CustomException(ErrorCode.MAX_TAGS_EXCEEDED);
+            }
+            attachTagsToQuestion(savedQuestion.getId(), request.getTags());
+        }
+
+        // 첨부파일 연결 (필요 시)
+        // TODO: attachmentIds 처리
+
+        return getQuestionDetail(savedQuestion.getId(), userId);
+    }
+
+    /**
+     * 질문 상세 조회 (조회수 증가)
+     */
+    @Transactional
+    public QuestionDetailResponse getQuestionDetail(Long questionId, Long currentUserId) {
+        Question question = questionRepository.findByIdAndIsDeletedFalse(questionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.QUESTION_NOT_FOUND));
+
+        // 조회수 증가
+        question.incrementViewCount();
+        questionRepository.save(question);
+
+        return buildQuestionDetailResponse(question, currentUserId);
+    }
+
+    /**
+     * 질문 목록 조회 (페이징)
+     */
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> getQuestions(Pageable pageable, Long currentUserId) {
+        Page<Question> questions = questionRepository.findAllByIsDeletedFalse(pageable);
+        return questions.map(q -> buildQuestionResponse(q, currentUserId));
+    }
+
+    /**
+     * 질문 검색 (키워드)
+     */
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> searchQuestions(String keyword, Pageable pageable, Long currentUserId) {
+        Page<Question> questions = questionRepository.searchByKeyword(keyword, pageable);
+        return questions.map(q -> buildQuestionResponse(q, currentUserId));
+    }
+
+    /**
+     * 태그별 질문 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> getQuestionsByTag(String tagName, Pageable pageable, Long currentUserId) {
+        Page<Question> questions = questionRepository.findByTagName(tagName, pageable);
+        return questions.map(q -> buildQuestionResponse(q, currentUserId));
+    }
+
+    /**
+     * 사용자별 질문 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> getQuestionsByUser(Long userId, Pageable pageable, Long currentUserId) {
+        Page<Question> questions = questionRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
+        return questions.map(q -> buildQuestionResponse(q, currentUserId));
+    }
+
+    /**
+     * 미답변 질문 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> getUnansweredQuestions(Pageable pageable, Long currentUserId) {
+        Page<Question> questions = questionRepository.findByIsAnsweredAndIsDeletedFalse(false, pageable);
+        return questions.map(q -> buildQuestionResponse(q, currentUserId));
+    }
+
+    /**
+     * 질문 수정
+     */
+    @Transactional
+    public QuestionDetailResponse updateQuestion(Long questionId, Long userId, UpdateQuestionRequest request) {
+        Question question = questionRepository.findByIdAndIsDeletedFalse(questionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.QUESTION_NOT_FOUND));
+
+        // 작성자 확인
+        if (!question.isOwnedBy(userId)) {
+            throw new CustomException(ErrorCode.QUESTION_ACCESS_DENIED);
+        }
+
+        // 질문 업데이트
+        question.update(request.getTitle(), request.getContent());
+        questionRepository.save(question);
+
+        // 태그 업데이트
+        if (request.getTags() != null) {
+            if (request.getTags().size() > 5) {
+                throw new CustomException(ErrorCode.MAX_TAGS_EXCEEDED);
+            }
+            // 기존 태그 제거
+            questionTagRepository.deleteByQuestionId(questionId);
+            // 새 태그 추가
+            if (!request.getTags().isEmpty()) {
+                attachTagsToQuestion(questionId, request.getTags());
+            }
+        }
+
+        log.info("질문 수정 완료 - questionId: {}", questionId);
+        return getQuestionDetail(questionId, userId);
+    }
+
+    /**
+     * 질문 삭제 (Soft Delete)
+     */
+    @Transactional
+    public void deleteQuestion(Long questionId, Long userId) {
+        Question question = questionRepository.findByIdAndIsDeletedFalse(questionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.QUESTION_NOT_FOUND));
+
+        // 작성자 확인
+        if (!question.isOwnedBy(userId)) {
+            throw new CustomException(ErrorCode.QUESTION_ACCESS_DENIED);
+        }
+
+        // Soft Delete
+        question.markAsDeleted();
+        questionRepository.save(question);
+
+        // 연관 엔티티도 Soft Delete (Service에서 처리)
+        softDeleteRelatedEntities(questionId);
+
+        log.info("질문 삭제 완료 - questionId: {}", questionId);
+    }
+
+    /**
+     * 답변 채택
+     */
+    @Transactional
+    public void acceptAnswer(Long questionId, Long answerId, Long userId) {
+        Question question = questionRepository.findByIdAndIsDeletedFalse(questionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.QUESTION_NOT_FOUND));
+
+        // 질문 작성자만 채택 가능
+        if (!question.isOwnedBy(userId)) {
+            throw new CustomException(ErrorCode.ONLY_QUESTION_AUTHOR_CAN_ACCEPT);
+        }
+
+        // 답변 검증
+        Answer answer = answerRepository.findByIdAndIsDeletedFalse(answerId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ANSWER_NOT_FOUND));
+
+        // 해당 질문의 답변인지 확인
+        if (!answer.getQuestionId().equals(questionId)) {
+            throw new CustomException(ErrorCode.INVALID_ACCEPTED_ANSWER);
+        }
+
+        // 기존 채택 답변 취소
+        if (question.hasAcceptedAnswer()) {
+            Answer previousAccepted = answerRepository.findById(question.getAcceptedAnswerId())
+                    .orElse(null);
+            if (previousAccepted != null) {
+                previousAccepted.unmarkAsAccepted();
+                answerRepository.save(previousAccepted);
+            }
+        }
+
+        // 새 답변 채택
+        question.acceptAnswer(answerId);
+        answer.markAsAccepted();
+
+        questionRepository.save(question);
+        answerRepository.save(answer);
+
+        log.info("답변 채택 완료 - questionId: {}, answerId: {}", questionId, answerId);
+    }
+
+    // ========== Private Helper 메소드 ==========
+
+    /**
+     * 태그 연결
+     */
+    private void attachTagsToQuestion(Long questionId, List<String> tagNames) {
+        for (String tagName : tagNames) {
+            tagName = tagName.trim().toLowerCase();
+            if (tagName.isEmpty()) continue;
+
+            // 태그 조회 또는 생성
+            Tag tag = tagRepository.findByNameAndIsDeletedFalse(tagName)
+                    .orElseGet(() -> {
+                        Tag newTag = Tag.builder()
+                                .name(tagName)
+                                .build();
+                        return tagRepository.save(newTag);
+                    });
+
+            // 중복 체크
+            if (!questionTagRepository.existsByQuestionIdAndTagId(questionId, tag.getId())) {
+                QuestionTag questionTag = QuestionTag.builder()
+                        .questionId(questionId)
+                        .tagId(tag.getId())
+                        .build();
+                questionTagRepository.save(questionTag);
+
+                // 태그 사용 횟수 증가
+                tag.incrementUseCount();
+                tagRepository.save(tag);
+            }
+        }
+    }
+
+    /**
+     * 연관 엔티티 Soft Delete
+     */
+    private void softDeleteRelatedEntities(Long questionId) {
+        // 답변들 Soft Delete
+        List<Answer> answers = answerRepository.findByQuestionIdAndIsDeletedFalse(questionId);
+        answers.forEach(answer -> {
+            answer.markAsDeleted();
+            answerRepository.save(answer);
+        });
+
+        // 댓글들 Soft Delete
+        List<QuestionComment> comments = questionCommentRepository.findByQuestionId(questionId);
+        comments.forEach(comment -> {
+            comment.markAsDeleted();
+            questionCommentRepository.save(comment);
+        });
+
+        // 첨부파일들 Soft Delete
+        List<QuestionAttachment> attachments = questionAttachmentRepository.findByQuestionId(questionId);
+        attachments.forEach(attachment -> {
+            attachment.markAsDeleted();
+            questionAttachmentRepository.save(attachment);
+        });
+    }
+
+    /**
+     * QuestionResponse 빌드 (목록용)
+     */
+    private QuestionResponse buildQuestionResponse(Question question, Long currentUserId) {
+        QuestionResponse response = QuestionResponse.from(question);
+
+        // 작성자 닉네임
+        userRepository.findById(question.getUserId()).ifPresent(user -> {
+            response.setUserNickname(user.getNickname());
+        });
+
+        // 태그 목록
+        List<QuestionTag> questionTags = questionTagRepository.findByQuestionId(question.getId());
+        List<TagResponse> tags = questionTags.stream()
+                .map(qt -> tagRepository.findByIdAndIsDeletedFalse(qt.getTagId()))
+                .filter(opt -> opt.isPresent())
+                .map(opt -> TagResponse.from(opt.get()))
+                .collect(Collectors.toList());
+        response.setTags(tags);
+
+        return response;
+    }
+
+    /**
+     * QuestionDetailResponse 빌드 (상세용)
+     */
+    private QuestionDetailResponse buildQuestionDetailResponse(Question question, Long currentUserId) {
+        QuestionDetailResponse response = QuestionDetailResponse.from(question);
+
+        // 작성자 닉네임
+        userRepository.findById(question.getUserId()).ifPresent(user -> {
+            response.setUserNickname(user.getNickname());
+        });
+
+        // 추천 여부 (현재 사용자)
+        if (currentUserId != null) {
+            boolean isVoted = questionVoteRepository.existsByQuestionIdAndUserId(question.getId(), currentUserId);
+            response.setIsVotedByCurrentUser(isVoted);
+        }
+
+        // 태그 목록
+        List<QuestionTag> questionTags = questionTagRepository.findByQuestionId(question.getId());
+        List<TagResponse> tags = questionTags.stream()
+                .map(qt -> tagRepository.findByIdAndIsDeletedFalse(qt.getTagId()))
+                .filter(opt -> opt.isPresent())
+                .map(opt -> TagResponse.from(opt.get()))
+                .collect(Collectors.toList());
+        response.setTags(tags);
+
+        // 댓글 목록
+        List<QuestionComment> comments = questionCommentRepository.findByQuestionIdAndIsDeletedFalseOrderByCreatedAtAsc(question.getId());
+        List<CommentResponse> commentResponses = comments.stream()
+                .map(comment -> {
+                    CommentResponse commentResponse = CommentResponse.from(comment);
+                    userRepository.findById(comment.getUserId()).ifPresent(user -> {
+                        commentResponse.setUserNickname(user.getNickname());
+                    });
+                    return commentResponse;
+                })
+                .collect(Collectors.toList());
+        response.setComments(commentResponses);
+
+        // 첨부파일 목록
+        List<QuestionAttachment> attachments = questionAttachmentRepository.findByQuestionIdAndIsDeletedFalse(question.getId());
+        List<AttachmentResponse> attachmentResponses = attachments.stream()
+                .map(AttachmentResponse::from)
+                .collect(Collectors.toList());
+        response.setAttachments(attachmentResponses);
+
+        // 답변 목록 (채택 답변 우선 정렬)
+        List<Answer> answers = answerRepository.findByQuestionIdOrderByAcceptedAndVotes(question.getId());
+        List<AnswerResponse> answerResponses = answers.stream()
+                .map(answer -> buildAnswerResponse(answer, currentUserId))
+                .collect(Collectors.toList());
+        response.setAnswers(answerResponses);
+
+        return response;
+    }
+
+    /**
+     * AnswerResponse 빌드
+     */
+    private AnswerResponse buildAnswerResponse(Answer answer, Long currentUserId) {
+        AnswerResponse response = AnswerResponse.from(answer);
+
+        // 작성자 닉네임
+        userRepository.findById(answer.getUserId()).ifPresent(user -> {
+            response.setUserNickname(user.getNickname());
+        });
+
+        // 추천 여부
+        if (currentUserId != null) {
+            boolean isVoted = questionVoteRepository.existsByQuestionIdAndUserId(answer.getId(), currentUserId);
+            response.setIsVotedByCurrentUser(isVoted);
+        }
+
+        return response;
+    }
+}
