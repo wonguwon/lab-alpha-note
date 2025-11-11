@@ -21,6 +21,7 @@ public class QuestionResponse {
     private Long id;
     private Long userId;
     private String userNickname; // Service에서 추가
+    private String profileImageUrl; // Service에서 추가
     private String title;
     private String contentPreview; // 앞부분만 (최대 200자)
     private Integer viewCount;

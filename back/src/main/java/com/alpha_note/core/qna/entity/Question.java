@@ -12,7 +12,8 @@ import java.util.List;
 /**
  * 질문 엔티티
  * - 사용자가 작성한 질문
- * - 답변, 댓글, 투표, 첨부파일, 태그와 관계
+ * - 답변, 댓글, 투표, 태그와 관계
+ * - 이미지는 content 필드에 마크다운 형식으로 임베드
  */
 @Entity
 @Table(name = "questions", indexes = {
@@ -94,10 +95,6 @@ public class Question {
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<QuestionVote> votes = new ArrayList<>();
-
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<QuestionAttachment> attachments = new ArrayList<>();
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

@@ -16,7 +16,7 @@
 - 질문 작성/수정/삭제 (Soft Delete)
 - 제목, 내용 (마크다운 지원)
 - 태그 추가 (최대 5개)
-- 이미지 첨부 (PNG, JPEG, WEBP)
+- 이미지 임베드 (content에 마크다운 형식으로 S3 URL 삽입)
 - 조회수, 추천수, 답변 수 자동 집계
 - 답변 채택 기능 (질문 작성자만)
 
@@ -40,10 +40,11 @@
 - 자동 생성 (질문 작성 시)
 - 인기 태그 (사용 횟수 기준)
 
-### 6. 첨부파일 (Attachment)
-- S3 업로드 후 메타데이터 저장
-- 이미지만 지원 (PNG, JPEG, WEBP)
-- CloudFront CDN URL 제공
+### 6. 이미지 업로드 방식
+- 프론트엔드에서 S3 presigned URL로 직접 업로드
+- 업로드 완료 후 CloudFront CDN URL을 마크다운 형식으로 content에 삽입
+- 형식: `![alt text](https://cdn.example.com/images/xxx.png)`
+- 별도 첨부파일 테이블 없이 content 필드에 통합 관리
 
 ---
 
@@ -57,11 +58,9 @@ User (기존)
 Question (1:N)
   ├── Answer (1:N)
   │   ├── AnswerComment (1:N)
-  │   ├── AnswerVote (1:N, UNIQUE constraint)
-  │   └── AnswerAttachment (1:N)
+  │   └── AnswerVote (1:N, UNIQUE constraint)
   ├── QuestionComment (1:N)
   ├── QuestionVote (1:N, UNIQUE constraint)
-  ├── QuestionAttachment (1:N)
   └── QuestionTag (N:M via QuestionTag)
         ↓
       Tag
@@ -113,19 +112,6 @@ Question (1:N)
 - UNIQUE(question_id/answer_id, user_id) -- 중복 방지
 ```
 
-#### 5. question_attachments / answer_attachments
-```sql
-- id (BIGINT, PK)
-- question_id / answer_id (BIGINT, FK)
-- file_name (VARCHAR(255))
-- file_size (BIGINT)
-- content_type (VARCHAR(50))
-- s3_key (VARCHAR(500))
-- cdn_url (VARCHAR(500))
-- uploaded_by (BIGINT, FK)
-- created_at, is_deleted, deleted_at
-```
-
 ### 인덱스 전략
 - FK 컬럼 전체 인덱싱
 - `is_deleted` 컬럼 (Soft Delete 필터링)
@@ -139,7 +125,7 @@ Question (1:N)
 ### 패키지 구조
 ```
 com.alpha_note.core.qna/
-├── entity/              # 10개 엔티티
+├── entity/              # 8개 엔티티
 │   ├── Question.java
 │   ├── Answer.java
 │   ├── Tag.java
@@ -147,11 +133,9 @@ com.alpha_note.core.qna/
 │   ├── QuestionComment.java
 │   ├── AnswerComment.java
 │   ├── QuestionVote.java
-│   ├── AnswerVote.java
-│   ├── QuestionAttachment.java
-│   └── AnswerAttachment.java
+│   └── AnswerVote.java
 │
-├── repository/          # 10개 Repository
+├── repository/          # 8개 Repository
 │   ├── QuestionRepository.java
 │   ├── AnswerRepository.java
 │   ├── TagRepository.java
@@ -159,17 +143,14 @@ com.alpha_note.core.qna/
 │   ├── QuestionCommentRepository.java
 │   ├── AnswerCommentRepository.java
 │   ├── QuestionVoteRepository.java
-│   ├── AnswerVoteRepository.java
-│   ├── QuestionAttachmentRepository.java
-│   └── AnswerAttachmentRepository.java
+│   └── AnswerVoteRepository.java
 │
-├── service/             # 6개 Service
+├── service/             # 5개 Service
 │   ├── QuestionService.java
 │   ├── AnswerService.java
 │   ├── CommentService.java
 │   ├── VoteService.java
-│   ├── TagService.java
-│   └── AttachmentService.java
+│   └── TagService.java
 │
 ├── controller/          # 4개 Controller
 │   ├── QuestionController.java
@@ -189,8 +170,7 @@ com.alpha_note.core.qna/
         ├── QuestionDetailResponse.java
         ├── AnswerResponse.java
         ├── CommentResponse.java
-        ├── TagResponse.java
-        └── AttachmentResponse.java
+        └── TagResponse.java
 ```
 
 ### 설계 패턴
@@ -290,9 +270,8 @@ Content-Type: application/json
 
 {
   "title": "질문 제목",
-  "content": "질문 내용 (마크다운)",
-  "tags": ["java", "spring", "jpa"],
-  "attachmentIds": [1, 2]
+  "content": "질문 내용 (마크다운, 이미지 URL 포함 가능)",
+  "tags": ["java", "spring", "jpa"]
 }
 
 Response 201:
@@ -311,7 +290,6 @@ Response 201:
     "isAnswered": false,
     "tags": [...],
     "comments": [],
-    "attachments": [],
     "answers": []
   }
 }
@@ -423,8 +401,7 @@ POST /api/v1/qna/questions/{questionId}/answers
 Authorization: Bearer {token}
 
 {
-  "content": "답변 내용",
-  "attachmentIds": [3, 4]
+  "content": "답변 내용 (마크다운, 이미지 URL 포함 가능)"
 }
 
 Response 201:
@@ -447,8 +424,7 @@ Response 200:
       "voteCount": 3,
       "isAccepted": true,
       "isVotedByCurrentUser": false,
-      "comments": [...],
-      "attachments": [...]
+      "comments": [...]
     }
   ]
 }
@@ -663,7 +639,7 @@ private void softDeleteRelatedEntities(Long questionId) {
         answer.markAsDeleted();
         answerRepository.save(answer);
     });
-    // 댓글, 첨부파일도 동일하게 처리
+    // 댓글도 동일하게 처리
 }
 ```
 
@@ -810,7 +786,7 @@ INSERT INTO tags (name, description) VALUES
 
 ## 🐛 에러 코드
 
-### QnA 관련 에러 (Q001~Q016)
+### QnA 관련 에러 (Q001~Q014)
 
 | 코드 | HTTP Status | 메시지 |
 |------|-------------|--------|
@@ -828,8 +804,6 @@ INSERT INTO tags (name, description) VALUES
 | Q012 | 400 BAD_REQUEST | 해당 질문의 답변이 아닙니다. |
 | Q013 | 409 CONFLICT | 이미 존재하는 태그입니다. |
 | Q014 | 400 BAD_REQUEST | 태그는 최대 5개까지 추가할 수 있습니다. |
-| Q015 | 404 NOT_FOUND | 첨부파일을 찾을 수 없습니다. |
-| Q016 | 400 BAD_REQUEST | 지원하지 않는 이미지 형식입니다. (PNG, JPEG, WEBP만 가능) |
 
 ---
 
@@ -839,7 +813,7 @@ INSERT INTO tags (name, description) VALUES
 - [ ] 데이터베이스 스키마 적용
 - [ ] 빌드 테스트
 - [ ] API 통합 테스트
-- [ ] S3 첨부파일 업로드 연동
+- [ ] 프론트엔드 마크다운 에디터 이미지 업로드 연동
 
 ### 기능 개선
 - [ ] 답변 정렬 옵션 추가 (최신순, 추천순, 채택 우선)

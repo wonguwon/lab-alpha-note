@@ -39,4 +39,10 @@ export const API_ENDPOINTS = {
   STORAGE: {
     PRESIGNED_URL: '/storage/presigned-url',
   },
+  // QnA 관련
+  QNA: {
+    QUESTIONS: '/qna/questions',
+    QUESTION_DETAIL: (id) => `/qna/questions/${id}`,
+    ANSWERS: (questionId) => `/qna/questions/${questionId}/answers`,
+  },
 };

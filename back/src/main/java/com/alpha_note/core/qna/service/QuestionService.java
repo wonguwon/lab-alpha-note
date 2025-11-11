@@ -30,7 +30,6 @@ public class QuestionService {
     private final QuestionTagRepository questionTagRepository;
     private final QuestionCommentRepository questionCommentRepository;
     private final QuestionVoteRepository questionVoteRepository;
-    private final QuestionAttachmentRepository questionAttachmentRepository;
     private final TagRepository tagRepository;
     private final AnswerRepository answerRepository;
     private final UserRepository userRepository;
@@ -62,9 +61,6 @@ public class QuestionService {
             }
             attachTagsToQuestion(savedQuestion.getId(), request.getTags());
         }
-
-        // 첨부파일 연결 (필요 시)
-        // TODO: attachmentIds 처리
 
         return getQuestionDetail(savedQuestion.getId(), userId);
     }
@@ -235,14 +231,14 @@ public class QuestionService {
      */
     private void attachTagsToQuestion(Long questionId, List<String> tagNames) {
         for (String tagName : tagNames) {
-            tagName = tagName.trim().toLowerCase();
-            if (tagName.isEmpty()) continue;
+            final String normalizedTagName = tagName.trim().toLowerCase();
+            if (normalizedTagName.isEmpty()) continue;
 
             // 태그 조회 또는 생성
-            Tag tag = tagRepository.findByNameAndIsDeletedFalse(tagName)
+            Tag tag = tagRepository.findByNameAndIsDeletedFalse(normalizedTagName)
                     .orElseGet(() -> {
                         Tag newTag = Tag.builder()
-                                .name(tagName)
+                                .name(normalizedTagName)
                                 .build();
                         return tagRepository.save(newTag);
                     });
@@ -279,13 +275,6 @@ public class QuestionService {
             comment.markAsDeleted();
             questionCommentRepository.save(comment);
         });
-
-        // 첨부파일들 Soft Delete
-        List<QuestionAttachment> attachments = questionAttachmentRepository.findByQuestionId(questionId);
-        attachments.forEach(attachment -> {
-            attachment.markAsDeleted();
-            questionAttachmentRepository.save(attachment);
-        });
     }
 
     /**
@@ -294,9 +283,10 @@ public class QuestionService {
     private QuestionResponse buildQuestionResponse(Question question, Long currentUserId) {
         QuestionResponse response = QuestionResponse.from(question);
 
-        // 작성자 닉네임
+        // 작성자 닉네임 및 프로필 이미지
         userRepository.findById(question.getUserId()).ifPresent(user -> {
             response.setUserNickname(user.getNickname());
+            response.setProfileImageUrl(user.getProfileImageUrl());
         });
 
         // 태그 목록
@@ -317,9 +307,10 @@ public class QuestionService {
     private QuestionDetailResponse buildQuestionDetailResponse(Question question, Long currentUserId) {
         QuestionDetailResponse response = QuestionDetailResponse.from(question);
 
-        // 작성자 닉네임
+        // 작성자 닉네임 및 프로필 이미지
         userRepository.findById(question.getUserId()).ifPresent(user -> {
             response.setUserNickname(user.getNickname());
+            response.setProfileImageUrl(user.getProfileImageUrl());
         });
 
         // 추천 여부 (현재 사용자)
@@ -344,18 +335,12 @@ public class QuestionService {
                     CommentResponse commentResponse = CommentResponse.from(comment);
                     userRepository.findById(comment.getUserId()).ifPresent(user -> {
                         commentResponse.setUserNickname(user.getNickname());
+                        commentResponse.setProfileImageUrl(user.getProfileImageUrl());
                     });
                     return commentResponse;
                 })
                 .collect(Collectors.toList());
         response.setComments(commentResponses);
-
-        // 첨부파일 목록
-        List<QuestionAttachment> attachments = questionAttachmentRepository.findByQuestionIdAndIsDeletedFalse(question.getId());
-        List<AttachmentResponse> attachmentResponses = attachments.stream()
-                .map(AttachmentResponse::from)
-                .collect(Collectors.toList());
-        response.setAttachments(attachmentResponses);
 
         // 답변 목록 (채택 답변 우선 정렬)
         List<Answer> answers = answerRepository.findByQuestionIdOrderByAcceptedAndVotes(question.getId());
@@ -373,9 +358,10 @@ public class QuestionService {
     private AnswerResponse buildAnswerResponse(Answer answer, Long currentUserId) {
         AnswerResponse response = AnswerResponse.from(answer);
 
-        // 작성자 닉네임
+        // 작성자 닉네임 및 프로필 이미지
         userRepository.findById(answer.getUserId()).ifPresent(user -> {
             response.setUserNickname(user.getNickname());
+            response.setProfileImageUrl(user.getProfileImageUrl());
         });
 
         // 추천 여부

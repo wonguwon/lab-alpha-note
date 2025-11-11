@@ -144,6 +144,54 @@ export const userService = {
   },
 };
 
+// QnA 관련 API 서비스
+export const qnaService = {
+  // 질문 목록 조회 - 반환: { content: [], page, size, totalElements, totalPages }
+  getQuestions: async (params) => {
+    return await api.get(API_ENDPOINTS.QNA.QUESTIONS, { params });
+  },
+
+  // 질문 상세 조회 - 반환: Question 객체
+  getQuestionDetail: async (id) => {
+    return await api.get(API_ENDPOINTS.QNA.QUESTION_DETAIL(id));
+  },
+
+  // 질문 작성 - 반환: Question 객체
+  createQuestion: async (data) => {
+    return await api.post(API_ENDPOINTS.QNA.QUESTIONS, data);
+  },
+
+  // 질문 수정 - 반환: Question 객체
+  updateQuestion: async (id, data) => {
+    return await api.put(API_ENDPOINTS.QNA.QUESTION_DETAIL(id), data);
+  },
+
+  // 질문 삭제 - 반환: null
+  deleteQuestion: async (id) => {
+    return await api.delete(API_ENDPOINTS.QNA.QUESTION_DETAIL(id));
+  },
+
+  // 답변 목록 조회 - 반환: Answer 배열
+  getAnswers: async (questionId) => {
+    return await api.get(API_ENDPOINTS.QNA.ANSWERS(questionId));
+  },
+
+  // 답변 작성 - 반환: Answer 객체
+  createAnswer: async (questionId, data) => {
+    return await api.post(API_ENDPOINTS.QNA.ANSWERS(questionId), data);
+  },
+
+  // 답변 수정 - 반환: Answer 객체
+  updateAnswer: async (questionId, answerId, data) => {
+    return await api.put(`${API_ENDPOINTS.QNA.ANSWERS(questionId)}/${answerId}`, data);
+  },
+
+  // 답변 삭제 - 반환: null
+  deleteAnswer: async (questionId, answerId) => {
+    return await api.delete(`${API_ENDPOINTS.QNA.ANSWERS(questionId)}/${answerId}`);
+  },
+};
+
 
 // 에러 처리 래퍼 함수
 export const withErrorHandling = (apiCall) => {

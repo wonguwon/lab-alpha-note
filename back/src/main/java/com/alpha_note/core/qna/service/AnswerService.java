@@ -5,10 +5,8 @@ import com.alpha_note.core.common.exception.ErrorCode;
 import com.alpha_note.core.qna.dto.request.CreateAnswerRequest;
 import com.alpha_note.core.qna.dto.request.UpdateAnswerRequest;
 import com.alpha_note.core.qna.dto.response.AnswerResponse;
-import com.alpha_note.core.qna.dto.response.AttachmentResponse;
 import com.alpha_note.core.qna.dto.response.CommentResponse;
 import com.alpha_note.core.qna.entity.Answer;
-import com.alpha_note.core.qna.entity.AnswerAttachment;
 import com.alpha_note.core.qna.entity.AnswerComment;
 import com.alpha_note.core.qna.entity.Question;
 import com.alpha_note.core.qna.repository.*;
@@ -31,7 +29,6 @@ public class AnswerService {
     private final AnswerRepository answerRepository;
     private final AnswerCommentRepository answerCommentRepository;
     private final AnswerVoteRepository answerVoteRepository;
-    private final AnswerAttachmentRepository answerAttachmentRepository;
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
 
@@ -166,13 +163,6 @@ public class AnswerService {
             comment.markAsDeleted();
             answerCommentRepository.save(comment);
         });
-
-        // 첨부파일들 Soft Delete
-        List<AnswerAttachment> attachments = answerAttachmentRepository.findByAnswerId(answerId);
-        attachments.forEach(attachment -> {
-            attachment.markAsDeleted();
-            answerAttachmentRepository.save(attachment);
-        });
     }
 
     /**
@@ -181,9 +171,10 @@ public class AnswerService {
     private AnswerResponse buildAnswerResponse(Answer answer, Long currentUserId) {
         AnswerResponse response = AnswerResponse.from(answer);
 
-        // 작성자 닉네임
+        // 작성자 닉네임 및 프로필 이미지
         userRepository.findById(answer.getUserId()).ifPresent(user -> {
             response.setUserNickname(user.getNickname());
+            response.setProfileImageUrl(user.getProfileImageUrl());
         });
 
         // 추천 여부
@@ -199,18 +190,12 @@ public class AnswerService {
                     CommentResponse commentResponse = CommentResponse.from(comment);
                     userRepository.findById(comment.getUserId()).ifPresent(user -> {
                         commentResponse.setUserNickname(user.getNickname());
+                        commentResponse.setProfileImageUrl(user.getProfileImageUrl());
                     });
                     return commentResponse;
                 })
                 .collect(Collectors.toList());
         response.setComments(commentResponses);
-
-        // 첨부파일 목록
-        List<AnswerAttachment> attachments = answerAttachmentRepository.findByAnswerIdAndIsDeletedFalse(answer.getId());
-        List<AttachmentResponse> attachmentResponses = attachments.stream()
-                .map(AttachmentResponse::from)
-                .collect(Collectors.toList());
-        response.setAttachments(attachmentResponses);
 
         return response;
     }

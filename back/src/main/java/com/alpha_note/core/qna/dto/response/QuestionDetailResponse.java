@@ -21,6 +21,7 @@ public class QuestionDetailResponse {
     private Long id;
     private Long userId;
     private String userNickname; // Service에서 추가
+    private String profileImageUrl; // Service에서 추가
     private String title;
     private String content; // 전체 내용
     private Integer viewCount;
@@ -34,7 +35,6 @@ public class QuestionDetailResponse {
     private Instant updatedAt;
     private List<TagResponse> tags; // Service에서 추가
     private List<CommentResponse> comments; // Service에서 추가
-    private List<AttachmentResponse> attachments; // Service에서 추가
     private List<AnswerResponse> answers; // Service에서 추가 (채택 답변 우선 정렬)
 
     public static QuestionDetailResponse from(Question question) {

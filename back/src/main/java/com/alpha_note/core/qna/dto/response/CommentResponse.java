@@ -18,6 +18,7 @@ public class CommentResponse {
     private Long id;
     private Long userId;
     private String userNickname; // Service에서 추가
+    private String profileImageUrl; // Service에서 추가
     private String content;
     private Instant createdAt;
     private Instant updatedAt;

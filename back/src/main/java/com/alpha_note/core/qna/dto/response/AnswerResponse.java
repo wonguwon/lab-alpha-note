@@ -19,6 +19,7 @@ public class AnswerResponse {
     private Long questionId;
     private Long userId;
     private String userNickname; // Service에서 추가
+    private String profileImageUrl; // Service에서 추가
     private String content;
     private Integer voteCount;
     private Boolean isAccepted;
@@ -26,7 +27,6 @@ public class AnswerResponse {
     private Instant createdAt;
     private Instant updatedAt;
     private List<CommentResponse> comments; // Optional, Service에서 추가
-    private List<AttachmentResponse> attachments; // Optional, Service에서 추가
 
     public static AnswerResponse from(Answer answer) {
         return AnswerResponse.builder()

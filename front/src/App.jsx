@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ProfilePage from './pages/ProfilePage';
 import OAuth2RedirectPage from './pages/OAuth2RedirectPage';
+import QnAPage, { AskQuestionPage } from './pages/QnAPage';
 import useAuthStore from './store/authStore';
 import { setAuthStoreGetter } from './api/axios';
 import { authService } from './api/services';
@@ -41,6 +42,8 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/qna" element={<QnAPage />} />
+          <Route path="/qna/ask" element={<AskQuestionPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/profile" element={<ProfilePage />} />
