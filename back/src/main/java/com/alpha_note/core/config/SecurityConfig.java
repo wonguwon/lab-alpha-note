@@ -75,6 +75,18 @@ public class SecurityConfig {
                     "/login/oauth2/**",          // 콜백
                     "/error"                     // 에러 페이지
                 ).permitAll()
+                // QNA 관련 조회 API는 공개 (GET 요청만)
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.GET,
+                    "/api/v1/qna/questions",
+                    "/api/v1/qna/questions/*",
+                    "/api/v1/qna/questions/search",
+                    "/api/v1/qna/questions/tag/*",
+                    "/api/v1/qna/questions/user/*",
+                    "/api/v1/qna/questions/unanswered",
+                    "/api/v1/qna/questions/*/answers",
+                    "/api/v1/qna/users/*/answers"
+                ).permitAll()
                 .anyRequest().authenticated()  // 나머지는 인증 필요 (/api/v1/auth/me 포함)
             )
             // Google OAuth2 로그인 설정

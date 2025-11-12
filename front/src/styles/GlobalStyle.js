@@ -55,6 +55,7 @@ const GlobalStyle = createGlobalStyle`
     font-size: inherit;
     border: none;
     outline: none;
+    resize: none;
   }
 
   img {

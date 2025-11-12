@@ -1,5 +1,6 @@
 package com.alpha_note.core.security.oauth2;
 
+import com.alpha_note.core.storage.service.ImageProcessingService;
 import com.alpha_note.core.user.entity.AuthProvider;
 import com.alpha_note.core.user.entity.Role;
 import com.alpha_note.core.user.entity.User;
@@ -27,6 +28,7 @@ import java.util.UUID;
 public class OAuth2UserSynchronizer {
 
     private final UserRepository userRepository;
+    private final ImageProcessingService imageProcessingService;
     private final Random random = new Random();
     private static final int MAX_NICKNAME_RETRY = 10;
 
@@ -63,6 +65,14 @@ public class OAuth2UserSynchronizer {
                         providerName + " 로그인을 사용해주세요."
                 );
             }
+
+            // profileImageUrl이 null인 경우에만 기본 이미지 설정
+            if (user.getProfileImageUrl() == null || user.getProfileImageUrl().isEmpty()) {
+                log.info("Setting default profile image for user: {}", user.getEmail());
+                user.updateProfileImage(imageProcessingService.getDefaultProfileImageUrl());
+                userRepository.save(user);
+            }
+
             // 기존 사용자는 정보를 업데이트하지 않음 (최초 가입 시에만 설정됨)
             // 사용자가 앱 내에서 닉네임/프로필을 변경할 수 있도록 허용
             log.debug("Existing OAuth2 user logged in: email={}, nickname={}", user.getEmail(), user.getNickname());
@@ -75,23 +85,37 @@ public class OAuth2UserSynchronizer {
     }
 
     /**
-     * 신규 사용자 등록
+     * 신규 사용자 등록 (2단계 저장)
+     * 1단계: 기본 이미지로 User 저장 → userId 생성
+     * 2단계: OAuth2 이미지 처리 → profileImageUrl 업데이트
      */
     private User registerNewUser(AuthProvider provider, OAuth2UserInfo userInfo) {
         // 고유한 닉네임 생성
         String uniqueNickname = generateUniqueNickname(userInfo.getName());
 
+        // 1단계: 기본 프로필 이미지로 User 먼저 저장 (ID 생성 위해)
         User user = User.builder()
                 .provider(provider)
                 .providerId(userInfo.getId())
                 .nickname(uniqueNickname)
                 .email(userInfo.getEmail())
-                .profileImageUrl(userInfo.getImageUrl())
+                .profileImageUrl(imageProcessingService.getDefaultProfileImageUrl()) // 임시 기본 이미지
                 .emailSubscribed(false) // OAuth2 가입 시 기본값 false
                 .role(Role.USER)
                 .build();
 
-        return userRepository.save(user);
+        user = userRepository.save(user); // 저장하여 ID 생성
+        log.info("User registered with temporary default image: userId={}", user.getId());
+
+        // 2단계: OAuth2 제공자의 프로필 이미지를 S3에 업로드 (userId 포함 경로)
+        String profileImageUrl = imageProcessingService.processOAuth2ProfileImage(userInfo.getImageUrl(), user.getId());
+
+        // 프로필 이미지 URL 업데이트
+        user.updateProfileImage(profileImageUrl);
+        user = userRepository.save(user);
+        log.info("Profile image updated for new user: userId={}, url={}", user.getId(), profileImageUrl);
+
+        return user;
     }
 
     /**
@@ -132,14 +156,6 @@ public class OAuth2UserSynchronizer {
         log.warn("Failed to generate nickname after {} retries, using UUID-based: {}",
                 MAX_NICKNAME_RETRY, fallbackNickname);
         return fallbackNickname;
-    }
-
-    /**
-     * 기존 사용자 정보 업데이트 (이름, 프로필 이미지)
-     */
-    private User updateExistingUser(User existingUser, OAuth2UserInfo userInfo) {
-        existingUser.updateOAuth2Info(userInfo.getName(), userInfo.getImageUrl());
-        return userRepository.save(existingUser);
     }
 
     /**

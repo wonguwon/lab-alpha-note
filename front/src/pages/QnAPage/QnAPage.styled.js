@@ -206,7 +206,7 @@ export const StatValue = styled.span`
   font-size: ${props => props.theme.fonts.size.sm};
   font-weight: ${props => props.theme.fonts.weight.semibold};
   color: ${props => props.$answered
-    ? props.theme.colors.green[600]
+    ? props.theme.colors.success[600]
     : props.theme.colors.gray[700]};
 `;
 
