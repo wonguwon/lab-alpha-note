@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaRegCommentDots } from 'react-icons/fa';
-import { BsPatchQuestion } from "react-icons/bs";
+import { FaRegCommentDots, FaCheckCircle } from 'react-icons/fa';
+import { BsPatchQuestion } from 'react-icons/bs';
 import { IoSend } from 'react-icons/io5';
 import { qnaService } from '../../api/services';
 import useAuthStore from '../../store/authStore';
@@ -27,7 +27,6 @@ import {
   ActionBar,
   VoteSection,
   VoteButton,
-  VoteCount,
   ActionButtons,
   ActionButton,
   CommentToggleButton,
@@ -38,8 +37,17 @@ import {
   CommentContent,
   CommentTime,
   CommentForm,
+  CommentInputArea,
   CommentInput,
-  CommentSubmitButton,
+  CommentInputFooter,
+  CharacterCount,
+  SendIconButton,
+  CommentActions,
+  CommentActionButton,
+  EditCommentInput,
+  EditCommentActions,
+  SaveButton,
+  CancelButton,
   Section,
   SectionHeader,
   SectionTitle,
@@ -53,10 +61,6 @@ import {
   FixedAnswerButton,
   EmptyState,
   LoadingState,
-  CommentInputArea,
-  CommentInputFooter,
-  CharacterCount,
-  SendIconButton,
 } from './QuestionDetailPage.styled';
 
 const QuestionDetailPage = () => {
@@ -72,12 +76,29 @@ const QuestionDetailPage = () => {
   const [showQuestionComments, setShowQuestionComments] = useState(false);
   const [showAnswerComments, setShowAnswerComments] = useState({});
 
+  // 댓글 데이터 상태 (서버에서 로드된 실제 댓글 목록)
+  const [questionComments, setQuestionComments] = useState([]);
+  const [answerCommentsMap, setAnswerCommentsMap] = useState({}); // { answerId: Comment[] }
+
+  // 댓글 로딩 상태
+  const [loadingQuestionComments, setLoadingQuestionComments] = useState(false);
+  const [loadingAnswerComments, setLoadingAnswerComments] = useState({});
+
   // 댓글 입력 상태
   const [questionComment, setQuestionComment] = useState('');
   const [answerComments, setAnswerComments] = useState({});
 
+  // 댓글 편집 상태
+  const [editingQuestionComment, setEditingQuestionComment] = useState(null);
+  const [editingAnswerComment, setEditingAnswerComment] = useState(null);
+  const [editCommentContent, setEditCommentContent] = useState('');
+
   // 댓글 최대 글자수
-  const MAX_COMMENT_LENGTH = 1000;
+  const MAX_COMMENT_LENGTH = 500;
+
+  // 추천 중복 클릭 방지
+  const [votingQuestion, setVotingQuestion] = useState(false);
+  const [votingAnswers, setVotingAnswers] = useState({});
 
   // 데이터 로드
   useEffect(() => {
@@ -116,29 +137,162 @@ const QuestionDetailPage = () => {
     });
   };
 
-  // 투표 핸들러
-  const handleVote = async (type, targetType, targetId) => {
+  // 질문 추천 핸들러
+  const handleQuestionVote = async () => {
     if (!isAuthenticated) {
       alert('로그인이 필요합니다.');
       navigate('/login');
       return;
     }
 
-    // TODO: 투표 API 호출
-    console.log(`Vote ${type} for ${targetType} ${targetId}`);
+    if (votingQuestion) return; // 중복 클릭 방지
+
+    const isVoted = question.isVotedByCurrentUser;
+    const previousVoteCount = question.voteCount;
+
+    // Optimistic update
+    setQuestion({
+      ...question,
+      isVotedByCurrentUser: !isVoted,
+      voteCount: isVoted ? previousVoteCount - 1 : previousVoteCount + 1,
+    });
+
+    setVotingQuestion(true);
+
+    try {
+      if (isVoted) {
+        await qnaService.unvoteQuestion(question.id);
+      } else {
+        await qnaService.voteQuestion(question.id);
+      }
+    } catch (err) {
+      console.error('질문 추천 실패:', err);
+      // Rollback on error
+      setQuestion({
+        ...question,
+        isVotedByCurrentUser: isVoted,
+        voteCount: previousVoteCount,
+      });
+      alert(err.response?.data?.message || '추천에 실패했습니다.');
+    } finally {
+      setVotingQuestion(false);
+    }
+  };
+
+  // 답변 추천 핸들러
+  const handleAnswerVote = async (answerId) => {
+    if (!isAuthenticated) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    if (votingAnswers[answerId]) return; // 중복 클릭 방지
+
+    const answer = question.answers.find(a => a.id === answerId);
+    if (!answer) return;
+
+    const isVoted = answer.isVotedByCurrentUser;
+    const previousVoteCount = answer.voteCount;
+
+    // Optimistic update
+    setQuestion({
+      ...question,
+      answers: question.answers.map(a =>
+        a.id === answerId
+          ? {
+              ...a,
+              isVotedByCurrentUser: !isVoted,
+              voteCount: isVoted ? previousVoteCount - 1 : previousVoteCount + 1,
+            }
+          : a
+      ),
+    });
+
+    setVotingAnswers({ ...votingAnswers, [answerId]: true });
+
+    try {
+      if (isVoted) {
+        await qnaService.unvoteAnswer(answerId);
+      } else {
+        await qnaService.voteAnswer(answerId);
+      }
+    } catch (err) {
+      console.error('답변 추천 실패:', err);
+      // Rollback on error
+      setQuestion({
+        ...question,
+        answers: question.answers.map(a =>
+          a.id === answerId
+            ? {
+                ...a,
+                isVotedByCurrentUser: isVoted,
+                voteCount: previousVoteCount,
+              }
+            : a
+        ),
+      });
+      alert(err.response?.data?.message || '추천에 실패했습니다.');
+    } finally {
+      setVotingAnswers({ ...votingAnswers, [answerId]: false });
+    }
+  };
+
+  // 질문 댓글 로드
+  const loadQuestionComments = async () => {
+    if (questionComments.length > 0) return; // 이미 로드됨
+
+    setLoadingQuestionComments(true);
+    try {
+      const comments = await qnaService.getQuestionComments(id);
+      setQuestionComments(comments);
+    } catch (err) {
+      console.error('질문 댓글 조회 실패:', err);
+      alert(err.response?.data?.message || '댓글을 불러오는데 실패했습니다.');
+    } finally {
+      setLoadingQuestionComments(false);
+    }
+  };
+
+  // 답변 댓글 로드
+  const loadAnswerComments = async (answerId) => {
+    if (answerCommentsMap[answerId]) return; // 이미 로드됨
+
+    setLoadingAnswerComments({ ...loadingAnswerComments, [answerId]: true });
+    try {
+      const comments = await qnaService.getAnswerComments(answerId);
+      setAnswerCommentsMap({ ...answerCommentsMap, [answerId]: comments });
+    } catch (err) {
+      console.error('답변 댓글 조회 실패:', err);
+      alert(err.response?.data?.message || '댓글을 불러오는데 실패했습니다.');
+    } finally {
+      setLoadingAnswerComments({ ...loadingAnswerComments, [answerId]: false });
+    }
   };
 
   // 질문 댓글 토글
   const toggleQuestionComments = () => {
-    setShowQuestionComments(!showQuestionComments);
+    const newState = !showQuestionComments;
+    setShowQuestionComments(newState);
+
+    // 처음 열 때만 로드
+    if (newState && questionComments.length === 0) {
+      loadQuestionComments();
+    }
   };
 
   // 답변 댓글 토글
   const toggleAnswerComments = (answerId) => {
+    const newState = !showAnswerComments[answerId];
     setShowAnswerComments({
       ...showAnswerComments,
-      [answerId]: !showAnswerComments[answerId]
+      [answerId]: newState
     });
+
+    // 처음 열 때만 로드
+    if (newState && !answerCommentsMap[answerId]) {
+      loadAnswerComments(answerId);
+    }
   };
 
   // 질문 댓글 작성
@@ -156,10 +310,21 @@ const QuestionDetailPage = () => {
       return;
     }
 
-    // TODO: 댓글 작성 API 호출
-    console.log('Create question comment:', questionComment);
-    setQuestionComment('');
-    // loadQuestionDetail(); // 새로고침
+    if (questionComment.length > MAX_COMMENT_LENGTH) {
+      alert(`댓글은 최대 ${MAX_COMMENT_LENGTH}자까지 입력 가능합니다.`);
+      return;
+    }
+
+    try {
+      const newComment = await qnaService.createQuestionComment(id, { content: questionComment });
+      setQuestionComments([...questionComments, newComment]);
+      setQuestionComment('');
+      // 댓글 개수 증가
+      setQuestion({ ...question, commentCount: question.commentCount + 1 });
+    } catch (err) {
+      console.error('질문 댓글 작성 실패:', err);
+      alert(err.response?.data?.message || '댓글 작성에 실패했습니다.');
+    }
   };
 
   // 답변 댓글 작성
@@ -178,10 +343,148 @@ const QuestionDetailPage = () => {
       return;
     }
 
-    // TODO: 답변 댓글 작성 API 호출
-    console.log(`Create answer comment for ${answerId}:`, comment);
-    setAnswerComments({ ...answerComments, [answerId]: '' });
-    // loadQuestionDetail(); // 새로고침
+    if (comment.length > MAX_COMMENT_LENGTH) {
+      alert(`댓글은 최대 ${MAX_COMMENT_LENGTH}자까지 입력 가능합니다.`);
+      return;
+    }
+
+    try {
+      const newComment = await qnaService.createAnswerComment(answerId, { content: comment });
+      const currentComments = answerCommentsMap[answerId] || [];
+      setAnswerCommentsMap({ ...answerCommentsMap, [answerId]: [...currentComments, newComment] });
+      setAnswerComments({ ...answerComments, [answerId]: '' });
+
+      // 답변의 댓글 개수 증가
+      setQuestion({
+        ...question,
+        answers: question.answers.map(a =>
+          a.id === answerId ? { ...a, commentCount: a.commentCount + 1 } : a
+        )
+      });
+    } catch (err) {
+      console.error('답변 댓글 작성 실패:', err);
+      alert(err.response?.data?.message || '댓글 작성에 실패했습니다.');
+    }
+  };
+
+  // 질문 댓글 수정 시작
+  const handleEditQuestionComment = (comment) => {
+    setEditingQuestionComment(comment.id);
+    setEditCommentContent(comment.content);
+  };
+
+  // 질문 댓글 수정 취소
+  const handleCancelEditQuestionComment = () => {
+    setEditingQuestionComment(null);
+    setEditCommentContent('');
+  };
+
+  // 질문 댓글 수정 저장
+  const handleSaveQuestionComment = async (commentId) => {
+    if (!editCommentContent.trim()) {
+      alert('댓글 내용을 입력해주세요.');
+      return;
+    }
+
+    if (editCommentContent.length > MAX_COMMENT_LENGTH) {
+      alert(`댓글은 최대 ${MAX_COMMENT_LENGTH}자까지 입력 가능합니다.`);
+      return;
+    }
+
+    try {
+      const updatedComment = await qnaService.updateQuestionComment(commentId, { content: editCommentContent });
+      setQuestionComments(questionComments.map(c =>
+        c.id === commentId ? updatedComment : c
+      ));
+      setEditingQuestionComment(null);
+      setEditCommentContent('');
+    } catch (err) {
+      console.error('질문 댓글 수정 실패:', err);
+      alert(err.response?.data?.message || '댓글 수정에 실패했습니다.');
+    }
+  };
+
+  // 질문 댓글 삭제
+  const handleDeleteQuestionComment = async (commentId) => {
+    if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await qnaService.deleteQuestionComment(commentId);
+      setQuestionComments(questionComments.filter(c => c.id !== commentId));
+      // 댓글 개수 감소
+      setQuestion({ ...question, commentCount: question.commentCount - 1 });
+    } catch (err) {
+      console.error('질문 댓글 삭제 실패:', err);
+      alert(err.response?.data?.message || '댓글 삭제에 실패했습니다.');
+    }
+  };
+
+  // 답변 댓글 수정 시작
+  const handleEditAnswerComment = (comment) => {
+    setEditingAnswerComment(comment.id);
+    setEditCommentContent(comment.content);
+  };
+
+  // 답변 댓글 수정 취소
+  const handleCancelEditAnswerComment = () => {
+    setEditingAnswerComment(null);
+    setEditCommentContent('');
+  };
+
+  // 답변 댓글 수정 저장
+  const handleSaveAnswerComment = async (commentId, answerId) => {
+    if (!editCommentContent.trim()) {
+      alert('댓글 내용을 입력해주세요.');
+      return;
+    }
+
+    if (editCommentContent.length > MAX_COMMENT_LENGTH) {
+      alert(`댓글은 최대 ${MAX_COMMENT_LENGTH}자까지 입력 가능합니다.`);
+      return;
+    }
+
+    try {
+      const updatedComment = await qnaService.updateAnswerComment(commentId, { content: editCommentContent });
+      const currentComments = answerCommentsMap[answerId] || [];
+      setAnswerCommentsMap({
+        ...answerCommentsMap,
+        [answerId]: currentComments.map(c => c.id === commentId ? updatedComment : c)
+      });
+      setEditingAnswerComment(null);
+      setEditCommentContent('');
+    } catch (err) {
+      console.error('답변 댓글 수정 실패:', err);
+      alert(err.response?.data?.message || '댓글 수정에 실패했습니다.');
+    }
+  };
+
+  // 답변 댓글 삭제
+  const handleDeleteAnswerComment = async (commentId, answerId) => {
+    if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await qnaService.deleteAnswerComment(commentId);
+      const currentComments = answerCommentsMap[answerId] || [];
+      setAnswerCommentsMap({
+        ...answerCommentsMap,
+        [answerId]: currentComments.filter(c => c.id !== commentId)
+      });
+
+      // 답변의 댓글 개수 감소
+      setQuestion({
+        ...question,
+        answers: question.answers.map(a =>
+          a.id === answerId ? { ...a, commentCount: a.commentCount - 1 } : a
+        )
+      });
+    } catch (err) {
+      console.error('답변 댓글 삭제 실패:', err);
+      alert(err.response?.data?.message || '댓글 삭제에 실패했습니다.');
+    }
   };
 
   // 질문 수정
@@ -261,7 +564,6 @@ const QuestionDetailPage = () => {
           </QuestionTitle>
           <QuestionMeta>
             <AuthorInfo>
-              {console.log(question)}
               <AuthorAvatar
                 src={question?.profileImageUrl}
                 alt={question?.userNickname}
@@ -278,7 +580,7 @@ const QuestionDetailPage = () => {
                 답변 <strong>{question.answerCount || 0}</strong>
               </StatItem>
               <StatItem>
-                추천 <strong>{question.likeCount || 0}</strong>
+                추천 <strong>{question.voteCount || 0}</strong>
               </StatItem>
             </Stats>
           </QuestionMeta>
@@ -305,10 +607,14 @@ const QuestionDetailPage = () => {
           <VoteSection>
             <CommentToggleButton onClick={toggleQuestionComments}>
               <FaRegCommentDots />
-              댓글 {question.comments?.length || 0}
+              댓글 {question.commentCount || 0}
             </CommentToggleButton>
-            <VoteButton onClick={() => handleVote('up', 'question', question.id)}>
-              👍
+            <VoteButton
+              onClick={handleQuestionVote}
+              $voted={question.isVotedByCurrentUser}
+              disabled={votingQuestion}
+            >
+              👍 {question.voteCount || 0}
             </VoteButton>
           </VoteSection>
 
@@ -354,9 +660,13 @@ const QuestionDetailPage = () => {
             )}
 
             {/* 댓글 목록 */}
-            {question.comments && question.comments.length > 0 && (
+            {loadingQuestionComments ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                댓글을 불러오는 중...
+              </div>
+            ) : questionComments.length > 0 && (
               <CommentList>
-                {question.comments.map((comment) => (
+                {questionComments.map((comment) => (
                   <CommentItem key={comment.id}>
                     <CommentAuthor>
                       <AuthorAvatar
@@ -366,7 +676,44 @@ const QuestionDetailPage = () => {
                       <AuthorName>{comment.author?.nickname || '익명'}</AuthorName>
                       <CommentTime>{formatTimeAgo(comment.createdAt)}</CommentTime>
                     </CommentAuthor>
-                    <CommentContent>{comment.content}</CommentContent>
+                    {editingQuestionComment === comment.id ? (
+                      <>
+                        <EditCommentInput
+                          value={editCommentContent}
+                          onChange={(e) => {
+                            if (e.target.value.length <= MAX_COMMENT_LENGTH) {
+                              setEditCommentContent(e.target.value);
+                            }
+                          }}
+                          maxLength={MAX_COMMENT_LENGTH}
+                        />
+                        <EditCommentActions>
+                          <CharacterCount $isOverLimit={editCommentContent.length > MAX_COMMENT_LENGTH}>
+                            {editCommentContent.length}/{MAX_COMMENT_LENGTH}
+                          </CharacterCount>
+                          <CancelButton onClick={handleCancelEditQuestionComment}>
+                            취소
+                          </CancelButton>
+                          <SaveButton onClick={() => handleSaveQuestionComment(comment.id)}>
+                            저장
+                          </SaveButton>
+                        </EditCommentActions>
+                      </>
+                    ) : (
+                      <>
+                        <CommentContent>{comment.content}</CommentContent>
+                        {isAuthenticated && user?.id === comment.author?.id && (
+                          <CommentActions>
+                            <CommentActionButton onClick={() => handleEditQuestionComment(comment)}>
+                              수정
+                            </CommentActionButton>
+                            <CommentActionButton onClick={() => handleDeleteQuestionComment(comment.id)}>
+                              삭제
+                            </CommentActionButton>
+                          </CommentActions>
+                        )}
+                      </>
+                    )}
                   </CommentItem>
                 ))}
               </CommentList>
@@ -384,17 +731,22 @@ const QuestionDetailPage = () => {
         {question.answers && question.answers.length > 0 && (
           <AnswerList>
             {question.answers.map((answer) => (
-              <AnswerItem key={answer.id} $isAccepted={answer.isAccepted}>
-                {answer.isAccepted && <AcceptedBadge>✓ 채택된 답변</AcceptedBadge>}
+              <AnswerItem key={answer.id}>
+                {answer.isAccepted && (
+                  <AcceptedBadge>
+                    <FaCheckCircle />
+                    <span>채택된 답변입니다</span>
+                  </AcceptedBadge>
+                )}
 
                 <AnswerHeader>
                   <AuthorInfo>
                     <AuthorAvatar
-                      src={answer.author?.profileImageUrl}
-                      alt={answer.author?.nickname}
+                      src={answer?.profileImageUrl}
+                      alt={answer?.userNickname}
                     />
                     <div>
-                      <AnswerAuthor>{answer.author?.nickname || '익명'}</AnswerAuthor>
+                      <AnswerAuthor>{answer?.userNickname || '익명'}</AnswerAuthor>
                       <TimeStamp style={{ display: 'block', marginTop: '4px' }}>
                         {formatTimeAgo(answer.createdAt)}
                       </TimeStamp>
@@ -405,17 +757,17 @@ const QuestionDetailPage = () => {
                 <AnswerContent>{answer.content}</AnswerContent>
 
                 <AnswerActions>
-                  <VoteButton onClick={() => handleVote('up', 'answer', answer.id)}>
-                    👍 추천
-                  </VoteButton>
-                  <VoteCount>{answer.voteCount || 0}</VoteCount>
-                  <VoteButton onClick={() => handleVote('down', 'answer', answer.id)}>
-                    👎 비추천
-                  </VoteButton>
                   <CommentToggleButton onClick={() => toggleAnswerComments(answer.id)}>
                     <FaRegCommentDots />
-                    댓글 {answer.comments?.length || 0}
+                    댓글 {answer.commentCount || 0}
                   </CommentToggleButton>
+                  <VoteButton
+                    onClick={() => handleAnswerVote(answer.id)}
+                    $voted={answer.isVotedByCurrentUser}
+                    disabled={votingAnswers[answer.id]}
+                  >
+                    👍 {answer.voteCount || 0}
+                  </VoteButton>
                 </AnswerActions>
 
                 {/* 답변 댓글 섹션 (토글) */}
@@ -457,9 +809,13 @@ const QuestionDetailPage = () => {
                     )}
 
                     {/* 댓글 목록 */}
-                    {answer.comments && answer.comments.length > 0 && (
+                    {loadingAnswerComments[answer.id] ? (
+                      <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                        댓글을 불러오는 중...
+                      </div>
+                    ) : (answerCommentsMap[answer.id] && answerCommentsMap[answer.id].length > 0) && (
                       <CommentList>
-                        {answer.comments.map((comment) => (
+                        {answerCommentsMap[answer.id].map((comment) => (
                           <CommentItem key={comment.id}>
                             <CommentAuthor>
                               <AuthorAvatar
@@ -469,7 +825,44 @@ const QuestionDetailPage = () => {
                               <AuthorName>{comment.author?.nickname || '익명'}</AuthorName>
                               <CommentTime>{formatTimeAgo(comment.createdAt)}</CommentTime>
                             </CommentAuthor>
-                            <CommentContent>{comment.content}</CommentContent>
+                            {editingAnswerComment === comment.id ? (
+                              <>
+                                <EditCommentInput
+                                  value={editCommentContent}
+                                  onChange={(e) => {
+                                    if (e.target.value.length <= MAX_COMMENT_LENGTH) {
+                                      setEditCommentContent(e.target.value);
+                                    }
+                                  }}
+                                  maxLength={MAX_COMMENT_LENGTH}
+                                />
+                                <EditCommentActions>
+                                  <CharacterCount $isOverLimit={editCommentContent.length > MAX_COMMENT_LENGTH}>
+                                    {editCommentContent.length}/{MAX_COMMENT_LENGTH}
+                                  </CharacterCount>
+                                  <CancelButton onClick={handleCancelEditAnswerComment}>
+                                    취소
+                                  </CancelButton>
+                                  <SaveButton onClick={() => handleSaveAnswerComment(comment.id, answer.id)}>
+                                    저장
+                                  </SaveButton>
+                                </EditCommentActions>
+                              </>
+                            ) : (
+                              <>
+                                <CommentContent>{comment.content}</CommentContent>
+                                {isAuthenticated && user?.id === comment.author?.id && (
+                                  <CommentActions>
+                                    <CommentActionButton onClick={() => handleEditAnswerComment(comment)}>
+                                      수정
+                                    </CommentActionButton>
+                                    <CommentActionButton onClick={() => handleDeleteAnswerComment(comment.id, answer.id)}>
+                                      삭제
+                                    </CommentActionButton>
+                                  </CommentActions>
+                                )}
+                              </>
+                            )}
                           </CommentItem>
                         ))}
                       </CommentList>

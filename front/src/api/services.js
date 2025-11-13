@@ -151,6 +151,11 @@ export const qnaService = {
     return await api.get(API_ENDPOINTS.QNA.QUESTIONS, { params });
   },
 
+  // 질문 검색 - 반환: { content: [], page, size, totalElements, totalPages }
+  searchQuestions: async (params) => {
+    return await api.get(API_ENDPOINTS.QNA.QUESTIONS_SEARCH, { params });
+  },
+
   // 질문 상세 조회 - 반환: Question 객체
   getQuestionDetail: async (id) => {
     return await api.get(API_ENDPOINTS.QNA.QUESTION_DETAIL(id));
@@ -189,6 +194,66 @@ export const qnaService = {
   // 답변 삭제 - 반환: null
   deleteAnswer: async (questionId, answerId) => {
     return await api.delete(`${API_ENDPOINTS.QNA.ANSWERS(questionId)}/${answerId}`);
+  },
+
+  // 질문 댓글 목록 조회 - 반환: Comment 배열
+  getQuestionComments: async (questionId) => {
+    return await api.get(API_ENDPOINTS.QNA.QUESTION_COMMENTS(questionId));
+  },
+
+  // 질문 댓글 작성 - 반환: Comment 객체
+  createQuestionComment: async (questionId, data) => {
+    return await api.post(API_ENDPOINTS.QNA.QUESTION_COMMENTS(questionId), data);
+  },
+
+  // 질문 댓글 수정 - 반환: Comment 객체
+  updateQuestionComment: async (commentId, data) => {
+    return await api.put(API_ENDPOINTS.QNA.QUESTION_COMMENT_DETAIL(commentId), data);
+  },
+
+  // 질문 댓글 삭제 - 반환: null
+  deleteQuestionComment: async (commentId) => {
+    return await api.delete(API_ENDPOINTS.QNA.QUESTION_COMMENT_DETAIL(commentId));
+  },
+
+  // 답변 댓글 목록 조회 - 반환: Comment 배열
+  getAnswerComments: async (answerId) => {
+    return await api.get(API_ENDPOINTS.QNA.ANSWER_COMMENTS(answerId));
+  },
+
+  // 답변 댓글 작성 - 반환: Comment 객체
+  createAnswerComment: async (answerId, data) => {
+    return await api.post(API_ENDPOINTS.QNA.ANSWER_COMMENTS(answerId), data);
+  },
+
+  // 답변 댓글 수정 - 반환: Comment 객체
+  updateAnswerComment: async (commentId, data) => {
+    return await api.put(API_ENDPOINTS.QNA.ANSWER_COMMENT_DETAIL(commentId), data);
+  },
+
+  // 답변 댓글 삭제 - 반환: null
+  deleteAnswerComment: async (commentId) => {
+    return await api.delete(API_ENDPOINTS.QNA.ANSWER_COMMENT_DETAIL(commentId));
+  },
+
+  // 질문 추천 - 반환: Question 객체
+  voteQuestion: async (questionId) => {
+    return await api.post(API_ENDPOINTS.QNA.QUESTION_VOTE(questionId));
+  },
+
+  // 질문 추천 취소 - 반환: Question 객체
+  unvoteQuestion: async (questionId) => {
+    return await api.delete(API_ENDPOINTS.QNA.QUESTION_VOTE(questionId));
+  },
+
+  // 답변 추천 - 반환: Answer 객체
+  voteAnswer: async (answerId) => {
+    return await api.post(API_ENDPOINTS.QNA.ANSWER_VOTE(answerId));
+  },
+
+  // 답변 추천 취소 - 반환: Answer 객체
+  unvoteAnswer: async (answerId) => {
+    return await api.delete(API_ENDPOINTS.QNA.ANSWER_VOTE(answerId));
   },
 };
 

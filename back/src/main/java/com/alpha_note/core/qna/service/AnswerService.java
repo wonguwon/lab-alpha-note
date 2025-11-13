@@ -183,19 +183,9 @@ public class AnswerService {
             response.setIsVotedByCurrentUser(isVoted);
         }
 
-        // 댓글 목록
-        List<AnswerComment> comments = answerCommentRepository.findByAnswerIdAndIsDeletedFalseOrderByCreatedAtAsc(answer.getId());
-        List<CommentResponse> commentResponses = comments.stream()
-                .map(comment -> {
-                    CommentResponse commentResponse = CommentResponse.from(comment);
-                    userRepository.findById(comment.getUserId()).ifPresent(user -> {
-                        commentResponse.setUserNickname(user.getNickname());
-                        commentResponse.setProfileImageUrl(user.getProfileImageUrl());
-                    });
-                    return commentResponse;
-                })
-                .collect(Collectors.toList());
-        response.setComments(commentResponses);
+        // 댓글 개수
+        long commentCount = answerCommentRepository.countByAnswerIdAndIsDeletedFalse(answer.getId());
+        response.setCommentCount((int) commentCount);
 
         return response;
     }

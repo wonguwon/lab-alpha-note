@@ -95,9 +95,14 @@ export const FilterTab = styled.button`
   transition: all ${props => props.theme.transitions.base};
   white-space: nowrap;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: ${props => props.theme.colors.white};
     border-color: ${props => props.theme.colors.gray[300]};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 

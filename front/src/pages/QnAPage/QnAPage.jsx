@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoPersonCircle } from 'react-icons/io5';
 import { qnaService } from '../../api/services';
 import useAuthStore from '../../store/authStore';
 import {
@@ -63,19 +62,25 @@ const QnAPage = () => {
       const params = {
         page: currentPage,
         size: 20,
-        sort: getSortParam(filter),
       };
 
-      if (searchKeyword) {
+      let data;
+      if (searchKeyword.trim()) {
+        // 검색 API 사용 (필터에 따른 정렬 적용)
         params.keyword = searchKeyword;
+        params.sort = getSortParam(filter);
+        data = await qnaService.searchQuestions(params);
+      } else {
+        // 목록 API 사용 (필터에 따른 정렬)
+        params.sort = getSortParam(filter);
+        data = await qnaService.getQuestions(params);
       }
 
-      const data = await qnaService.getQuestions(params);
       setQuestions(data.content || []);
       setTotalElements(data.totalElements || 0);
       setTotalPages(data.totalPages || 0);
     } catch (error) {
-      console.error('질문 목록 조회 실패:', error);
+      console.error('질문 조회 실패:', error);
     } finally {
       setLoading(false);
     }
@@ -84,13 +89,13 @@ const QnAPage = () => {
   const getSortParam = (filter) => {
     switch (filter) {
       case 'latest':
-        return 'lastActivityAt,desc';
-      case 'unanswered':
-        return 'answerCount,asc';
-      case 'popular':
+        return 'createdAt,desc';
+      case 'answers':
+        return 'answerCount,desc';
+      case 'views':
         return 'viewCount,desc';
       default:
-        return 'lastActivityAt,desc';
+        return 'createdAt,desc';
     }
   };
 
@@ -165,12 +170,6 @@ const QnAPage = () => {
     return (
       <Pagination>
         <PageButton
-          onClick={() => setCurrentPage(0)}
-          disabled={currentPage === 0}
-        >
-          처음
-        </PageButton>
-        <PageButton
           onClick={() => setCurrentPage(currentPage - 1)}
           disabled={currentPage === 0}
         >
@@ -182,12 +181,6 @@ const QnAPage = () => {
           disabled={currentPage >= totalPages - 1}
         >
           다음
-        </PageButton>
-        <PageButton
-          onClick={() => setCurrentPage(totalPages - 1)}
-          disabled={currentPage >= totalPages - 1}
-        >
-          마지막
         </PageButton>
       </Pagination>
     );
@@ -216,16 +209,16 @@ const QnAPage = () => {
             최신순
           </FilterTab>
           <FilterTab
-            $active={filter === 'unanswered'}
-            onClick={() => handleFilterChange('unanswered')}
+            $active={filter === 'answers'}
+            onClick={() => handleFilterChange('answers')}
           >
-            미해결
+            답변순
           </FilterTab>
           <FilterTab
-            $active={filter === 'popular'}
-            onClick={() => handleFilterChange('popular')}
+            $active={filter === 'views'}
+            onClick={() => handleFilterChange('views')}
           >
-            인기순
+            조회순
           </FilterTab>
         </FilterTabs>
         <SearchBox>
@@ -257,7 +250,6 @@ const QnAPage = () => {
       ) : (
         <>
           <QuestionList>
-            {console.log(questions)}
             {questions.map((question) => (
               <QuestionCard
                 key={question.id}

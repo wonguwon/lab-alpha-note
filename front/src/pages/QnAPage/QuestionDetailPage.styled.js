@@ -349,6 +349,85 @@ export const CommentContent = styled.p`
   padding-left: ${props => props.theme.spacing[9]};
 `;
 
+export const CommentActions = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing[2]};
+  margin-top: ${props => props.theme.spacing[2]};
+  padding-left: ${props => props.theme.spacing[9]};
+`;
+
+export const CommentActionButton = styled.button`
+  padding: ${props => props.theme.spacing[1]} ${props => props.theme.spacing[2]};
+  background: transparent;
+  color: ${props => props.theme.colors.gray[500]};
+  border: none;
+  font-size: ${props => props.theme.fonts.size.xs};
+  cursor: pointer;
+  transition: color ${props => props.theme.transitions.fast};
+
+  &:hover {
+    color: ${props => props.theme.colors.gray[700]};
+  }
+`;
+
+export const EditCommentInput = styled.textarea`
+  width: 100%;
+  padding: ${props => props.theme.spacing[3]};
+  border: 1px solid ${props => props.theme.colors.gray[300]};
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-size: ${props => props.theme.fonts.size.sm};
+  font-family: inherit;
+  line-height: 1.6;
+  min-height: 60px;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.primary[500]};
+    box-shadow: 0 0 0 3px ${props => props.theme.colors.primary[100]};
+  }
+`;
+
+export const EditCommentActions = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing[2]};
+  margin-top: ${props => props.theme.spacing[2]};
+  justify-content: flex-end;
+`;
+
+export const SaveButton = styled.button`
+  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
+  background: ${props => props.theme.colors.primary[600]};
+  color: ${props => props.theme.colors.white};
+  border: none;
+  border-radius: ${props => props.theme.borderRadius.sm};
+  font-size: ${props => props.theme.fonts.size.sm};
+  font-weight: ${props => props.theme.fonts.weight.medium};
+  cursor: pointer;
+  transition: background ${props => props.theme.transitions.base};
+
+  &:hover {
+    background: ${props => props.theme.colors.primary[700]};
+  }
+`;
+
+export const CancelButton = styled.button`
+  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
+  background: ${props => props.theme.colors.white};
+  color: ${props => props.theme.colors.gray[600]};
+  border: 1px solid ${props => props.theme.colors.gray[300]};
+  border-radius: ${props => props.theme.borderRadius.sm};
+  font-size: ${props => props.theme.fonts.size.sm};
+  font-weight: ${props => props.theme.fonts.weight.medium};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+
+  &:hover {
+    background: ${props => props.theme.colors.gray[50]};
+    border-color: ${props => props.theme.colors.gray[400]};
+  }
+`;
+
 export const CommentTime = styled.span`
   font-size: ${props => props.theme.fonts.size.xs};
   color: ${props => props.theme.colors.gray[500]};
@@ -435,28 +514,6 @@ export const SendIconButton = styled.button`
   }
 `;
 
-export const CommentSubmitButton = styled.button`
-  margin-top: ${props => props.theme.spacing[2]};
-  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[4]};
-  background: ${props => props.theme.colors.primary[600]};
-  color: ${props => props.theme.colors.white};
-  border: none;
-  border-radius: ${props => props.theme.borderRadius.md};
-  font-size: ${props => props.theme.fonts.size.sm};
-  font-weight: ${props => props.theme.fonts.weight.medium};
-  cursor: pointer;
-  transition: background ${props => props.theme.transitions.base};
-
-  &:hover:not(:disabled) {
-    background: ${props => props.theme.colors.primary[700]};
-  }
-
-  &:disabled {
-    background: ${props => props.theme.colors.gray[400]};
-    cursor: not-allowed;
-  }
-`;
-
 /* 답변 */
 export const AnswerList = styled.div`
   ${flexColumn}
@@ -465,7 +522,7 @@ export const AnswerList = styled.div`
 
 export const AnswerItem = styled.div`
   padding: ${props => props.theme.spacing[6]};
-  background: ${props => props.$isAccepted ? props.theme.colors.success[50] : props.theme.colors.white};
+  background: ${props => props.theme.colors.white};
   border-bottom: 1px solid ${props => props.theme.colors.gray[200]};
   position: relative;
 
@@ -479,16 +536,27 @@ export const AnswerItem = styled.div`
 `;
 
 export const AcceptedBadge = styled.div`
-  ${flexCenter}
-  gap: ${props => props.theme.spacing[1]};
-  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
-  background: ${props => props.theme.colors.success[600]};
-  color: ${props => props.theme.colors.white};
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[2]};
+  padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[4]};
+  background: ${props => props.theme.colors.success[50]};
+  border-left: 4px solid ${props => props.theme.colors.success[600]};
   border-radius: ${props => props.theme.borderRadius.md};
-  font-size: ${props => props.theme.fonts.size.sm};
-  font-weight: ${props => props.theme.fonts.weight.bold};
   margin-bottom: ${props => props.theme.spacing[4]};
-  width: fit-content;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    color: ${props => props.theme.colors.success[600]};
+    flex-shrink: 0;
+  }
+
+  span {
+    font-size: ${props => props.theme.fonts.size.sm};
+    font-weight: ${props => props.theme.fonts.weight.semibold};
+    color: ${props => props.theme.colors.success[700]};
+  }
 `;
 
 export const AnswerHeader = styled.div`

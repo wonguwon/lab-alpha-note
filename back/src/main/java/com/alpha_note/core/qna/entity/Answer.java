@@ -79,10 +79,6 @@ public class Answer {
     @Builder.Default
     private List<AnswerVote> votes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<AnswerAttachment> attachments = new ArrayList<>();
-
     // ========== 비즈니스 메소드 ==========
 
     /**

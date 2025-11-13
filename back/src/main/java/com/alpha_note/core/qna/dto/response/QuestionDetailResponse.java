@@ -34,7 +34,7 @@ public class QuestionDetailResponse {
     private Instant createdAt;
     private Instant updatedAt;
     private List<TagResponse> tags; // Service에서 추가
-    private List<CommentResponse> comments; // Service에서 추가
+    private Integer commentCount; // Service에서 추가
     private List<AnswerResponse> answers; // Service에서 추가 (채택 답변 우선 정렬)
 
     public static QuestionDetailResponse from(Question question) {

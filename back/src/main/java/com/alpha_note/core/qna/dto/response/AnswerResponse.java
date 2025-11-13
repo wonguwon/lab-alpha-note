@@ -26,7 +26,7 @@ public class AnswerResponse {
     private Boolean isVotedByCurrentUser; // Service에서 추가
     private Instant createdAt;
     private Instant updatedAt;
-    private List<CommentResponse> comments; // Optional, Service에서 추가
+    private Integer commentCount; // Service에서 추가
 
     public static AnswerResponse from(Answer answer) {
         return AnswerResponse.builder()

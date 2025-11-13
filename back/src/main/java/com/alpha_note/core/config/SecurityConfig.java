@@ -85,6 +85,8 @@ public class SecurityConfig {
                     "/api/v1/qna/questions/user/*",
                     "/api/v1/qna/questions/unanswered",
                     "/api/v1/qna/questions/*/answers",
+                    "/api/v1/qna/questions/*/comments",
+                    "/api/v1/qna/answers/*/comments",
                     "/api/v1/qna/users/*/answers"
                 ).permitAll()
                 .anyRequest().authenticated()  // 나머지는 인증 필요 (/api/v1/auth/me 포함)

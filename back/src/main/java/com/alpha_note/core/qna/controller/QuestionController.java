@@ -49,7 +49,7 @@ public class QuestionController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<QuestionResponse>>> getQuestions(
             @AuthenticationPrincipal User user,
-            @PageableDefault(size = 20, sort = "lastActivityAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Long userId = (user != null) ? user.getId() : null;
         Page<QuestionResponse> response = questionService.getQuestions(pageable, userId);

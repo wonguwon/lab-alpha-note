@@ -42,7 +42,14 @@ export const API_ENDPOINTS = {
   // QnA 관련
   QNA: {
     QUESTIONS: '/qna/questions',
+    QUESTIONS_SEARCH: '/qna/questions/search',
     QUESTION_DETAIL: (id) => `/qna/questions/${id}`,
     ANSWERS: (questionId) => `/qna/questions/${questionId}/answers`,
+    QUESTION_COMMENTS: (questionId) => `/qna/questions/${questionId}/comments`,
+    ANSWER_COMMENTS: (answerId) => `/qna/answers/${answerId}/comments`,
+    QUESTION_COMMENT_DETAIL: (commentId) => `/qna/comments/question/${commentId}`,
+    ANSWER_COMMENT_DETAIL: (commentId) => `/qna/comments/answer/${commentId}`,
+    QUESTION_VOTE: (questionId) => `/qna/questions/${questionId}/vote`,
+    ANSWER_VOTE: (answerId) => `/qna/answers/${answerId}/vote`,
   },
 };

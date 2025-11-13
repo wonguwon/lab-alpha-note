@@ -32,6 +32,8 @@ public class QuestionService {
     private final QuestionVoteRepository questionVoteRepository;
     private final TagRepository tagRepository;
     private final AnswerRepository answerRepository;
+    private final AnswerCommentRepository answerCommentRepository;
+    private final AnswerVoteRepository answerVoteRepository;
     private final UserRepository userRepository;
 
     /**
@@ -328,19 +330,9 @@ public class QuestionService {
                 .collect(Collectors.toList());
         response.setTags(tags);
 
-        // 댓글 목록
-        List<QuestionComment> comments = questionCommentRepository.findByQuestionIdAndIsDeletedFalseOrderByCreatedAtAsc(question.getId());
-        List<CommentResponse> commentResponses = comments.stream()
-                .map(comment -> {
-                    CommentResponse commentResponse = CommentResponse.from(comment);
-                    userRepository.findById(comment.getUserId()).ifPresent(user -> {
-                        commentResponse.setUserNickname(user.getNickname());
-                        commentResponse.setProfileImageUrl(user.getProfileImageUrl());
-                    });
-                    return commentResponse;
-                })
-                .collect(Collectors.toList());
-        response.setComments(commentResponses);
+        // 댓글 개수
+        long commentCount = questionCommentRepository.countByQuestionIdAndIsDeletedFalse(question.getId());
+        response.setCommentCount((int) commentCount);
 
         // 답변 목록 (채택 답변 우선 정렬)
         List<Answer> answers = answerRepository.findByQuestionIdOrderByAcceptedAndVotes(question.getId());
@@ -366,9 +358,13 @@ public class QuestionService {
 
         // 추천 여부
         if (currentUserId != null) {
-            boolean isVoted = questionVoteRepository.existsByQuestionIdAndUserId(answer.getId(), currentUserId);
+            boolean isVoted = answerVoteRepository.existsByAnswerIdAndUserId(answer.getId(), currentUserId);
             response.setIsVotedByCurrentUser(isVoted);
         }
+
+        // 댓글 개수
+        long commentCount = answerCommentRepository.countByAnswerIdAndIsDeletedFalse(answer.getId());
+        response.setCommentCount((int) commentCount);
 
         return response;
     }
