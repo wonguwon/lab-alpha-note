@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.jsoup.Jsoup;
 
 import java.time.Instant;
 import java.util.List;
@@ -33,9 +34,14 @@ public class QuestionResponse {
     private List<TagResponse> tags; // Service에서 추가
 
     public static QuestionResponse from(Question question) {
+        // HTML 태그 제거하고 텍스트만 추출
         String preview = question.getContent();
-        if (preview != null && preview.length() > 200) {
-            preview = preview.substring(0, 200) + "...";
+        if (preview != null && !preview.isEmpty()) {
+            // Jsoup을 사용해서 HTML 태그 제거 및 이미지 태그 제거
+            preview = Jsoup.parse(preview).text();
+            if (preview.length() > 200) {
+                preview = preview.substring(0, 200) + "...";
+            }
         }
 
         return QuestionResponse.builder()

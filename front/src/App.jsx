@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -43,12 +44,12 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/qna" element={<QnAPage />} />
-          <Route path="/qna/ask" element={<AskQuestionPage />} />
+          <Route path="/qna/ask" element={<ProtectedRoute><AskQuestionPage /></ProtectedRoute>} />
           <Route path="/qna/:id" element={<QuestionDetailPage />} />
-          <Route path="/qna/:id/answer" element={<AnswerPage />} />
+          <Route path="/qna/:id/answer" element={<ProtectedRoute><AnswerPage /></ProtectedRoute>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
         </Routes>
       </Layout>

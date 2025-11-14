@@ -76,20 +76,17 @@ const ProfilePage = () => {
 
   // 프로필 정보 로드
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+    if (user) {
+      // 로그인한 사용자 정보에서 설정
+      setEmail(user.email || '');
+      setNickname(user.nickname || '');
 
-    // 로그인한 사용자 정보에서 설정
-    setEmail(user.email || '');
-    setNickname(user.nickname || '');
-
-    // 프로필 이미지가 있으면 설정
-    if (user.profileImageUrl) {
-      setProfileImagePreview(getImageUrl(user.profileImageUrl));
+      // 프로필 이미지가 있으면 설정
+      if (user.profileImageUrl) {
+        setProfileImagePreview(getImageUrl(user.profileImageUrl));
+      }
     }
-  }, [user, navigate]);
+  }, [user]);
 
   // 프로필 이미지 변경 핸들러
   const handleProfileImageClick = () => {

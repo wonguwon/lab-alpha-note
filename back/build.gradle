@@ -42,6 +42,9 @@ dependencies {
 	// Image processing
 	implementation 'net.coobird:thumbnailator:0.4.20'
 
+	// HTML parsing
+	implementation 'org.jsoup:jsoup:1.18.1'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'

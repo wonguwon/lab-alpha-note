@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaRegCommentDots, FaCheckCircle } from 'react-icons/fa';
 import { BsPatchQuestion } from 'react-icons/bs';
 import { IoSend } from 'react-icons/io5';
+import { MdEdit, MdDelete } from 'react-icons/md';
 import { qnaService } from '../../api/services';
 import useAuthStore from '../../store/authStore';
 import {
@@ -588,7 +589,7 @@ const QuestionDetailPage = () => {
 
         {/* 질문 본문 */}
         <QuestionBody>
-          <QuestionContent>{question.content}</QuestionContent>
+          <QuestionContent dangerouslySetInnerHTML={{ __html: question.content }} />
         </QuestionBody>
 
         {/* 태그 */}
@@ -617,11 +618,17 @@ const QuestionDetailPage = () => {
               👍 {question.voteCount || 0}
             </VoteButton>
           </VoteSection>
-
-          {isAuthenticated && user?.id === question.author?.id && (
+          {console.log(user)}
+          {isAuthenticated && user?.id === question.userId && (
             <ActionButtons>
-              <ActionButton onClick={handleEditQuestion}>수정</ActionButton>
-              <ActionButton onClick={handleDeleteQuestion}>삭제</ActionButton>
+              <ActionButton onClick={handleEditQuestion}>
+                <MdEdit size={16} />
+                수정
+              </ActionButton>
+              <ActionButton onClick={handleDeleteQuestion} $danger>
+                <MdDelete size={16} />
+                삭제
+              </ActionButton>
             </ActionButtons>
           )}
         </ActionBar>
@@ -754,7 +761,7 @@ const QuestionDetailPage = () => {
                   </AuthorInfo>
                 </AnswerHeader>
 
-                <AnswerContent>{answer.content}</AnswerContent>
+                <AnswerContent dangerouslySetInnerHTML={{ __html: answer.content }} />
 
                 <AnswerActions>
                   <CommentToggleButton onClick={() => toggleAnswerComments(answer.id)}>

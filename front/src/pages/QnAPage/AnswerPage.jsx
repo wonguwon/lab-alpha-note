@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { qnaService } from '../../api/services';
-import useAuthStore from '../../store/authStore';
+import TiptapEditor from '../../components/TiptapEditor';
 import {
   AnswerContainer,
   AnswerCard,
@@ -26,7 +26,6 @@ import {
 const AnswerPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
   const [question, setQuestion] = useState(null);
   const [content, setContent] = useState('');
   const [error, setError] = useState('');
@@ -34,13 +33,8 @@ const AnswerPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      alert('로그인이 필요합니다.');
-      navigate('/login');
-      return;
-    }
     loadQuestion();
-  }, [id, isAuthenticated, navigate]);
+  }, [id]);
 
   const loadQuestion = async () => {
     setLoading(true);
@@ -55,8 +49,8 @@ const AnswerPage = () => {
     }
   };
 
-  const handleContentChange = (e) => {
-    setContent(e.target.value);
+  const handleContentChange = (html) => {
+    setContent(html);
     if (error) {
       setError('');
     }
@@ -127,11 +121,11 @@ const AnswerPage = () => {
         {/* 질문 미리보기 */}
         <QuestionPreview>
           <QuestionTitle>{question.title}</QuestionTitle>
-          <QuestionContent>
-            {question.content.length > 200
-              ? `${question.content.substring(0, 200)}...`
-              : question.content}
-          </QuestionContent>
+          <QuestionContent dangerouslySetInnerHTML={{
+            __html: question.content.length > 500
+              ? `${question.content.substring(0, 500)}...`
+              : question.content
+          }} />
         </QuestionPreview>
 
         <FormSection onSubmit={handleSubmit}>
@@ -143,12 +137,14 @@ const AnswerPage = () => {
             <HelperText>
               질문자가 이해하기 쉽도록 구체적이고 명확하게 작성해주세요.
             </HelperText>
-            <TextArea
-              placeholder="좋은 답변의 예시:&#10;- 문제의 원인을 설명하고 해결 방법을 제시합니다.&#10;- 코드 예시를 포함하여 구체적으로 설명합니다.&#10;- 관련 문서나 참고 자료 링크를 추가합니다.&#10;- 추가 질문이 있을 경우 댓글로 소통합니다.&#10;&#10;피해야 할 예시:&#10;- 단순히 &quot;검색해보세요&quot;라고만 답변하기&#10;- 코드만 나열하고 설명이 없는 답변&#10;- 질문 내용과 무관한 답변"
-              value={content}
+            <TiptapEditor
+              content={content}
               onChange={handleContentChange}
+              placeholder="좋은 답변의 예시:
+- 문제의 원인을 설명하고 해결 방법을 제시합니다.
+- 코드 예시를 포함하여 구체적으로 설명합니다.
+- 관련 문서나 참고 자료 링크를 추가합니다."
               error={error}
-              rows={15}
             />
             {error && <ErrorMessage>{error}</ErrorMessage>}
           </FormGroup>

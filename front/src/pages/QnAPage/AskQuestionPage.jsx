@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { qnaService } from '../../api/services';
+import TiptapEditor from '../../components/TiptapEditor';
 import {
   AskContainer,
   AskCard,
@@ -46,8 +47,8 @@ const AskQuestionPage = () => {
     }
   };
 
-  const handleContentChange = (e) => {
-    setFormData({ ...formData, content: e.target.value });
+  const handleContentChange = (html) => {
+    setFormData({ ...formData, content: html });
     if (errors.content) {
       setErrors({ ...errors, content: '' });
     }
@@ -165,12 +166,14 @@ const AskQuestionPage = () => {
             내용 <RequiredMark>*</RequiredMark>
           </Label>
           <HelperText>구체적으로 작성하고, 다른 사람에게 설명하듯 물어보세요.</HelperText>
-          <TextArea
-            placeholder="좋은 질문이 좋은 답을 얻습니다.&#10;- 현재 발생한 문제를 구체적으로 설명하세요.&#10;- 해결을 위해 시도한 방법을 적어주세요.&#10;- 코드는 코드블록으로 깔끔하게 정리하세요.&#10;- 추가 정보 요청에는 신속히 응답해주세요.&#10;&#10;피해야 할 예시:&#10;- 코드나 에러 메시지를 이미지로만 올리기&#10;- &quot;급해요&quot;, &quot;빨리요&quot;, &quot;도와주세요&quot; 등 불필요한 표현"
-            value={formData.content}
+          <TiptapEditor
+            content={formData.content}
             onChange={handleContentChange}
+            placeholder="좋은 질문이 좋은 답을 얻습니다.
+- 현재 발생한 문제를 구체적으로 설명하세요.
+- 해결을 위해 시도한 방법을 적어주세요.
+- 코드는 코드블록으로 깔끔하게 정리하세요."
             error={errors.content}
-            rows={15}
           />
           {errors.content && <ErrorMessage>{errors.content}</ErrorMessage>}
         </FormGroup>

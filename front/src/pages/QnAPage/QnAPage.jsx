@@ -259,13 +259,13 @@ const QnAPage = () => {
                   {/* 태그와 통계 */}
                   <QuestionFooter>
                     {/* 태그 */}
-                    <TagList>
-                      {question.tags && question.tags.length > 0 && (
-                        question.tags.map((tag) => (
+                    {question.tags && question.tags.length > 0 && (
+                      <TagList>
+                        {question.tags.map((tag) => (
                           <Tag key={tag.id}>{tag.name}</Tag>
-                        ))
-                      )}
-                    </TagList>
+                        ))}
+                      </TagList>
+                    )}
 
                     {/* 통계 */}
                     <QuestionStats>
@@ -290,7 +290,7 @@ const QnAPage = () => {
                   <QuestionTitle>{question.title}</QuestionTitle>
 
                   {/* 내용 */}
-                  <QuestionExcerpt>{question.contentPreview}</QuestionExcerpt>
+                  <QuestionExcerpt dangerouslySetInnerHTML={{ __html: question.contentPreview }} />
 
                   {/* 메타 정보 */}
                   <QuestionMeta>
