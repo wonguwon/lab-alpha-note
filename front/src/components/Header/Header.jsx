@@ -49,8 +49,6 @@ const Header = () => {
           {/* 내비게이션 영역 */}
           <Navigation>
             <NavLink as={Link} to="/qna">Q&A</NavLink>
-            <NavLink href="/community">커뮤니티</NavLink>
-            <NavLink href="/records">기록</NavLink>
           </Navigation>
         </CenterSection>
 

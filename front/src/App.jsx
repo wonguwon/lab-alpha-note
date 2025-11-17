@@ -7,7 +7,8 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ProfilePage from './pages/ProfilePage';
 import OAuth2RedirectPage from './pages/OAuth2RedirectPage';
-import QnAPage, { AskQuestionPage, QuestionDetailPage, AnswerPage } from './pages/QnAPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import QnAPage, { AskQuestionPage, QuestionDetailPage, AnswerPage, EditQuestionPage, EditAnswerPage } from './pages/QnAPage';
 import useAuthStore from './store/authStore';
 import { setAuthStoreGetter } from './api/axios';
 import { authService } from './api/services';
@@ -46,11 +47,14 @@ function App() {
           <Route path="/qna" element={<QnAPage />} />
           <Route path="/qna/ask" element={<ProtectedRoute><AskQuestionPage /></ProtectedRoute>} />
           <Route path="/qna/:id" element={<QuestionDetailPage />} />
+          <Route path="/qna/:id/edit" element={<ProtectedRoute><EditQuestionPage /></ProtectedRoute>} />
           <Route path="/qna/:id/answer" element={<ProtectedRoute><AnswerPage /></ProtectedRoute>} />
+          <Route path="/qna/:id/answer/:answerId/edit" element={<ProtectedRoute><EditAnswerPage /></ProtectedRoute>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         </Routes>
       </Layout>
     </Router>

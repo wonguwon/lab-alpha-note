@@ -348,8 +348,68 @@ export const CommentItem = styled.div`
 export const CommentAuthor = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: ${props => props.theme.spacing[2]};
   margin-bottom: ${props => props.theme.spacing[2]};
+`;
+
+export const CommentAuthorInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[2]};
+  flex: 1;
+`;
+
+export const CommentActionButtons = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[1]};
+`;
+
+export const CommentEditButton = styled.button`
+  background: none;
+  border: none;
+  color: ${props => props.theme.colors.gray[400]};
+  cursor: pointer;
+  padding: ${props => props.theme.spacing[1]};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+
+  &:hover {
+    color: ${props => props.theme.colors.primary[600]};
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
+export const CommentDeleteButton = styled.button`
+  background: none;
+  border: none;
+  color: ${props => props.theme.colors.gray[400]};
+  cursor: pointer;
+  padding: ${props => props.theme.spacing[1]};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+
+  &:hover {
+    color: ${props => props.theme.colors.danger[600]};
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
+export const CommentContentWrapper = styled.div`
+  padding-left: ${props => props.theme.spacing[9]};
 `;
 
 export const CommentContent = styled.p`
@@ -357,7 +417,6 @@ export const CommentContent = styled.p`
   line-height: ${props => props.theme.fonts.lineHeight.relaxed};
   color: ${props => props.theme.colors.gray[700]};
   margin: 0;
-  padding-left: ${props => props.theme.spacing[9]};
 `;
 
 export const CommentActions = styled.div`
@@ -629,6 +688,7 @@ export const AnswerContent = styled.div`
 export const AnswerActions = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: ${props => props.theme.spacing[2]};
   padding-top: ${props => props.theme.spacing[3]};
   border-top: 1px solid ${props => props.theme.colors.gray[200]};

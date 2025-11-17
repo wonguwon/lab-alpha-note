@@ -221,9 +221,10 @@ public class CommentService {
     private CommentResponse buildQuestionCommentResponse(QuestionComment comment) {
         CommentResponse response = CommentResponse.from(comment);
 
-        // 작성자 닉네임
+        // 작성자 닉네임 및 프로필 이미지
         userRepository.findById(comment.getUserId()).ifPresent(user -> {
             response.setUserNickname(user.getNickname());
+            response.setProfileImageUrl(user.getProfileImageUrl());
         });
 
         return response;
@@ -235,9 +236,10 @@ public class CommentService {
     private CommentResponse buildAnswerCommentResponse(AnswerComment comment) {
         CommentResponse response = CommentResponse.from(comment);
 
-        // 작성자 닉네임
+        // 작성자 닉네임 및 프로필 이미지
         userRepository.findById(comment.getUserId()).ifPresent(user -> {
             response.setUserNickname(user.getNickname());
+            response.setProfileImageUrl(user.getProfileImageUrl());
         });
 
         return response;

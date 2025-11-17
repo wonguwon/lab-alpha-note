@@ -74,6 +74,20 @@ public class AnswerController {
     }
 
     /**
+     * 답변 단건 조회
+     * GET /api/v1/qna/answers/{answerId}
+     */
+    @GetMapping("/answers/{answerId}")
+    public ResponseEntity<ApiResponse<AnswerResponse>> getAnswer(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long answerId) {
+
+        Long currentUserId = (user != null) ? user.getId() : null;
+        AnswerResponse response = answerService.getAnswerById(answerId, currentUserId);
+        return ResponseEntity.ok(ApiResponse.success("답변 조회 성공", response));
+    }
+
+    /**
      * 답변 수정
      * PUT /api/v1/qna/answers/{answerId}
      */

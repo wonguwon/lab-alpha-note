@@ -35,6 +35,11 @@ import {
   CommentList,
   CommentItem,
   CommentAuthor,
+  CommentAuthorInfo,
+  CommentActionButtons,
+  CommentEditButton,
+  CommentDeleteButton,
+  CommentContentWrapper,
   CommentContent,
   CommentTime,
   CommentForm,
@@ -43,8 +48,6 @@ import {
   CommentInputFooter,
   CharacterCount,
   SendIconButton,
-  CommentActions,
-  CommentActionButton,
   EditCommentInput,
   EditCommentActions,
   SaveButton,
@@ -509,6 +512,28 @@ const QuestionDetailPage = () => {
     }
   };
 
+  // 답변 수정
+  const handleEditAnswer = (answerId) => {
+    navigate(`/qna/${id}/answer/${answerId}/edit`);
+  };
+
+  // 답변 삭제
+  const handleDeleteAnswer = async (answerId) => {
+    if (!window.confirm('정말로 이 답변을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await qnaService.deleteAnswer(answerId);
+      alert('답변이 삭제되었습니다.');
+      // 답변 목록 새로고침
+      loadQuestionDetail();
+    } catch (err) {
+      console.error('답변 삭제 실패:', err);
+      alert(err.response?.data?.message || '답변 삭제에 실패했습니다.');
+    }
+  };
+
   // 답변하기 페이지로 이동
   const handleAnswerClick = () => {
     if (!isAuthenticated) {
@@ -676,12 +701,24 @@ const QuestionDetailPage = () => {
                 {questionComments.map((comment) => (
                   <CommentItem key={comment.id}>
                     <CommentAuthor>
-                      <AuthorAvatar
-                        src={comment.author?.profileImageUrl}
-                        alt={comment.author?.nickname}
-                      />
-                      <AuthorName>{comment.author?.nickname || '익명'}</AuthorName>
-                      <CommentTime>{formatTimeAgo(comment.createdAt)}</CommentTime>
+                      <CommentAuthorInfo>
+                        <AuthorAvatar
+                          src={comment?.profileImageUrl}
+                          alt={comment?.userNickname}
+                        />
+                        <AuthorName>{comment?.userNickname || '익명'}</AuthorName>
+                        <CommentTime>{formatTimeAgo(comment.createdAt)}</CommentTime>
+                      </CommentAuthorInfo>
+                      {!editingQuestionComment && isAuthenticated && user?.id === comment?.userId && (
+                        <CommentActionButtons>
+                          <CommentEditButton onClick={() => handleEditQuestionComment(comment)}>
+                            <MdEdit size={16} />
+                          </CommentEditButton>
+                          <CommentDeleteButton onClick={() => handleDeleteQuestionComment(comment.id)}>
+                            <MdDelete size={16} />
+                          </CommentDeleteButton>
+                        </CommentActionButtons>
+                      )}
                     </CommentAuthor>
                     {editingQuestionComment === comment.id ? (
                       <>
@@ -707,19 +744,9 @@ const QuestionDetailPage = () => {
                         </EditCommentActions>
                       </>
                     ) : (
-                      <>
+                      <CommentContentWrapper>
                         <CommentContent>{comment.content}</CommentContent>
-                        {isAuthenticated && user?.id === comment.author?.id && (
-                          <CommentActions>
-                            <CommentActionButton onClick={() => handleEditQuestionComment(comment)}>
-                              수정
-                            </CommentActionButton>
-                            <CommentActionButton onClick={() => handleDeleteQuestionComment(comment.id)}>
-                              삭제
-                            </CommentActionButton>
-                          </CommentActions>
-                        )}
-                      </>
+                      </CommentContentWrapper>
                     )}
                   </CommentItem>
                 ))}
@@ -764,17 +791,32 @@ const QuestionDetailPage = () => {
                 <AnswerContent dangerouslySetInnerHTML={{ __html: answer.content }} />
 
                 <AnswerActions>
-                  <CommentToggleButton onClick={() => toggleAnswerComments(answer.id)}>
-                    <FaRegCommentDots />
-                    댓글 {answer.commentCount || 0}
-                  </CommentToggleButton>
-                  <VoteButton
-                    onClick={() => handleAnswerVote(answer.id)}
-                    $voted={answer.isVotedByCurrentUser}
-                    disabled={votingAnswers[answer.id]}
-                  >
-                    👍 {answer.voteCount || 0}
-                  </VoteButton>
+                  <VoteSection>
+                    <CommentToggleButton onClick={() => toggleAnswerComments(answer.id)}>
+                      <FaRegCommentDots />
+                      댓글 {answer.commentCount || 0}
+                    </CommentToggleButton>
+                    <VoteButton
+                      onClick={() => handleAnswerVote(answer.id)}
+                      $voted={answer.isVotedByCurrentUser}
+                      disabled={votingAnswers[answer.id]}
+                    >
+                      👍 {answer.voteCount || 0}
+                    </VoteButton>
+                  </VoteSection>
+
+                  {isAuthenticated && user?.id === answer.userId && (
+                    <ActionButtons>
+                      <ActionButton onClick={() => handleEditAnswer(answer.id)}>
+                        <MdEdit size={16} />
+                        수정
+                      </ActionButton>
+                      <ActionButton onClick={() => handleDeleteAnswer(answer.id)} $danger>
+                        <MdDelete size={16} />
+                        삭제
+                      </ActionButton>
+                    </ActionButtons>
+                  )}
                 </AnswerActions>
 
                 {/* 답변 댓글 섹션 (토글) */}
@@ -825,12 +867,24 @@ const QuestionDetailPage = () => {
                         {answerCommentsMap[answer.id].map((comment) => (
                           <CommentItem key={comment.id}>
                             <CommentAuthor>
-                              <AuthorAvatar
-                                src={comment.author?.profileImageUrl}
-                                alt={comment.author?.nickname}
-                              />
-                              <AuthorName>{comment.author?.nickname || '익명'}</AuthorName>
-                              <CommentTime>{formatTimeAgo(comment.createdAt)}</CommentTime>
+                              <CommentAuthorInfo>
+                                <AuthorAvatar
+                                  src={comment?.profileImageUrl}
+                                  alt={comment?.userNickname}
+                                />
+                                <AuthorName>{comment?.userNickname || '익명'}</AuthorName>
+                                <CommentTime>{formatTimeAgo(comment.createdAt)}</CommentTime>
+                              </CommentAuthorInfo>
+                              {!editingAnswerComment && isAuthenticated && user?.id === comment?.userId && (
+                                <CommentActionButtons>
+                                  <CommentEditButton onClick={() => handleEditAnswerComment(comment)}>
+                                    <MdEdit size={16} />
+                                  </CommentEditButton>
+                                  <CommentDeleteButton onClick={() => handleDeleteAnswerComment(comment.id, answer.id)}>
+                                    <MdDelete size={16} />
+                                  </CommentDeleteButton>
+                                </CommentActionButtons>
+                              )}
                             </CommentAuthor>
                             {editingAnswerComment === comment.id ? (
                               <>
@@ -856,19 +910,9 @@ const QuestionDetailPage = () => {
                                 </EditCommentActions>
                               </>
                             ) : (
-                              <>
+                              <CommentContentWrapper>
                                 <CommentContent>{comment.content}</CommentContent>
-                                {isAuthenticated && user?.id === comment.author?.id && (
-                                  <CommentActions>
-                                    <CommentActionButton onClick={() => handleEditAnswerComment(comment)}>
-                                      수정
-                                    </CommentActionButton>
-                                    <CommentActionButton onClick={() => handleDeleteAnswerComment(comment.id, answer.id)}>
-                                      삭제
-                                    </CommentActionButton>
-                                  </CommentActions>
-                                )}
-                              </>
+                              </CommentContentWrapper>
                             )}
                           </CommentItem>
                         ))}

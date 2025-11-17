@@ -26,7 +26,7 @@ const Footer = () => {
 
           {/* 네비게이션 링크들 */}
           <NavLinks>
-            <FooterLink href="/privacy">개인정보처리방침</FooterLink>
+            <FooterLink href="/privacy-policy">개인정보처리방침</FooterLink>
             <Separator>|</Separator>
             <FooterLink href="/terms">이용약관</FooterLink>
             <Separator>|</Separator>

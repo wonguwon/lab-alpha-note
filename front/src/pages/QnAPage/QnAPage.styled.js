@@ -61,17 +61,12 @@ export const AskButton = styled.button`
 
 /* 필터 및 검색 영역 */
 export const FilterSection = styled.div`
-  ${flexBetween}
+  ${flexColumn}
   margin-bottom: ${props => props.theme.spacing[4]};
   padding: ${props => props.theme.spacing[4]};
   background: ${props => props.theme.colors.gray[50]};
   border-radius: ${props => props.theme.borderRadius.lg};
-  gap: ${props => props.theme.spacing[4]};
-
-  @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    flex-direction: column;
-    align-items: stretch;
-  }
+  gap: ${props => props.theme.spacing[3]};
 `;
 
 export const FilterTabs = styled.div`
@@ -106,14 +101,39 @@ export const FilterTab = styled.button`
   }
 `;
 
+export const SearchRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[3]};
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+`;
+
 export const SearchBox = styled.div`
   display: flex;
   gap: ${props => props.theme.spacing[2]};
   flex: 1;
-  max-width: 400px;
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     max-width: 100%;
+  }
+`;
+
+export const SearchTypeSelect = styled.select`
+  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
+  border: 1px solid ${props => props.theme.colors.gray[300]};
+  border-radius: ${props => props.theme.borderRadius.base};
+  font-size: ${props => props.theme.fonts.size.sm};
+  background: ${props => props.theme.colors.white};
+  cursor: pointer;
+  min-width: 100px;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.primary[500]};
   }
 `;
 
@@ -133,6 +153,12 @@ export const SearchInput = styled.input`
   &::placeholder {
     color: ${props => props.theme.colors.gray[400]};
   }
+`;
+
+export const SearchResultCount = styled.span`
+  color: ${props => props.theme.colors.gray[600]};
+  font-size: ${props => props.theme.fonts.size.sm};
+  white-space: nowrap;
 `;
 
 export const SearchButton = styled.button`
@@ -183,7 +209,7 @@ export const QuestionContent = styled.div`
 /* 질문 푸터 (태그 + 통계) */
 export const QuestionFooter = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: ${props => props.theme.spacing[4]};
   flex-wrap: wrap;
@@ -243,6 +269,7 @@ export const TagList = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: ${props => props.theme.spacing[2]};
+  margin-right: auto;
 `;
 
 export const Tag = styled.span`

@@ -5,6 +5,7 @@ import com.alpha_note.core.qna.dto.request.CreateQuestionRequest;
 import com.alpha_note.core.qna.dto.request.UpdateQuestionRequest;
 import com.alpha_note.core.qna.dto.response.QuestionDetailResponse;
 import com.alpha_note.core.qna.dto.response.QuestionResponse;
+import com.alpha_note.core.qna.enums.SearchType;
 import com.alpha_note.core.qna.service.QuestionService;
 import com.alpha_note.core.user.entity.User;
 import jakarta.validation.Valid;
@@ -71,17 +72,18 @@ public class QuestionController {
     }
 
     /**
-     * 질문 검색 (키워드)
-     * GET /api/v1/qna/questions/search?keyword=...
+     * 질문 검색 (키워드 + 검색 타입)
+     * GET /api/v1/qna/questions/search?keyword=...&searchType=TITLE
      */
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<Page<QuestionResponse>>> searchQuestions(
             @AuthenticationPrincipal User user,
             @RequestParam String keyword,
+            @RequestParam(defaultValue = "ALL") SearchType searchType,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Long userId = (user != null) ? user.getId() : null;
-        Page<QuestionResponse> response = questionService.searchQuestions(keyword, pageable, userId);
+        Page<QuestionResponse> response = questionService.searchQuestions(keyword, searchType, pageable, userId);
         return ResponseEntity.ok(ApiResponse.success("질문 검색 성공", response));
     }
 

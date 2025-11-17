@@ -187,13 +187,13 @@ export const qnaService = {
   },
 
   // 답변 수정 - 반환: Answer 객체
-  updateAnswer: async (questionId, answerId, data) => {
-    return await api.put(`${API_ENDPOINTS.QNA.ANSWERS(questionId)}/${answerId}`, data);
+  updateAnswer: async (answerId, data) => {
+    return await api.put(API_ENDPOINTS.QNA.ANSWER_DETAIL(answerId), data);
   },
 
   // 답변 삭제 - 반환: null
-  deleteAnswer: async (questionId, answerId) => {
-    return await api.delete(`${API_ENDPOINTS.QNA.ANSWERS(questionId)}/${answerId}`);
+  deleteAnswer: async (answerId) => {
+    return await api.delete(API_ENDPOINTS.QNA.ANSWER_DETAIL(answerId));
   },
 
   // 질문 댓글 목록 조회 - 반환: Comment 배열

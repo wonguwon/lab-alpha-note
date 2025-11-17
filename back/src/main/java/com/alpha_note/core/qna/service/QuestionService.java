@@ -6,6 +6,7 @@ import com.alpha_note.core.qna.dto.request.CreateQuestionRequest;
 import com.alpha_note.core.qna.dto.request.UpdateQuestionRequest;
 import com.alpha_note.core.qna.dto.response.*;
 import com.alpha_note.core.qna.entity.*;
+import com.alpha_note.core.qna.enums.SearchType;
 import com.alpha_note.core.qna.repository.*;
 import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
@@ -35,6 +36,7 @@ public class QuestionService {
     private final AnswerCommentRepository answerCommentRepository;
     private final AnswerVoteRepository answerVoteRepository;
     private final UserRepository userRepository;
+    private final ViewCountService viewCountService;
 
     /**
      * 질문 생성
@@ -68,16 +70,20 @@ public class QuestionService {
     }
 
     /**
-     * 질문 상세 조회 (조회수 증가)
+     * 질문 상세 조회 (조회수 증가 - 중복 방지)
      */
     @Transactional
     public QuestionDetailResponse getQuestionDetail(Long questionId, Long currentUserId) {
         Question question = questionRepository.findByIdAndIsDeletedFalse(questionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.QUESTION_NOT_FOUND));
 
-        // 조회수 증가
-        question.incrementViewCount();
-        questionRepository.save(question);
+        // 조회수 증가 (로그인 사용자만, 중복 방지)
+        if (currentUserId != null && !viewCountService.hasViewed(questionId, currentUserId)) {
+            question.incrementViewCount();
+            viewCountService.recordView(questionId, currentUserId);
+            questionRepository.save(question);
+            log.debug("질문 조회수 증가 - questionId: {}, userId: {}", questionId, currentUserId);
+        }
 
         return buildQuestionDetailResponse(question, currentUserId);
     }
@@ -92,11 +98,28 @@ public class QuestionService {
     }
 
     /**
-     * 질문 검색 (키워드)
+     * 질문 검색 (키워드 + 검색 타입)
      */
     @Transactional(readOnly = true)
-    public Page<QuestionResponse> searchQuestions(String keyword, Pageable pageable, Long currentUserId) {
-        Page<Question> questions = questionRepository.searchByKeyword(keyword, pageable);
+    public Page<QuestionResponse> searchQuestions(String keyword, SearchType searchType, Pageable pageable, Long currentUserId) {
+        Page<Question> questions;
+
+        switch (searchType) {
+            case TITLE:
+                questions = questionRepository.searchByTitle(keyword, pageable);
+                break;
+            case CONTENT:
+                questions = questionRepository.searchByContent(keyword, pageable);
+                break;
+            case AUTHOR:
+                questions = questionRepository.searchByAuthor(keyword, pageable);
+                break;
+            case ALL:
+            default:
+                questions = questionRepository.searchByKeyword(keyword, pageable);
+                break;
+        }
+
         return questions.map(q -> buildQuestionResponse(q, currentUserId));
     }
 

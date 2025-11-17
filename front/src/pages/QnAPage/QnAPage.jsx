@@ -7,12 +7,12 @@ import {
   QnAHeader,
   TitleSection,
   PageTitle,
-  QnAStats,
   AskButton,
   FilterSection,
   FilterTabs,
   FilterTab,
   SearchBox,
+  SearchTypeSelect,
   SearchInput,
   SearchButton,
   QuestionList,
@@ -49,6 +49,7 @@ const QnAPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [filter, setFilter] = useState('latest');
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchType, setSearchType] = useState('TITLE');
   const [loading, setLoading] = useState(false);
 
   // 질문 목록 조회
@@ -68,6 +69,7 @@ const QnAPage = () => {
       if (searchKeyword.trim()) {
         // 검색 API 사용 (필터에 따른 정렬 적용)
         params.keyword = searchKeyword;
+        params.searchType = searchType;
         params.sort = getSortParam(filter);
         data = await qnaService.searchQuestions(params);
       } else {
@@ -192,9 +194,6 @@ const QnAPage = () => {
       <QnAHeader>
         <TitleSection>
           <PageTitle>Q&A</PageTitle>
-          <QnAStats>
-            <span>{totalElements.toLocaleString()}개의 질문</span>
-          </QnAStats>
         </TitleSection>
         <AskButton onClick={handleAskQuestion}>질문하기</AskButton>
       </QnAHeader>
@@ -222,12 +221,20 @@ const QnAPage = () => {
           </FilterTab>
         </FilterTabs>
         <SearchBox>
+          <SearchTypeSelect
+            value={searchType}
+            onChange={(e) => setSearchType(e.target.value)}
+          >
+            <option value="TITLE">제목</option>
+            <option value="CONTENT">내용</option>
+            <option value="AUTHOR">작성자</option>
+          </SearchTypeSelect>
           <SearchInput
             type="text"
             placeholder="질문 검색..."
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
           />
           <SearchButton onClick={handleSearch}>검색</SearchButton>
         </SearchBox>

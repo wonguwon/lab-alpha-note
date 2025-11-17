@@ -32,6 +32,18 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     @Query("SELECT q FROM Question q WHERE (q.title LIKE %:keyword% OR q.content LIKE %:keyword%) AND q.isDeleted = false")
     Page<Question> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
+    // 제목만 검색
+    @Query("SELECT q FROM Question q WHERE q.title LIKE %:keyword% AND q.isDeleted = false")
+    Page<Question> searchByTitle(@Param("keyword") String keyword, Pageable pageable);
+
+    // 내용만 검색
+    @Query("SELECT q FROM Question q WHERE q.content LIKE %:keyword% AND q.isDeleted = false")
+    Page<Question> searchByContent(@Param("keyword") String keyword, Pageable pageable);
+
+    // 작성자 닉네임으로 검색
+    @Query("SELECT q FROM Question q JOIN User u ON q.userId = u.id WHERE u.nickname LIKE %:keyword% AND q.isDeleted = false")
+    Page<Question> searchByAuthor(@Param("keyword") String keyword, Pageable pageable);
+
     // 태그별 질문 조회 (태그 ID로)
     @Query("SELECT q FROM Question q JOIN q.questionTags qt WHERE qt.tagId = :tagId AND q.isDeleted = false")
     Page<Question> findByTagId(@Param("tagId") Long tagId, Pageable pageable);

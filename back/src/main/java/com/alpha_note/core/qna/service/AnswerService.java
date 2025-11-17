@@ -90,6 +90,17 @@ public class AnswerService {
     }
 
     /**
+     * 답변 단건 조회
+     */
+    @Transactional(readOnly = true)
+    public AnswerResponse getAnswerById(Long answerId, Long currentUserId) {
+        Answer answer = answerRepository.findByIdAndIsDeletedFalse(answerId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ANSWER_NOT_FOUND));
+
+        return buildAnswerResponse(answer, currentUserId);
+    }
+
+    /**
      * 답변 수정
      */
     @Transactional
