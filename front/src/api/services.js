@@ -257,6 +257,91 @@ export const qnaService = {
   },
 };
 
+// Habit 관련 API 서비스
+export const habitService = {
+  // 습관 목록 조회 - 반환: Page<Habit>
+  getHabits: async (params = {}) => {
+    return await api.get(API_ENDPOINTS.HABIT.HABITS, { params });
+  },
+
+  // 습관 대시보드 조회 (습관 목록 + 잔디 캘린더) - 반환: HabitDashboardResponse
+  getHabitDashboard: async (params = {}) => {
+    return await api.get(API_ENDPOINTS.HABIT.HABIT_DASHBOARD, { params });
+  },
+
+  // 습관 생성 - 반환: Habit 객체
+  createHabit: async (data) => {
+    return await api.post(API_ENDPOINTS.HABIT.HABITS, data);
+  },
+
+  // 습관 상세 조회 - 반환: Habit 객체
+  getHabit: async (id) => {
+    return await api.get(API_ENDPOINTS.HABIT.HABIT_DETAIL(id));
+  },
+
+  // 습관 수정 - 반환: Habit 객체
+  updateHabit: async (id, data) => {
+    return await api.put(API_ENDPOINTS.HABIT.HABIT_DETAIL(id), data);
+  },
+
+  // 습관 삭제 - 반환: null
+  deleteHabit: async (id) => {
+    return await api.delete(API_ENDPOINTS.HABIT.HABIT_DETAIL(id));
+  },
+
+  // 습관 통계 조회 - 반환: HabitStats 객체
+  getHabitStats: async (id) => {
+    return await api.get(API_ENDPOINTS.HABIT.HABIT_STATS(id));
+  },
+
+  // 습관 보관 - 반환: Habit 객체
+  archiveHabit: async (id) => {
+    return await api.post(API_ENDPOINTS.HABIT.HABIT_ARCHIVE(id));
+  },
+
+  // 습관 활성화 - 반환: Habit 객체
+  activateHabit: async (id) => {
+    return await api.post(API_ENDPOINTS.HABIT.HABIT_ACTIVATE(id));
+  },
+
+  // 습관 기록 목록 조회 - 반환: Page<HabitRecord>
+  getHabitRecords: async (habitId, params = {}) => {
+    return await api.get(API_ENDPOINTS.HABIT.HABIT_RECORDS(habitId), { params });
+  },
+
+  // 습관 기록 생성 - 반환: HabitRecord 객체
+  createHabitRecord: async (habitId, data) => {
+    return await api.post(API_ENDPOINTS.HABIT.HABIT_RECORDS(habitId), data);
+  },
+
+  // 습관 기록 상세 조회 - 반환: HabitRecord 객체
+  getHabitRecord: async (habitId, recordId) => {
+    return await api.get(API_ENDPOINTS.HABIT.HABIT_RECORD_DETAIL(habitId, recordId));
+  },
+
+  // 습관 기록 수정 - 반환: HabitRecord 객체
+  updateHabitRecord: async (habitId, recordId, data) => {
+    return await api.put(API_ENDPOINTS.HABIT.HABIT_RECORD_DETAIL(habitId, recordId), data);
+  },
+
+  // 습관 기록 삭제 - 반환: null
+  deleteHabitRecord: async (habitId, recordId) => {
+    return await api.delete(API_ENDPOINTS.HABIT.HABIT_RECORD_DETAIL(habitId, recordId));
+  },
+
+  // 특정 날짜의 기록 조회 - 반환: HabitRecord 배열
+  getHabitRecordByDate: async (habitId, date) => {
+    return await api.get(API_ENDPOINTS.HABIT.HABIT_RECORD_BY_DATE(habitId, date));
+  },
+
+  // 월별 캘린더 데이터 조회 - 반환: HabitCalendar 객체
+  getHabitCalendar: async (habitId, yearMonth) => {
+    return await api.get(API_ENDPOINTS.HABIT.HABIT_CALENDAR(habitId), {
+      params: { yearMonth }
+    });
+  },
+};
+
 
 // 에러 처리 래퍼 함수
 export const withErrorHandling = (apiCall) => {

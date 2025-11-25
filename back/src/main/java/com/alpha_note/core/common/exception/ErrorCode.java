@@ -66,7 +66,19 @@ public enum ErrorCode {
     TAG_ALREADY_EXISTS(HttpStatus.CONFLICT, "Q013", "이미 존재하는 태그입니다."),
     MAX_TAGS_EXCEEDED(HttpStatus.BAD_REQUEST, "Q014", "태그는 최대 5개까지 추가할 수 있습니다."),
     ATTACHMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "Q015", "첨부파일을 찾을 수 없습니다."),
-    INVALID_IMAGE_TYPE(HttpStatus.BAD_REQUEST, "Q016", "지원하지 않는 이미지 형식입니다. (PNG, JPEG, WEBP만 가능)");
+    INVALID_IMAGE_TYPE(HttpStatus.BAD_REQUEST, "Q016", "지원하지 않는 이미지 형식입니다. (PNG, JPEG, WEBP만 가능)"),
+
+    // Habit 관련 에러
+    HABIT_NOT_FOUND(HttpStatus.NOT_FOUND, "H001", "습관을 찾을 수 없습니다."),
+    HABIT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "H002", "습관에 접근할 권한이 없습니다."),
+    HABIT_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "H003", "습관 기록을 찾을 수 없습니다."),
+    HABIT_RECORD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "H004", "습관 기록에 접근할 권한이 없습니다."),
+    HABIT_ALREADY_ARCHIVED(HttpStatus.CONFLICT, "H005", "이미 보관된 습관입니다."),
+    HABIT_ALREADY_ACTIVE(HttpStatus.CONFLICT, "H006", "이미 활성 상태인 습관입니다."),
+    HABIT_DELETED(HttpStatus.GONE, "H007", "삭제된 습관입니다."),
+    FUTURE_RECORD_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "H008", "미래 날짜에 기록을 남길 수 없습니다."),
+    RECORD_DATE_BEFORE_START_DATE(HttpStatus.BAD_REQUEST, "H009", "습관 시작일 이전에 기록을 남길 수 없습니다."),
+    HABIT_END_DATE_PASSED(HttpStatus.BAD_REQUEST, "H010", "습관 종료일 이후에 기록을 남길 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

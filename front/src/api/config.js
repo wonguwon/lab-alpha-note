@@ -53,4 +53,17 @@ export const API_ENDPOINTS = {
     QUESTION_VOTE: (questionId) => `/qna/questions/${questionId}/vote`,
     ANSWER_VOTE: (answerId) => `/qna/answers/${answerId}/vote`,
   },
+  // Habit 관련
+  HABIT: {
+    HABITS: '/habits',
+    HABIT_DASHBOARD: '/habits/dashboard',
+    HABIT_DETAIL: (id) => `/habits/${id}`,
+    HABIT_STATS: (id) => `/habits/${id}/stats`,
+    HABIT_ARCHIVE: (id) => `/habits/${id}/archive`,
+    HABIT_ACTIVATE: (id) => `/habits/${id}/activate`,
+    HABIT_RECORDS: (habitId) => `/habits/${habitId}/records`,
+    HABIT_RECORD_DETAIL: (habitId, recordId) => `/habits/${habitId}/records/${recordId}`,
+    HABIT_RECORD_BY_DATE: (habitId, date) => `/habits/${habitId}/records/date/${date}`,
+    HABIT_CALENDAR: (habitId) => `/habits/${habitId}/records/calendar`,
+  },
 };

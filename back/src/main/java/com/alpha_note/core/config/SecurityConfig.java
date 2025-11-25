@@ -89,6 +89,18 @@ public class SecurityConfig {
                     "/api/v1/qna/answers/*/comments",
                     "/api/v1/qna/users/*/answers"
                 ).permitAll()
+                // Habit 관련 조회 API는 공개 (GET 요청만)
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.GET,
+                    "/api/v1/habits",
+                    "/api/v1/habits/dashboard",
+                    "/api/v1/habits/*",
+                    "/api/v1/habits/*/stats",
+                    "/api/v1/habits/*/records",
+                    "/api/v1/habits/*/records/date/*",
+                    "/api/v1/habits/*/records/*",
+                    "/api/v1/habits/*/records/calendar"
+                ).permitAll()
                 .anyRequest().authenticated()  // 나머지는 인증 필요 (/api/v1/auth/me 포함)
             )
             // Google OAuth2 로그인 설정
