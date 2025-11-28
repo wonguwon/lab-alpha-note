@@ -82,6 +82,12 @@ const HabitPage = () => {
         params.userId = user.id;
       }
 
+      // viewMode에 따른 expired 필터 추가
+      if (viewMode === 'all') {
+        params.expired = false; // 모든 습관: 종료 안 된 것만
+      }
+      // viewMode === 'my'일 때는 expired 파라미터 없음 (종료된 것도 조회, 자동으로 뒤로 정렬됨)
+
       // 검색어가 있는 경우 검색 파라미터 추가
       if (searchKeyword.trim()) {
         params.keyword = searchKeyword;
@@ -110,9 +116,10 @@ const HabitPage = () => {
   };
 
   // 6개월 캘린더 렌더링 (GitHub 스타일)
-  const renderSixMonthCalendar = (habitId, targetCount) => {
+  const renderSixMonthCalendar = (habitId, targetCount, habitStartDate) => {
     const today = new Date();
     const now = new Date();
+    const startDate = new Date(habitStartDate);
 
     // 6개월 전 1일부터 시작
     const startMonth = new Date(now.getFullYear(), now.getMonth() - 5, 1);
@@ -143,6 +150,10 @@ const HabitPage = () => {
       const count = calendarData[habitId]?.[dateStr] || 0;
       const intensity = isInRange ? getIntensity(count, targetCount) : null;
       const isToday = currentDate.toDateString() === today.toDateString();
+      // 시작일 이전인지 확인 (시작일 당일은 포함하지 않음)
+      const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+      const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const isBeforeStart = currentDateOnly < startDateOnly;
 
       // 월 레이블 추출 (각 월의 첫 주 일요일에만)
       if (currentDate.getDay() === 0 && currentDate.getMonth() !== lastMonthProcessed && isInRange) {
@@ -162,7 +173,8 @@ const HabitPage = () => {
         intensity,
         isToday,
         count,
-        isEmpty: !isInRange
+        isEmpty: !isInRange,
+        isBeforeStart // 시작일 이전 플래그 추가
       });
 
       currentDate.setDate(currentDate.getDate() + 1);
@@ -194,6 +206,7 @@ const HabitPage = () => {
               $intensity={day.isEmpty ? null : day.intensity}
               $isToday={day.isToday}
               $isEmpty={day.isEmpty}
+              $isBeforeStart={day.isBeforeStart && !day.isEmpty}
               title={day.isEmpty ? '' : `${day.date}: ${day.count}회`}
             />
           ))}
@@ -330,7 +343,23 @@ const HabitPage = () => {
                 <HabitInfo>
                   <HabitColor $color={habit.color} />
                   <HabitTitleSection>
-                    <HabitTitle>{habit.title}</HabitTitle>
+                    <HabitTitle>
+                      {habit.title}
+                      {habit.endDate && (
+                        <span style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 'normal',
+                          color: '#9CA3AF',
+                          marginLeft: '8px'
+                        }}>
+                          (~ {new Date(habit.endDate).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: 'numeric',
+                            day: 'numeric'
+                          })})
+                        </span>
+                      )}
+                    </HabitTitle>
                     <HabitOwner>by {habit.userNickname || '익명'}</HabitOwner>
                     {habit.description && (
                       <HabitDescription>{habit.description}</HabitDescription>
@@ -367,7 +396,7 @@ const HabitPage = () => {
               </HabitStats>
 
               <CalendarContainer>
-                {renderSixMonthCalendar(habit.id, habit.targetCount)}
+                {renderSixMonthCalendar(habit.id, habit.targetCount, habit.startDate)}
               </CalendarContainer>
             </HabitCard>
           ))}

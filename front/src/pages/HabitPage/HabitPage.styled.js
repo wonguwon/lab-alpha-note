@@ -282,6 +282,7 @@ export const DayCell = styled.div`
   border-radius: 2px;
   background: ${props => {
     if (props.$isEmpty) return 'transparent';
+    if (props.$isBeforeStart) return props.theme.colors.gray[300]; // 시작일 이전 블록 (어두운 회색)
     if (props.$intensity === 0) return props.theme.colors.gray[100];
     if (props.$intensity === 1) return '#BBF7D0';
     if (props.$intensity === 2) return '#4ADE80';
@@ -290,9 +291,9 @@ export const DayCell = styled.div`
   }};
   transition: all 0.2s;
   position: relative;
-  cursor: ${props => props.$isEmpty ? 'default' : 'pointer'};
+  cursor: ${props => props.$isEmpty || props.$isBeforeStart ? 'default' : 'pointer'};
 
-  ${props => !props.$isEmpty && `
+  ${props => !props.$isEmpty && !props.$isBeforeStart && `
     &:hover {
       transform: scale(1.5);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);

@@ -71,6 +71,7 @@ public class HabitController {
      * @param keyword 검색 키워드 (선택)
      * @param searchType 검색 타입 (ALL, TITLE, AUTHOR, 기본값: ALL)
      * @param sortType 정렬 타입 (LATEST, CURRENT_STREAK, LONGEST_STREAK, 기본값: LATEST)
+     * @param expired 종료일 필터 (true: 종료일 지난 것만, false: 안 지난 것만, null: 전체)
      * @param startMonth 잔디 시작 월 (YYYY-MM 형식, 기본값: 현재-6개월)
      * @param endMonth 잔디 종료 월 (YYYY-MM 형식, 기본값: 현재월)
      * @param pageable 페이징 정보
@@ -83,6 +84,7 @@ public class HabitController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false, defaultValue = "ALL") HabitSearchType searchType,
             @RequestParam(required = false, defaultValue = "LATEST") HabitSortType sortType,
+            @RequestParam(required = false) Boolean expired,
             @RequestParam(required = false) String startMonth,
             @RequestParam(required = false) String endMonth,
             @PageableDefault(size = 20)
@@ -90,7 +92,7 @@ public class HabitController {
     ) {
         // userId 파라미터가 있으면 해당 사용자의 습관, 없으면 전체 조회 (로그인 여부 무관)
         Page<HabitWithCalendarDTO> page = habitService.getHabitDashboard(
-                userId, status, keyword, searchType, sortType, startMonth, endMonth, pageable
+                userId, status, keyword, searchType, sortType, expired, startMonth, endMonth, pageable
         );
         HabitDashboardResponse response = HabitDashboardResponse.from(page);
         return ResponseEntity.ok(ApiResponse.success("대시보드 조회 성공", response));

@@ -201,11 +201,11 @@ export const ColorInput = styled.input`
 `;
 
 export const NumberInput = styled(Input)`
-  max-width: 200px;
+  width: 100%;
 `;
 
 export const DateInput = styled(Input)`
-  max-width: 200px;
+  width: 100%;
 `;
 
 export const CharCount = styled.span`
@@ -279,4 +279,70 @@ export const ErrorMessage = styled.p`
   font-size: ${props => props.theme.fonts.size.sm};
   color: ${props => props.theme.colors.danger[500]};
   margin: ${props => props.theme.spacing[2]} 0 0 0;
+`;
+
+// 토글 스위치
+export const ToggleWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[3]};
+  margin-bottom: ${props => props.theme.spacing[3]};
+`;
+
+export const ToggleSwitch = styled.label`
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+  cursor: pointer;
+`;
+
+export const ToggleInput = styled.input`
+  opacity: 0;
+  width: 0;
+  height: 0;
+
+  &:checked + span {
+    background-color: ${props => props.theme.colors.primary[600]};
+  }
+
+  &:checked + span:before {
+    transform: translateX(24px);
+  }
+`;
+
+export const ToggleSlider = styled.span`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: ${props => props.theme.colors.gray[300]};
+  border-radius: 24px;
+  transition: all ${props => props.theme.transitions.base};
+
+  &:before {
+    position: absolute;
+    content: '';
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: all ${props => props.theme.transitions.base};
+  }
+`;
+
+export const ToggleLabel = styled.span`
+  font-size: ${props => props.theme.fonts.size.sm};
+  font-weight: ${props => props.theme.fonts.weight.medium};
+  color: ${props => props.theme.colors.gray[700]};
+`;
+
+export const EndDateWrapper = styled.div`
+  margin-top: ${props => props.theme.spacing[3]};
+  opacity: ${props => props.$disabled ? 0.5 : 1};
+  pointer-events: ${props => props.$disabled ? 'none' : 'auto'};
+  transition: all ${props => props.theme.transitions.base};
 `;

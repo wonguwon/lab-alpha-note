@@ -23,7 +23,13 @@ import {
   ButtonGroup,
   CancelButton,
   SubmitButton,
-  ErrorMessage
+  ErrorMessage,
+  ToggleWrapper,
+  ToggleSwitch,
+  ToggleInput,
+  ToggleSlider,
+  ToggleLabel,
+  EndDateWrapper
 } from './HabitCreatePage.styled';
 
 const HabitCreatePage = () => {
@@ -33,8 +39,10 @@ const HabitCreatePage = () => {
     description: '',
     color: '#10B981', // 기본 색상 (녹색)
     targetCount: 1,
-    startDate: new Date().toISOString().split('T')[0] // 오늘 날짜
+    startDate: new Date().toISOString().split('T')[0], // 오늘 날짜
+    endDate: '' // 종료일 (선택사항)
   });
+  const [hasEndDate, setHasEndDate] = useState(false); // 종료일 사용 여부
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const colorInputRef = React.useRef(null);
@@ -101,6 +109,24 @@ const HabitCreatePage = () => {
     }
   };
 
+  const handleEndDateToggle = (e) => {
+    const checked = e.target.checked;
+    setHasEndDate(checked);
+    if (!checked) {
+      setFormData({ ...formData, endDate: '' });
+      if (errors.endDate) {
+        setErrors({ ...errors, endDate: '' });
+      }
+    }
+  };
+
+  const handleEndDateChange = (e) => {
+    setFormData({ ...formData, endDate: e.target.value });
+    if (errors.endDate) {
+      setErrors({ ...errors, endDate: '' });
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -124,6 +150,15 @@ const HabitCreatePage = () => {
       newErrors.startDate = '시작일을 선택해주세요.';
     }
 
+    // 종료일 검증
+    if (hasEndDate) {
+      if (!formData.endDate) {
+        newErrors.endDate = '종료일을 선택해주세요.';
+      } else if (formData.startDate && formData.endDate < formData.startDate) {
+        newErrors.endDate = '종료일은 시작일 이후여야 합니다.';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -145,6 +180,11 @@ const HabitCreatePage = () => {
         targetCount: formData.targetCount,
         startDate: formData.startDate
       };
+
+      // 종료일이 설정된 경우에만 추가
+      if (hasEndDate && formData.endDate) {
+        submitData.endDate = formData.endDate;
+      }
 
       await habitService.createHabit(submitData);
       alert('습관이 성공적으로 생성되었습니다!');
@@ -276,6 +316,37 @@ const HabitCreatePage = () => {
               />
               <HelperText>습관을 시작할 날짜를 선택해주세요.</HelperText>
               {errors.startDate && <ErrorMessage>{errors.startDate}</ErrorMessage>}
+            </FormGroup>
+
+            <FormGroup>
+              <Label>종료일</Label>
+              <ToggleWrapper>
+                <ToggleSwitch>
+                  <ToggleInput
+                    type="checkbox"
+                    checked={hasEndDate}
+                    onChange={handleEndDateToggle}
+                  />
+                  <ToggleSlider />
+                </ToggleSwitch>
+                <ToggleLabel>종료일 설정</ToggleLabel>
+              </ToggleWrapper>
+              <EndDateWrapper $disabled={!hasEndDate}>
+                <DateInput
+                  type="date"
+                  value={formData.endDate}
+                  onChange={handleEndDateChange}
+                  min={formData.startDate}
+                  $error={!!errors.endDate}
+                  disabled={!hasEndDate}
+                />
+                <HelperText>
+                  {hasEndDate
+                    ? '습관을 종료할 날짜를 선택해주세요. 종료일 이후에는 기록할 수 없습니다.'
+                    : '종료일을 설정하지 않으면 계속해서 기록할 수 있습니다.'}
+                </HelperText>
+                {errors.endDate && <ErrorMessage>{errors.endDate}</ErrorMessage>}
+              </EndDateWrapper>
             </FormGroup>
           </FormSection>
 

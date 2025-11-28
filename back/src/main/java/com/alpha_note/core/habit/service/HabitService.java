@@ -13,9 +13,11 @@ import com.alpha_note.core.habit.enums.HabitSortType;
 import com.alpha_note.core.habit.enums.HabitStatus;
 import com.alpha_note.core.habit.repository.HabitRecordRepository;
 import com.alpha_note.core.habit.repository.HabitRepository;
+import com.alpha_note.core.habit.repository.HabitSpecification;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -210,6 +212,7 @@ public class HabitService {
      * @param keyword 검색 키워드
      * @param searchType 검색 타입 (ALL, TITLE, AUTHOR)
      * @param sortType 정렬 타입 (LATEST, CURRENT_STREAK, LONGEST_STREAK)
+     * @param expired 종료일 필터 (true: 종료일 지난 것만, false: 안 지난 것만, null: 전체)
      * @param startMonth 잔디 시작 월 (YYYY-MM 형식, null이면 현재-6개월)
      * @param endMonth 잔디 종료 월 (YYYY-MM 형식, null이면 현재월)
      * @param pageable 페이징 정보
@@ -221,24 +224,25 @@ public class HabitService {
             String keyword,
             HabitSearchType searchType,
             HabitSortType sortType,
+            Boolean expired,
             String startMonth,
             String endMonth,
             Pageable pageable
     ) {
-        // 1. 정렬 타입에 따라 Pageable 재생성
-        if (sortType != null) {
-            Sort sort = Sort.by(Sort.Direction.DESC, sortType.getFieldName());
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
-        }
+        // 1. sortType의 필드명 추출 (종료일 우선순위 다음으로 적용될 정렬)
+        String sortField = (sortType != null) ? sortType.getFieldName() : "createdAt";
 
-        // 2. 습관 목록 조회 (검색 또는 필터)
+        // 2. Sort 없는 Pageable 생성 (Specification에서 정렬 처리)
+        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+
+        // 3. 습관 목록 조회 (검색 또는 필터)
         Page<Habit> habitPage;
         if (keyword != null && !keyword.trim().isEmpty()) {
             // 검색 모드
-            habitPage = performSearch(userId, status, keyword.trim(), searchType, pageable);
+            habitPage = performSearch(userId, status, keyword.trim(), searchType, expired, sortField, pageable);
         } else {
             // 일반 필터 모드
-            habitPage = performFilter(userId, status, pageable);
+            habitPage = performFilter(userId, status, expired, sortField, pageable);
         }
 
         List<Habit> habits = habitPage.getContent();
@@ -330,56 +334,34 @@ public class HabitService {
     }
 
     /**
-     * 검색 수행 (검색 타입에 따라 적절한 Repository 메서드 호출)
+     * 검색 수행 (종료일 우선순위 정렬 포함)
      */
-    private Page<Habit> performSearch(Long userId, HabitStatus status, String keyword, HabitSearchType searchType, Pageable pageable) {
+    private Page<Habit> performSearch(Long userId, HabitStatus status, String keyword, HabitSearchType searchType, Boolean expired, String sortField, Pageable pageable) {
         // searchType이 null이면 ALL로 처리
         if (searchType == null) {
             searchType = HabitSearchType.ALL;
         }
 
-        switch (searchType) {
-            case TITLE:
-                if (userId != null && status != null) {
-                    return habitRepository.searchByTitleAndUserIdAndStatus(userId, keyword, status, pageable);
-                } else if (userId != null) {
-                    return habitRepository.searchByTitleAndUserId(userId, keyword, pageable);
-                } else if (status != null) {
-                    return habitRepository.searchByTitleAndStatus(keyword, status, pageable);
-                } else {
-                    return habitRepository.searchByTitle(keyword, pageable);
-                }
-
-            case AUTHOR:
-                if (status != null) {
-                    return habitRepository.searchByAuthorAndStatus(keyword, status, pageable);
-                } else {
-                    return habitRepository.searchByAuthor(keyword, pageable);
-                }
-
-            case ALL:
-            default:
-                // 제목과 작성자 모두 검색
-                return habitRepository.searchByKeyword(keyword, pageable);
-        }
+        // 종료일 우선순위 정렬이 포함된 Specification 사용
+        Specification<Habit> spec = HabitSpecification.withSearchAndExpiredSort(
+                userId, status, keyword, searchType, expired, sortField
+        );
+        return habitRepository.findAll(spec, pageable);
     }
 
     /**
-     * 일반 필터 수행 (userId, status 조합에 따른 조회)
+     * 일반 필터 수행 (종료일 우선순위 정렬 포함)
      */
-    private Page<Habit> performFilter(Long userId, HabitStatus status, Pageable pageable) {
-        if (userId == null) {
-            if (status != null) {
-                return habitRepository.findByStatus(status, pageable);
-            } else {
-                return habitRepository.findByStatusNot(HabitStatus.DELETED, pageable);
-            }
-        } else {
-            if (status != null) {
-                return habitRepository.findByUserIdAndStatus(userId, status, pageable);
-            } else {
-                return habitRepository.findByUserIdAndStatusNot(userId, HabitStatus.DELETED, pageable);
-            }
-        }
+    private Page<Habit> performFilter(Long userId, HabitStatus status, Boolean expired, String sortField, Pageable pageable) {
+        // 종료일 우선순위 정렬이 포함된 Specification 사용
+        Specification<Habit> spec = HabitSpecification.withFiltersAndExpiredSort(
+                userId,
+                status != null ? status : HabitStatus.DELETED,
+                status == null, // statusNot: status가 null이면 DELETED 제외
+                expired,
+                sortField
+        );
+
+        return habitRepository.findAll(spec, pageable);
     }
 }
