@@ -100,10 +100,12 @@ export const HabitCard = styled.div`
   border-radius: ${props => props.theme.borderRadius.lg};
   padding: ${props => props.theme.spacing[6]};
   transition: all 0.2s ease;
+  cursor: pointer;
 
   &:hover {
     border-color: ${props => props.theme.colors.gray[300]};
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
   }
 `;
 

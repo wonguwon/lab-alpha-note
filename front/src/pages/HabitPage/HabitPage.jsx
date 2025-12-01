@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { habitService } from '../../api/services';
 import useAuthStore from '../../store/authStore';
+import { useModal } from '../../hooks/useModal';
+import HabitDetailModal from './HabitDetailModal';
 import {
   HabitContainer,
   HabitHeader,
@@ -54,6 +56,8 @@ const HabitPage = () => {
   const [sortType, setSortType] = useState('LATEST'); // 정렬 타입
   const [searchKeyword, setSearchKeyword] = useState(''); // 검색어
   const [searchType, setSearchType] = useState('TITLE'); // 검색 타입
+  const { isOpen, openModal, closeModal } = useModal();
+  const [selectedHabitId, setSelectedHabitId] = useState(null);
 
   // 습관 목록 조회
   useEffect(() => {
@@ -251,6 +255,12 @@ const HabitPage = () => {
     }
   };
 
+  // 습관 카드 클릭 핸들러
+  const handleHabitClick = (habitId) => {
+    setSelectedHabitId(habitId);
+    openModal();
+  };
+
   return (
     <HabitContainer>
       <HabitHeader>
@@ -338,7 +348,7 @@ const HabitPage = () => {
       ) : (
         <HabitList>
           {habits.map(habit => (
-            <HabitCard key={habit.id}>
+            <HabitCard key={habit.id} onClick={() => handleHabitClick(habit.id)}>
               <HabitCardHeader>
                 <HabitInfo>
                   <HabitColor $color={habit.color} />
@@ -402,6 +412,13 @@ const HabitPage = () => {
           ))}
         </HabitList>
       )}
+
+      {/* 습관 상세 모달 */}
+      <HabitDetailModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        habitId={selectedHabitId}
+      />
     </HabitContainer>
   );
 };
