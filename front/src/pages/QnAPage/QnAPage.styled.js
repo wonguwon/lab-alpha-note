@@ -12,20 +12,9 @@ export const QnAContainer = styled.div`
 export const QnAHeader = styled.div`
   ${flexBetween}
   margin-bottom: ${props => props.theme.spacing[6]};
-
-  @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: ${props => props.theme.spacing[4]};
-  }
 `;
 
 /* 제목 및 통계 영역 */
-export const TitleSection = styled.div`
-  ${flexColumn}
-  gap: ${props => props.theme.spacing[2]};
-`;
-
 export const PageTitle = styled.h1`
   font-size: ${props => props.theme.fonts.size['3xl']};
   font-weight: ${props => props.theme.fonts.weight.bold};

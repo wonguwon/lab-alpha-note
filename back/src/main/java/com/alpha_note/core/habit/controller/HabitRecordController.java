@@ -120,15 +120,31 @@ public class HabitRecordController {
 
     /**
      * 월별 잔디 데이터 조회 (비로그인 허용)
+     * yearMonth 단독 사용 시: 해당 월만 조회
+     * startMonth, endMonth 함께 사용 시: 범위 조회
      */
     @GetMapping("/calendar")
     public ResponseEntity<ApiResponse<HabitCalendarResponse>> getCalendar(
             @PathVariable Long habitId,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth startMonth,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth endMonth
     ) {
-        HabitCalendarResponse response = habitCalendarService.getMonthlyCalendar(
-                habitId, yearMonth
-        );
+        HabitCalendarResponse response;
+
+        // 범위 조회 (startMonth, endMonth가 모두 있는 경우)
+        if (startMonth != null && endMonth != null) {
+            response = habitCalendarService.getRangeCalendar(habitId, startMonth, endMonth);
+        }
+        // 단일 월 조회
+        else if (yearMonth != null) {
+            response = habitCalendarService.getMonthlyCalendar(habitId, yearMonth);
+        }
+        // 파라미터가 없는 경우 현재 월 조회
+        else {
+            response = habitCalendarService.getMonthlyCalendar(habitId, YearMonth.now());
+        }
+
         return ResponseEntity.ok(ApiResponse.success("캘린더 조회 성공", response));
     }
 }

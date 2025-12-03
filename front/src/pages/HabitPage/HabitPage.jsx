@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { habitService } from '../../api/services';
 import useAuthStore from '../../store/authStore';
-import { useModal } from '../../hooks/useModal';
-import HabitDetailModal from './HabitDetailModal';
 import {
   HabitContainer,
   HabitHeader,
@@ -56,8 +54,6 @@ const HabitPage = () => {
   const [sortType, setSortType] = useState('LATEST'); // 정렬 타입
   const [searchKeyword, setSearchKeyword] = useState(''); // 검색어
   const [searchType, setSearchType] = useState('TITLE'); // 검색 타입
-  const { isOpen, openModal, closeModal } = useModal();
-  const [selectedHabitId, setSelectedHabitId] = useState(null);
 
   // 습관 목록 조회
   useEffect(() => {
@@ -257,8 +253,7 @@ const HabitPage = () => {
 
   // 습관 카드 클릭 핸들러
   const handleHabitClick = (habitId) => {
-    setSelectedHabitId(habitId);
-    openModal();
+    navigate(`/habits/${habitId}`);
   };
 
   return (
@@ -269,20 +264,20 @@ const HabitPage = () => {
           {isAuthenticated && (
             <ToggleGroup>
               <ToggleButton
-                $active={viewMode === 'my'}
-                onClick={() => setViewMode('my')}
-              >
-                내 습관
-              </ToggleButton>
-              <ToggleButton
                 $active={viewMode === 'all'}
                 onClick={() => setViewMode('all')}
               >
                 모든 습관
               </ToggleButton>
+              <ToggleButton
+                $active={viewMode === 'my'}
+                onClick={() => setViewMode('my')}
+              >
+                내 습관
+              </ToggleButton>
             </ToggleGroup>
           )}
-          {isAuthenticated && (
+           {isAuthenticated && (
             <CreateButton onClick={handleCreateHabit}>새 습관 만들기</CreateButton>
           )}
         </HeaderActions>
@@ -377,11 +372,10 @@ const HabitPage = () => {
                   </HabitTitleSection>
                 </HabitInfo>
 
-                {habit.currentStreak > 0 && (
+                {habit.currentStreak >= 2 && (
                   <StreakBadge>
                     <span className="fire-icon">🔥</span>
                     <span className="streak-number">{habit.currentStreak}</span>
-                    <span className="streak-text">일 연속</span>
                   </StreakBadge>
                 )}
               </HabitCardHeader>
@@ -412,13 +406,6 @@ const HabitPage = () => {
           ))}
         </HabitList>
       )}
-
-      {/* 습관 상세 모달 */}
-      <HabitDetailModal
-        isOpen={isOpen}
-        onClose={closeModal}
-        habitId={selectedHabitId}
-      />
     </HabitContainer>
   );
 };

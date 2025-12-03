@@ -335,9 +335,9 @@ export const habitService = {
   },
 
   // 월별 캘린더 데이터 조회 - 반환: HabitCalendar 객체
-  getHabitCalendar: async (habitId, yearMonth) => {
+  getHabitCalendar: async (habitId, params = {}) => {
     return await api.get(API_ENDPOINTS.HABIT.HABIT_CALENDAR(habitId), {
-      params: { yearMonth }
+      params
     });
   },
 };

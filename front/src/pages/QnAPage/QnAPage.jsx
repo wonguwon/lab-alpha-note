@@ -5,7 +5,6 @@ import useAuthStore from '../../store/authStore';
 import {
   QnAContainer,
   QnAHeader,
-  TitleSection,
   PageTitle,
   AskButton,
   FilterSection,
@@ -192,9 +191,7 @@ const QnAPage = () => {
     <QnAContainer>
       {/* 헤더 */}
       <QnAHeader>
-        <TitleSection>
-          <PageTitle>Q&A</PageTitle>
-        </TitleSection>
+        <PageTitle>Q&A</PageTitle>
         {isAuthenticated && (
           <AskButton onClick={handleAskQuestion}>질문하기</AskButton>
         )}

@@ -175,3 +175,93 @@ export const IconButton = styled.button`
     color: ${props => props.theme.colors.gray[900]};
   }
 `;
+
+/* 모바일 햄버거 버튼 */
+export const MobileMenuButton = styled.button`
+  display: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: ${props => props.theme.colors.gray[700]};
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    display: flex;
+  }
+`;
+
+/* 모바일 메뉴 */
+export const MobileMenu = styled.div`
+  display: none;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  background: ${props => props.theme.colors.white};
+  border-bottom: 1px solid ${props => props.theme.colors.gray[200]};
+  padding: ${props => props.theme.spacing[4]};
+  flex-direction: column;
+  gap: ${props => props.theme.spacing[1]};
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  z-index: ${props => props.theme.zIndex.dropdown || 100};
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    display: ${props => props.$isOpen ? 'flex' : 'none'};
+  }
+`;
+
+/* 모바일 네비게이션 링크 */
+export const MobileNavLink = styled.a`
+  display: flex;
+  align-items: center;
+  padding: ${props => props.theme.spacing[3]};
+  color: ${props => props.theme.colors.gray[700]};
+  font-weight: ${props => props.theme.fonts.weight.medium};
+  font-size: ${props => props.theme.fonts.size.base};
+  text-decoration: none;
+  border-radius: ${props => props.theme.borderRadius.base};
+  transition: all ${props => props.theme.transitions.base};
+  cursor: pointer;
+
+  &:hover {
+    background: ${props => props.theme.colors.gray[50]};
+    color: ${props => props.theme.colors.primary[600]};
+  }
+
+  &.active {
+    background: ${props => props.theme.colors.primary[50]};
+    color: ${props => props.theme.colors.primary[600]};
+    font-weight: ${props => props.theme.fonts.weight.semibold};
+  }
+
+  &.primary {
+    background: ${props => props.theme.colors.primary[600]};
+    color: ${props => props.theme.colors.white};
+    margin-top: ${props => props.theme.spacing[2]};
+
+    &:hover {
+      background: ${props => props.theme.colors.primary[700]};
+      color: ${props => props.theme.colors.white};
+    }
+  }
+`;
+
+/* 모바일 사용자 섹션 */
+export const MobileUserSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.theme.spacing[1]};
+  margin-top: ${props => props.theme.spacing[3]};
+  padding-top: ${props => props.theme.spacing[3]};
+  border-top: 1px solid ${props => props.theme.colors.gray[200]};
+`;

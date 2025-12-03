@@ -32,7 +32,6 @@ export const HeaderActions = styled.div`
   gap: ${props => props.theme.spacing[3]};
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    flex-direction: column;
     width: 100%;
   }
 `;

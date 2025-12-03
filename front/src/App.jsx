@@ -10,6 +10,7 @@ import OAuth2RedirectPage from './pages/OAuth2RedirectPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import HabitPage from './pages/HabitPage';
 import HabitCreatePage from './pages/HabitPage/HabitCreatePage';
+import HabitDetailPage from './pages/HabitPage/HabitDetailPage';
 import QnAPage, { AskQuestionPage, QuestionDetailPage, AnswerPage, EditQuestionPage, EditAnswerPage } from './pages/QnAPage';
 import useAuthStore from './store/authStore';
 import { setAuthStoreGetter } from './api/axios';
@@ -50,6 +51,7 @@ function App() {
           <Route path="/qna/ask" element={<ProtectedRoute><AskQuestionPage /></ProtectedRoute>} />
           <Route path="/habits" element={<HabitPage />} />
           <Route path="/habits/create" element={<ProtectedRoute><HabitCreatePage /></ProtectedRoute>} />
+          <Route path="/habits/:habitId" element={<HabitDetailPage />} />
           <Route path="/qna/:id" element={<QuestionDetailPage />} />
           <Route path="/qna/:id/edit" element={<ProtectedRoute><EditQuestionPage /></ProtectedRoute>} />
           <Route path="/qna/:id/answer" element={<ProtectedRoute><AnswerPage /></ProtectedRoute>} />
