@@ -2,10 +2,12 @@ package com.alpha_note.core.auth.service;
 
 import com.alpha_note.core.common.exception.CustomException;
 import com.alpha_note.core.common.exception.ErrorCode;
+import com.alpha_note.core.support.dto.ContactRequest;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,9 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
+
+    @Value("${spring.mail.username}")
+    private String adminEmail;
 
     /**
      * 인증 코드 이메일 전송
@@ -49,6 +54,31 @@ public class EmailService {
     }
 
     /**
+     * 문의사항/에러 보고 이메일 전송
+     *
+     * @param request 문의 요청 정보
+     */
+    public void sendContactEmail(ContactRequest request) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(request.getEmail());
+            helper.setTo(adminEmail);
+            helper.setSubject("[AlphaNote 문의] " + request.getType().getDescription() + " - " + request.getSubject());
+            helper.setText(buildContactEmailContent(request), true);
+            helper.setReplyTo(request.getEmail());
+
+            mailSender.send(message);
+            log.info("Contact email sent from: {} (type: {})", request.getEmail(), request.getType());
+
+        } catch (MessagingException e) {
+            log.error("Failed to send contact email from: {}", request.getEmail(), e);
+            throw new CustomException(ErrorCode.EMAIL_SEND_FAILED);
+        }
+    }
+
+    /**
      * Thymeleaf를 사용한 이메일 본문 HTML 생성
      *
      * @param code 인증 코드
@@ -58,5 +88,20 @@ public class EmailService {
         Context context = new Context();
         context.setVariable("code", code);
         return templateEngine.process("email/verification-code", context);
+    }
+
+    /**
+     * 문의사항 이메일 본문 생성
+     *
+     * @param request 문의 요청 정보
+     * @return HTML 문자열
+     */
+    private String buildContactEmailContent(ContactRequest request) {
+        Context context = new Context();
+        context.setVariable("type", request.getType().getDescription());
+        context.setVariable("email", request.getEmail());
+        context.setVariable("subject", request.getSubject());
+        context.setVariable("content", request.getContent());
+        return templateEngine.process("email/contact", context);
     }
 }

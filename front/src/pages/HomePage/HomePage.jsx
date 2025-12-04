@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../../store/authStore';
+import { qnaService, habitService } from '../../api/services';
 import {
   HomeContainer,
   HeroSection,
@@ -8,6 +11,23 @@ import {
   Button,
   ContentSection,
   SectionTitle,
+  PreviewGrid,
+  PreviewSection,
+  PreviewHeader,
+  PreviewTitle,
+  ViewAllButton,
+  QuestionList,
+  HabitList,
+  QuestionPreviewCard,
+  HabitPreviewCard,
+  CardTitle,
+  CardMeta,
+  MetaItem,
+  TagList,
+  Tag,
+  HabitCardHeader,
+  HabitColorBar,
+  StreakBadge,
   FeatureGrid,
   FeatureCard,
   FeatureIcon,
@@ -16,80 +36,200 @@ import {
 } from './HomePage.styled';
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
+  const [recentQuestions, setRecentQuestions] = useState([]);
+  const [recentHabits, setRecentHabits] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 최근 Q&A 5개 가져오기
+        const questionsData = await qnaService.getQuestions({
+          page: 0,
+          size: 5,
+          sort: 'createdAt,desc'
+        });
+
+        // 최근 습관 5개 가져오기 (6개월 캘린더 포함)
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const startMonth = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+        const startMonthStr = `${startMonth.getFullYear()}-${String(startMonth.getMonth() + 1).padStart(2, '0')}`;
+
+        const habitsData = await habitService.getHabitDashboard({
+          status: 'ACTIVE',
+          size: 5,
+          startMonth: startMonthStr,
+          endMonth: currentMonth,
+          sortType: 'LATEST',
+          expired: false
+        });
+
+        setRecentQuestions(questionsData.content || []);
+        setRecentHabits(habitsData.habits || []);
+      } catch (error) {
+        console.error('데이터 로딩 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+
+    if (diff < 60) return '방금 전';
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}일 전`;
+
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const handleGetStarted = () => {
+    if (isAuthenticated) {
+      navigate('/habits');
+    } else {
+      navigate('/signup');
+    }
+  };
+
+  const handleLearnMore = () => {
+    navigate('/qna');
+  };
+
   return (
     <HomeContainer>
       {/* 히어로 섹션 */}
       <HeroSection>
         <HeroTitle>
-          당신의 아이디어를 <br />
-          체계적으로 관리하세요
+          성장을 기록하고 <br />
+          지식을 공유하세요
         </HeroTitle>
         <HeroDescription>
-          Alpha Note와 함께 생각을 정리하고, 창의적인 작업을 더욱 효율적으로 만들어보세요. 
-          간편하면서도 강력한 노트 기능을 경험해보세요.
+          AlphaNote와 함께 습관을 추적하고, 궁금한 점을 질문하세요. <br />
+          매일매일 성장하는 우리를 기록합니다.
         </HeroDescription>
         <CTAButtons>
-          <Button className="primary">무료로 시작하기</Button>
-          <Button className="secondary">더 알아보기</Button>
+          <Button className="primary" onClick={handleGetStarted}>습관 기록하기</Button>
+          <Button className="secondary" onClick={handleLearnMore}>Q&A 둘러보기</Button>
         </CTAButtons>
       </HeroSection>
 
+      {/* 최근 Q&A 및 습관 섹션 */}
+      {!loading && (recentQuestions.length > 0 || recentHabits.length > 0) && (
+        <ContentSection>
+          <SectionTitle>최근 활동</SectionTitle>
+
+          <PreviewGrid>
+            {/* 최근 Q&A */}
+            <PreviewSection>
+              <PreviewHeader>
+                <PreviewTitle>💬 최근 질문</PreviewTitle>
+                <ViewAllButton onClick={() => navigate('/qna')}>
+                  전체보기 →
+                </ViewAllButton>
+              </PreviewHeader>
+              <QuestionList>
+                {recentQuestions.length > 0 ? (
+                  recentQuestions.map(question => (
+                    <QuestionPreviewCard key={question.id} onClick={() => navigate(`/qna/${question.id}`)}>
+                      <CardTitle>{question.title}</CardTitle>
+                      <CardMeta>
+                        <MetaItem>{question.userNickname || '익명'}</MetaItem>
+                        <MetaItem>답변 {question.answerCount || 0}</MetaItem>
+                        <MetaItem>{formatTimeAgo(question.createdAt)}</MetaItem>
+                      </CardMeta>
+                      {question.tags && question.tags.length > 0 && (
+                        <TagList>
+                          {question.tags.slice(0, 3).map(tag => (
+                            <Tag key={tag.id}>{tag.name}</Tag>
+                          ))}
+                        </TagList>
+                      )}
+                    </QuestionPreviewCard>
+                  ))
+                ) : (
+                  <CardMeta>아직 등록된 질문이 없습니다.</CardMeta>
+                )}
+              </QuestionList>
+            </PreviewSection>
+
+            {/* 최근 습관 */}
+            <PreviewSection>
+              <PreviewHeader>
+                <PreviewTitle>🎯 최근 습관</PreviewTitle>
+                <ViewAllButton onClick={() => navigate('/habits')}>
+                  전체보기 →
+                </ViewAllButton>
+              </PreviewHeader>
+              <HabitList>
+                {recentHabits.length > 0 ? (
+                  recentHabits.map(habit => (
+                    <HabitPreviewCard key={habit.id} onClick={() => navigate(`/habits/${habit.id}`)}>
+                      <HabitCardHeader>
+                        <HabitColorBar $color={habit.color} />
+                        <CardTitle>{habit.title}</CardTitle>
+                        {habit.currentStreak >= 2 && (
+                          <StreakBadge>
+                            🔥 {habit.currentStreak}
+                          </StreakBadge>
+                        )}
+                      </HabitCardHeader>
+                      <CardMeta>
+                        <MetaItem>by {habit.userNickname || '익명'}</MetaItem>
+                        <MetaItem>총 {habit.totalRecords || 0}회</MetaItem>
+                      </CardMeta>
+                    </HabitPreviewCard>
+                  ))
+                ) : (
+                  <CardMeta>아직 등록된 습관이 없습니다.</CardMeta>
+                )}
+              </HabitList>
+            </PreviewSection>
+          </PreviewGrid>
+        </ContentSection>
+      )}
+
       {/* 주요 기능 섹션 */}
       <ContentSection>
-        <SectionTitle>왜 Alpha Note를 선택해야 할까요?</SectionTitle>
-        
+        <SectionTitle>AlphaNote가 제공하는 기능</SectionTitle>
+
         <FeatureGrid>
-          <FeatureCard>
-            <FeatureIcon>📝</FeatureIcon>
-            <FeatureTitle>직관적인 에디터</FeatureTitle>
-            <FeatureDescription>
-              마크다운을 지원하는 깔끔하고 사용하기 쉬운 에디터로 
-              아이디어를 빠르게 기록할 수 있습니다.
-            </FeatureDescription>
-          </FeatureCard>
-
-          <FeatureCard>
-            <FeatureIcon>🗂️</FeatureIcon>
-            <FeatureTitle>스마트한 정리</FeatureTitle>
-            <FeatureDescription>
-              태그와 폴더를 활용한 체계적인 분류 시스템으로 
-              필요한 노트를 빠르게 찾을 수 있습니다.
-            </FeatureDescription>
-          </FeatureCard>
-
-          <FeatureCard>
-            <FeatureIcon>🔒</FeatureIcon>
-            <FeatureTitle>안전한 보관</FeatureTitle>
-            <FeatureDescription>
-              클라우드 동기화와 강력한 보안으로 언제 어디서나 
-              안전하게 노트에 접근할 수 있습니다.
-            </FeatureDescription>
-          </FeatureCard>
-
-          <FeatureCard>
+          <FeatureCard style={{ cursor: 'pointer' }}>
             <FeatureIcon>🎯</FeatureIcon>
-            <FeatureTitle>집중 모드</FeatureTitle>
+            <FeatureTitle>습관 트래킹</FeatureTitle>
             <FeatureDescription>
-              방해 요소 없는 집중 환경에서 창의적인 작업에만 
-              몰입할 수 있는 특별한 모드를 제공합니다.
+              매일의 습관을 기록하고 시각화하세요.
+              연간 활동 캘린더로 한눈에 진행 상황을 확인할 수 있습니다.
             </FeatureDescription>
           </FeatureCard>
 
-          <FeatureCard>
-            <FeatureIcon>📱</FeatureIcon>
-            <FeatureTitle>모든 기기에서</FeatureTitle>
+          <FeatureCard style={{ cursor: 'pointer' }}>
+            <FeatureIcon>💬</FeatureIcon>
+            <FeatureTitle>Q&A 커뮤니티</FeatureTitle>
             <FeatureDescription>
-              데스크톱, 태블릿, 모바일 어떤 기기에서든 
-              일관된 경험으로 노트를 작성하고 관리할 수 있습니다.
+              궁금한 점을 질문하고 다른 사용자들과 지식을 공유하세요.
+              답변을 통해 함께 성장할 수 있습니다.
             </FeatureDescription>
           </FeatureCard>
 
-          <FeatureCard>
-            <FeatureIcon>⚡</FeatureIcon>
-            <FeatureTitle>빠른 검색</FeatureTitle>
+          <FeatureCard style={{ cursor: 'pointer' }}>
+            <FeatureIcon>🏷️</FeatureIcon>
+            <FeatureTitle>태그 시스템</FeatureTitle>
             <FeatureDescription>
-              강력한 검색 엔진으로 수천 개의 노트 중에서도 
-              원하는 내용을 즉시 찾을 수 있습니다.
+              질문과 답변에 태그를 추가하여 쉽게 분류하고 검색할 수 있습니다.
+              관심있는 주제를 빠르게 찾아보세요.
             </FeatureDescription>
           </FeatureCard>
         </FeatureGrid>

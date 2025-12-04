@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>AlphaNote 문의사항</title>
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f4;">
+<!-- full wrapper -->
+<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse; background-color:#f4f4f4;">
+    <tr>
+        <td align="center" style="padding:20px 10px;">
+            <!-- card -->
+            <table role="presentation" width="600" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse; width:600px; background-color:#ffffff;">
+                <!-- header -->
+                <tr>
+                    <td align="center" style="padding:32px 24px; background-color:#667eea;">
+                        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                            <tr>
+                                <td align="center" style="font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:28px; line-height:34px; color:#ffffff; font-weight:bold;">
+                                    <span style="font-size:28px; margin-right:6px;">📝</span>AlphaNote
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="padding-top:8px; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:12px; line-height:18px; color:#eef2ff; letter-spacing:0.5px;">
+                                    YOUR SMART NOTE ASSISTANT
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- content -->
+                <tr>
+                    <td align="left" style="padding:32px 28px 8px 28px; background-color:#ffffff;">
+                        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                            <tr>
+                                <td align="center" style="font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:22px; line-height:30px; color:#333333; font-weight:600;">
+                                    새로운 문의사항이 도착했습니다
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="padding-top:14px; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:15px; line-height:24px; color:#666666;">
+                                    사용자로부터 아래의 문의사항이 접수되었습니다.
+                                </td>
+                            </tr>
+
+                            <!-- info table -->
+                            <tr>
+                                <td style="padding:24px 0;">
+                                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border:1px solid #e0e0e0;">
+                                        <!-- 문의 유형 -->
+                                        <tr>
+                                            <td style="width:120px; padding:14px 16px; background-color:#f5f7fa; border-bottom:1px solid #e0e0e0; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:13px; line-height:20px; color:#666666; font-weight:600;">
+                                                문의 유형
+                                            </td>
+                                            <td style="padding:14px 16px; border-bottom:1px solid #e0e0e0; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:14px; line-height:20px; color:#333333;">
+                                                <span th:text="${type}">일반 문의</span>
+                                            </td>
+                                        </tr>
+
+                                        <!-- 발신자 이메일 -->
+                                        <tr>
+                                            <td style="width:120px; padding:14px 16px; background-color:#f5f7fa; border-bottom:1px solid #e0e0e0; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:13px; line-height:20px; color:#666666; font-weight:600;">
+                                                발신자
+                                            </td>
+                                            <td style="padding:14px 16px; border-bottom:1px solid #e0e0e0; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:14px; line-height:20px; color:#333333;">
+                                                <a th:href="'mailto:' + ${email}" th:text="${email}" style="color:#667eea; text-decoration:none;">user@example.com</a>
+                                            </td>
+                                        </tr>
+
+                                        <!-- 제목 -->
+                                        <tr>
+                                            <td style="width:120px; padding:14px 16px; background-color:#f5f7fa; border-bottom:1px solid #e0e0e0; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:13px; line-height:20px; color:#666666; font-weight:600;">
+                                                제목
+                                            </td>
+                                            <td style="padding:14px 16px; border-bottom:1px solid #e0e0e0; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:14px; line-height:20px; color:#333333; font-weight:600;">
+                                                <span th:text="${subject}">문의 제목</span>
+                                            </td>
+                                        </tr>
+
+                                        <!-- 내용 -->
+                                        <tr>
+                                            <td style="width:120px; padding:14px 16px; background-color:#f5f7fa; vertical-align:top; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:13px; line-height:20px; color:#666666; font-weight:600;">
+                                                내용
+                                            </td>
+                                            <td style="padding:14px 16px; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:14px; line-height:22px; color:#333333; white-space:pre-wrap; word-break:break-word;">
+                                                <span th:text="${content}">문의 내용이 여기에 표시됩니다.</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- action info -->
+                            <tr>
+                                <td align="left" style="padding:12px 0;">
+                                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse; background-color:#e8f4ff;">
+                                        <tr>
+                                            <td style="padding:16px 16px 8px 16px; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:15px; line-height:22px; color:#0066cc; font-weight:600;">
+                                                📬 답변 방법
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:0 16px 16px 16px; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:13px; line-height:20px; color:#004999;">
+                                                이 이메일에 바로 회신하시면 사용자에게 답변이 전송됩니다.
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- divider -->
+                            <tr>
+                                <td style="padding:20px 0;">
+                                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                                        <tr>
+                                            <td style="height:1px; background-color:#dddddd; line-height:1px; font-size:0;">&nbsp;</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- help text -->
+                            <tr>
+                                <td align="center" style="padding:8px 0 8px 0; font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:13px; line-height:20px; color:#999999;">
+                                    이 메일은 AlphaNote 문의 시스템에서 자동으로 발송되었습니다.
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- footer -->
+                <tr>
+                    <td align="center" style="background-color:#2c3e50; padding:22px 16px;">
+                        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                            <tr>
+                                <td align="center" style="font-family:Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size:12px; line-height:20px; color:#cbd5e1;">
+                                    © 2025 AlphaNote. All rights reserved.<br>
+                                    이 이메일은 AlphaNote 문의 접수 과정에서 자동으로 발송되었습니다.
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+            </table>
+            <!-- /card -->
+        </td>
+    </tr>
+</table>
+<!-- /full wrapper -->
+</body>
+</html>

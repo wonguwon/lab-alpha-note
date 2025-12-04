@@ -30,7 +30,7 @@ const Footer = () => {
             <Separator>|</Separator>
             <FooterLink href="/terms">이용약관</FooterLink>
             <Separator>|</Separator>
-            <FooterLink href="/contact">협업문의</FooterLink>
+            <FooterLink href="/contact">문의하기</FooterLink>
           </NavLinks>
         </FooterTop>
 
@@ -38,8 +38,8 @@ const Footer = () => {
           {/* 회사 정보 */}
           <CompanyInfo>
             <div>상호명: 알파노트 | 대표명: 최지원</div>
-            <div>사업자등록번호:  | 통신판매업신고번호: 제~호 | 직업정보 제공사업 신고번호: </div>
-            <div>주소:  | 고객센터 :  </div>
+            {/* <div>사업자등록번호:  | 통신판매업신고번호: 제~호 | 직업정보 제공사업 신고번호: </div> */}
+            {/* <div>주소:  | 고객센터 :  </div> */}
           </CompanyInfo>
 
           {/* 저작권 정보 */}

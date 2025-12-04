@@ -12,6 +12,7 @@ export const QnAContainer = styled.div`
 export const QnAHeader = styled.div`
   ${flexBetween}
   margin-bottom: ${props => props.theme.spacing[6]};
+  gap: ${props => props.theme.spacing[3]};
 `;
 
 /* 제목 및 통계 영역 */

@@ -66,4 +66,8 @@ export const API_ENDPOINTS = {
     HABIT_RECORD_BY_DATE: (habitId, date) => `/habits/${habitId}/records/date/${date}`,
     HABIT_CALENDAR: (habitId) => `/habits/${habitId}/records/calendar`,
   },
+  // Support 관련
+  SUPPORT: {
+    CONTACT: '/support/contact',
+  },
 };

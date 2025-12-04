@@ -343,6 +343,14 @@ export const habitService = {
 };
 
 
+// Support 관련 API 서비스
+export const supportService = {
+  // 문의사항 전송 - 반환: { success, message, data }
+  submitContact: async (data) => {
+    return await api.post(API_ENDPOINTS.SUPPORT.CONTACT, data);
+  },
+};
+
 // 에러 처리 래퍼 함수
 export const withErrorHandling = (apiCall) => {
   return async (...args) => {

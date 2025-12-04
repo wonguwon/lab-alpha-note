@@ -8,6 +8,8 @@ import SignupPage from './pages/SignupPage';
 import ProfilePage from './pages/ProfilePage';
 import OAuth2RedirectPage from './pages/OAuth2RedirectPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsPage from './pages/TermsPage';
+import ContactPage from './pages/ContactPage';
 import HabitPage from './pages/HabitPage';
 import HabitCreatePage from './pages/HabitPage/HabitCreatePage';
 import HabitDetailPage from './pages/HabitPage/HabitDetailPage';
@@ -61,6 +63,8 @@ function App() {
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
         </Routes>
       </Layout>
     </Router>
