@@ -1,5 +1,5 @@
 const {
-  VITE_API_URL = 'http://localhost:8001',
+  VITE_API_URL,
   VITE_API_TIMEOUT = '5000',
   VITE_API_VERSION = 'v1'
 } = import.meta.env;
