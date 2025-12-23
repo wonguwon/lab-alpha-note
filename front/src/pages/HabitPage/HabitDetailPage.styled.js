@@ -106,7 +106,6 @@ export const StatsContainer = styled.div`
   border-radius: ${props => props.theme.borderRadius.lg};
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    grid-template-columns: 1fr;
     gap: ${props => props.theme.spacing[3]};
     padding: ${props => props.theme.spacing[4]};
   }

@@ -106,6 +106,10 @@ export const HabitCard = styled.div`
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transform: translateY(-2px);
   }
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    padding: ${props => props.theme.spacing[2]};
+  }
 `;
 
 export const HabitCardHeader = styled.div`

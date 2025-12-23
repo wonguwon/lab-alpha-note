@@ -213,7 +213,7 @@ const SignupPage = () => {
                 onClick={handleSendVerificationCode}
                 disabled={!email.value || isCodeSent || isLoading || isEmailVerified}
               >
-                {isLoading ? '발송 중...' : isCodeSent ? '전송완료' : '인증코드 발송'}
+                {isLoading ? '발송중...' : isCodeSent ? '전송완료' : '코드발송'}
               </VerifyButton>
             </div>
             {errorMessage && (
