@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+- N+1 방지: 필요한 경우 fetch join 또는 EntityGraph 고려.
+- 양방향 연관관계는 최소화하고, 필요 시 연관관계 편의 메서드 작성.
+- cascade/orphanRemoval은 근거가 있을 때만.
+- 쿼리가 복잡하면 JPQL/Native를 사용.

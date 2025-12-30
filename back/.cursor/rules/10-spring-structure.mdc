@@ -1,0 +1,16 @@
+---
+alwaysApply: true
+---
+## 1) 패키지/구조
+- 최상위 패키지는 도메인(기능) 기준으로 구성한다. (예: domain/auth, domain/member, domain/chat ...)
+- 각 도메인 내부는 controller -> service -> repository -> domain(entity) 레이어로 분리한다.
+- 공통 코드는 global(common) 패키지에만 둔다. (config, security, exception, response, util 등)
+- 도메인 전용 코드(Entity/DTO/Service/Repository)는 global로 올리지 않는다.
+
+## 2) 의존성/경계
+- Controller는 비즈니스 로직 금지: 요청/응답 매핑 + 검증(@Valid) + 서비스 호출만 한다.
+- Service는 도메인 로직의 중심이며 트랜잭션 경계를 가진다.
+  - 조회는 @Transactional(readOnly = true) 우선 적용
+- 도메인 간 직접 참조 금지:
+  - A 도메인이 B 도메인의 Repository/Service를 직접 호출하지 않는다.
+  - 도메인 간 조합이 필요하면 “유스케이스(application 계층)” 또는 이벤트 방식으로 연결한다.
