@@ -26,14 +26,45 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
 
+        // OAuth2AuthenticationException에서 에러 메시지 추출
+        String errorMessage = extractErrorMessage(exception);
+
         // 에러 메시지를 쿼리 파라미터로 포함한 리다이렉트 URL 생성
         String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("error", exception.getLocalizedMessage())
+                .queryParam("error", errorMessage)
                 .build().toUriString();
 
-        log.error("OAuth2 authentication failed: {}", exception.getMessage());
+        log.error("OAuth2 authentication failed: {} (errorMessage: {})", 
+                exception.getMessage(), errorMessage);
 
         // 프론트엔드로 리다이렉트
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
+    }
+
+    /**
+     * OAuth2AuthenticationException에서 사용자에게 표시할 에러 메시지 추출
+     * 1순위: OAuth2Error의 description
+     * 2순위: exception의 message
+     * 3순위: 기본 메시지
+     */
+    private String extractErrorMessage(AuthenticationException exception) {
+        // OAuth2AuthenticationException인 경우 OAuth2Error에서 추출
+        if (exception instanceof org.springframework.security.oauth2.core.OAuth2AuthenticationException) {
+            org.springframework.security.oauth2.core.OAuth2AuthenticationException oauth2Exception =
+                    (org.springframework.security.oauth2.core.OAuth2AuthenticationException) exception;
+            
+            if (oauth2Exception.getError() != null && 
+                oauth2Exception.getError().getDescription() != null) {
+                return oauth2Exception.getError().getDescription();
+            }
+        }
+
+        // exception의 message 확인
+        if (exception.getMessage() != null && !exception.getMessage().isEmpty()) {
+            return exception.getMessage();
+        }
+
+        // 기본 메시지
+        return "OAuth2 로그인 중 오류가 발생했습니다. 다시 시도해주세요.";
     }
 }

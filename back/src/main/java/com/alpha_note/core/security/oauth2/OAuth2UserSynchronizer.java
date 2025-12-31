@@ -8,6 +8,7 @@ import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -48,7 +49,12 @@ public class OAuth2UserSynchronizer {
 
         // 이메일 필수 체크
         if (!StringUtils.hasText(userInfo.getEmail())) {
-            throw new OAuth2AuthenticationException("OAuth2 제공자로부터 이메일 정보를 받지 못했습니다.");
+            OAuth2Error error = new OAuth2Error(
+                    "email_not_provided",
+                    "OAuth2 제공자로부터 이메일 정보를 받지 못했습니다.",
+                    null
+            );
+            throw new OAuth2AuthenticationException(error);
         }
 
         // 활성 계정만 조회 (삭제된 계정 제외)
@@ -60,10 +66,16 @@ public class OAuth2UserSynchronizer {
             // 다른 제공자로 이미 가입된 경우 에러
             if (!user.getProvider().equals(provider)) {
                 String providerName = getProviderDisplayName(user.getProvider());
-                throw new OAuth2AuthenticationException(
-                        "이미 " + providerName + "로 가입된 계정입니다. " +
-                        providerName + " 로그인을 사용해주세요."
+                String errorMessage = "이미 " + providerName + "로 가입된 계정입니다. " +
+                        providerName + " 로그인을 사용해주세요.";
+                OAuth2Error error = new OAuth2Error(
+                        "provider_mismatch",
+                        errorMessage,
+                        null
                 );
+                log.warn("OAuth2 provider mismatch: existing={}, requested={}, email={}",
+                        user.getProvider(), provider, userInfo.getEmail());
+                throw new OAuth2AuthenticationException(error, errorMessage);
             }
 
             // profileImageUrl이 null인 경우에만 기본 이미지 설정
