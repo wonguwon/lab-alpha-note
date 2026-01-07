@@ -5,6 +5,7 @@ import useAuthStore from '../../store/authStore';
 import { authService } from '../../api/services';
 import { Alert, Modal } from '../../components/common/Modal';
 import { useAlert } from '../../hooks/useModal';
+import { ButtonSpinner } from '../../components/common/Loading';
 import GoogleIcon from '../../assets/icons/google_login.svg';
 import {
   LoginContainer,
@@ -153,7 +154,14 @@ const LoginPage = () => {
           )}
 
           <LoginButton type="submit" disabled={isLoading}>
-            {isLoading ? '로그인 중...' : '로그인'}
+            {isLoading ? (
+              <>
+                로그인 중
+                <ButtonSpinner size="small" />
+              </>
+            ) : (
+              '로그인'
+            )}
           </LoginButton>
         </LoginForm>
 
@@ -185,7 +193,12 @@ const LoginPage = () => {
             variant: 'secondary'
           },
           {
-            label: isLoading ? '복구 중...' : '예, 복구합니다',
+            label: isLoading ? (
+              <>
+                복구 중
+                <ButtonSpinner size="small" />
+              </>
+            ) : '예, 복구합니다',
             onClick: handleRecover,
             variant: 'primary',
             disabled: isLoading

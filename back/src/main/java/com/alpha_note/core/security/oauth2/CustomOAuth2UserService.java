@@ -41,14 +41,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
      * OAuth2 사용자 정보를 DB와 동기화하고 AppUserPrincipal로 래핑
      */
     private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) {
-        // Provider 추출 (google, kakao, github 등)
+        // Provider 추출 (google, google-signup, kakao, github 등)
         String registrationId = oAuth2UserRequest.getClientRegistration().getRegistrationId();
-        AuthProvider provider = AuthProvider.fromRegistrationId(registrationId);
+        
+        // Registration ID 정규화 (예: "google-signup" → "google")
+        String normalizedRegistrationId = OAuth2RegistrationIdNormalizer.normalize(registrationId);
+        AuthProvider provider = AuthProvider.fromRegistrationId(normalizedRegistrationId);
 
-        // 사용자 정보 동기화 (신규 등록 또는 업데이트)
-        User user = userSynchronizer.synchronizeUser(provider, oAuth2User.getAttributes());
+        // 사용자 정보 동기화 (신규/기존 여부 판단)
+        OAuth2UserSynchronizer.UserSyncResult result = userSynchronizer.synchronizeUser(provider, oAuth2User.getAttributes());
 
-        // AppUserPrincipal로 래핑하여 반환 (일반 OAuth2 생성자 사용)
-        return new AppUserPrincipal(user, oAuth2User);
+        // AppUserPrincipal로 래핑하여 반환 (신규 여부 플래그 포함)
+        return new AppUserPrincipal(result.getUser(), oAuth2User, result.isNewUser());
     }
 }

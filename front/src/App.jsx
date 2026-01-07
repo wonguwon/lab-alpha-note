@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import SocialSignupPage from './pages/SignupPage/SocialSignupPage';
 import ProfilePage from './pages/ProfilePage';
 import OAuth2RedirectPage from './pages/OAuth2RedirectPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
@@ -60,6 +61,7 @@ function App() {
           <Route path="/qna/:id/answer/:answerId/edit" element={<ProtectedRoute><EditAnswerPage /></ProtectedRoute>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/signup/social" element={<SocialSignupPage />} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

@@ -70,6 +70,7 @@ public class SecurityConfig {
                     "/api/v1/auth/login",        // 로그인
                     "/api/v1/auth/email/**",     // 이메일 인증 (send, verify)
                     "/api/v1/auth/recover",      // 계정 복구 (recoveryToken)
+                    "/api/v1/auth/oauth2/register", // OAuth2 회원가입
                     "/api/public/**",            // 공개 API
                     "/oauth2/**",                // OAuth2 관련 경로 (Google 로그인)
                     "/login/oauth2/**",          // 콜백

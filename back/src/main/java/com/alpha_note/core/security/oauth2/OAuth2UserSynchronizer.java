@@ -5,6 +5,8 @@ import com.alpha_note.core.user.entity.AuthProvider;
 import com.alpha_note.core.user.entity.Role;
 import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -32,15 +34,26 @@ public class OAuth2UserSynchronizer {
     private final ImageProcessingService imageProcessingService;
     private final Random random = new Random();
     private static final int MAX_NICKNAME_RETRY = 10;
+    
+    /**
+     * User 동기화 결과
+     */
+    @Getter
+    @AllArgsConstructor
+    public static class UserSyncResult {
+        private final User user;
+        private final boolean isNewUser;
+    }
 
     /**
-     * OAuth2 attributes로부터 사용자 정보를 추출하여 DB에 저장/업데이트
+     * OAuth2 attributes로부터 사용자 정보를 추출하여 DB 확인
+     * 신규 사용자는 임시 User 객체만 생성 (DB에 저장하지 않음)
      *
      * @param provider OAuth2 제공자 (GOOGLE 등)
      * @param attributes OAuth2/OIDC에서 받은 사용자 정보
-     * @return 저장/업데이트된 User 엔티티
+     * @return UserSyncResult (User 객체와 신규 여부 포함)
      */
-    public User synchronizeUser(AuthProvider provider, Map<String, Object> attributes) {
+    public UserSyncResult synchronizeUser(AuthProvider provider, Map<String, Object> attributes) {
         // Provider별 어댑터로 사용자 정보 추출
         OAuth2UserInfo userInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(
                 provider.name(),
@@ -60,9 +73,12 @@ public class OAuth2UserSynchronizer {
         // 활성 계정만 조회 (삭제된 계정 제외)
         Optional<User> userOptional = userRepository.findByEmailAndIsDeletedFalse(userInfo.getEmail());
         User user;
+        boolean isNewUser;
 
         if (userOptional.isPresent()) {
             user = userOptional.get();
+            isNewUser = false;
+            
             // 다른 제공자로 이미 가입된 경우 에러
             if (!user.getProvider().equals(provider)) {
                 String providerName = getProviderDisplayName(user.getProvider());
@@ -89,43 +105,57 @@ public class OAuth2UserSynchronizer {
             // 사용자가 앱 내에서 닉네임/프로필을 변경할 수 있도록 허용
             log.debug("Existing OAuth2 user logged in: email={}, nickname={}", user.getEmail(), user.getNickname());
         } else {
-            // 신규 사용자 등록 (탈퇴한 계정이 있어도 새로 생성)
-            user = registerNewUser(provider, userInfo);
+            // 신규 사용자: 임시 User 객체 생성 (DB에 저장하지 않음)
+            user = createTempUser(provider, userInfo);
+            isNewUser = true;
+            log.info("New OAuth2 user detected: email={}, provider={}", userInfo.getEmail(), provider);
         }
 
-        return user;
+        return new UserSyncResult(user, isNewUser);
+    }
+    
+    /**
+     * 임시 User 객체 생성 (신규 사용자용, DB 저장 안함)
+     */
+    private User createTempUser(AuthProvider provider, OAuth2UserInfo userInfo) {
+        return User.builder()
+                .provider(provider)
+                .providerId(userInfo.getId())
+                .email(userInfo.getEmail())
+                .profileImageUrl(imageProcessingService.getDefaultProfileImageUrl())
+                .emailSubscribed(false)
+                .role(Role.USER)
+                .build();
     }
 
     /**
      * 신규 사용자 등록 (2단계 저장)
      * 1단계: 기본 이미지로 User 저장 → userId 생성
      * 2단계: OAuth2 이미지 처리 → profileImageUrl 업데이트
+     * 
+     * @param provider OAuth2 제공자
+     * @param providerId OAuth2 제공자의 사용자 ID
+     * @param email 이메일
+     * @param nickname 닉네임
+     * @param emailSubscribed 마케팅 동의
+     * @param profileImageUrl 프로필 이미지 URL
+     * @return 저장된 User
      */
-    private User registerNewUser(AuthProvider provider, OAuth2UserInfo userInfo) {
-        // 고유한 닉네임 생성
-        String uniqueNickname = generateUniqueNickname(userInfo.getName());
-
+    public User registerNewUser(AuthProvider provider, String providerId, String email, 
+                                String nickname, boolean emailSubscribed, String profileImageUrl) {
         // 1단계: 기본 프로필 이미지로 User 먼저 저장 (ID 생성 위해)
         User user = User.builder()
                 .provider(provider)
-                .providerId(userInfo.getId())
-                .nickname(uniqueNickname)
-                .email(userInfo.getEmail())
-                .profileImageUrl(imageProcessingService.getDefaultProfileImageUrl()) // 임시 기본 이미지
-                .emailSubscribed(false) // OAuth2 가입 시 기본값 false
+                .providerId(providerId)
+                .nickname(nickname)
+                .email(email)
+                .profileImageUrl(profileImageUrl != null ? profileImageUrl : imageProcessingService.getDefaultProfileImageUrl())
+                .emailSubscribed(emailSubscribed)
                 .role(Role.USER)
                 .build();
 
-        user = userRepository.save(user); // 저장하여 ID 생성
-        log.info("User registered with temporary default image: userId={}", user.getId());
-
-        // 2단계: OAuth2 제공자의 프로필 이미지를 S3에 업로드 (userId 포함 경로)
-        String profileImageUrl = imageProcessingService.processOAuth2ProfileImage(userInfo.getImageUrl(), user.getId());
-
-        // 프로필 이미지 URL 업데이트
-        user.updateProfileImage(profileImageUrl);
         user = userRepository.save(user);
-        log.info("Profile image updated for new user: userId={}, url={}", user.getId(), profileImageUrl);
+        log.info("User registered: userId={}, email={}, provider={}", user.getId(), email, provider);
 
         return user;
     }
@@ -139,7 +169,7 @@ public class OAuth2UserSynchronizer {
      * @param baseName 기본 이름
      * @return 고유한 닉네임
      */
-    private String generateUniqueNickname(String baseName) {
+    public String generateUniqueNickname(String baseName) {
         // null이거나 빈 문자열인 경우 기본값 사용
         if (!StringUtils.hasText(baseName)) {
             baseName = "user";

@@ -21,6 +21,7 @@ export const API_ENDPOINTS = {
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
     REGISTER: '/auth/register',
+    OAUTH2_REGISTER: '/auth/oauth2/register',
     RECOVER: '/auth/recover',
     ME: '/auth/me',
     EMAIL_SEND: '/auth/email/send',

@@ -1,9 +1,4 @@
-import styled, { keyframes } from 'styled-components';
-
-const spin = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-`;
+import styled from 'styled-components';
 
 export const RedirectContainer = styled.div`
   display: flex;
@@ -11,22 +6,14 @@ export const RedirectContainer = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   padding: 20px;
 `;
 
-export const LoadingSpinner = styled.div`
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: ${spin} 1s linear infinite;
-  margin-bottom: 20px;
-`;
-
 export const Message = styled.div`
-  color: #ffffff;
+  color: #374151;
   font-size: 18px;
   font-weight: 500;
   text-align: center;
@@ -35,9 +22,11 @@ export const Message = styled.div`
 `;
 
 export const ErrorMessage = styled(Message)`
-  color: #fee;
-  background: rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.15);
   padding: 16px 24px;
   border-radius: 8px;
   border: 1px solid rgba(239, 68, 68, 0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 `;

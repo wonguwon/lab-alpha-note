@@ -23,6 +23,10 @@ public enum ErrorCode {
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A004", "잘못된 아이디/비밀번호입니다."),
     INVALID_RECOVERY_TOKEN(HttpStatus.UNAUTHORIZED, "A005", "유효하지 않은 복구 토큰입니다."),
     EXPIRED_RECOVERY_TOKEN(HttpStatus.UNAUTHORIZED, "A006", "만료된 복구 토큰입니다."),
+    OAUTH2_SIGNUP_ALREADY_REGISTERED(HttpStatus.CONFLICT, "A007", "이미 가입된 계정입니다."),
+    OAUTH2_LOGIN_NOT_REGISTERED(HttpStatus.UNAUTHORIZED, "A008", "회원가입이 필요합니다."),
+    OAUTH2_AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "A009", "OAuth2 인증에 실패했습니다."),
+    OAUTH2_PROVIDER_MISMATCH(HttpStatus.CONFLICT, "A010", "다른 로그인 방식으로 가입된 계정입니다."),
     
     // 사용자 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),

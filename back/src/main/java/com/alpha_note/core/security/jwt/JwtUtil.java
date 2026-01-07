@@ -28,8 +28,12 @@ public class JwtUtil {
     @Value("${jwt.recovery-expiration:600000}") // 10 minutes
     private Long recoveryExpiration;
 
+    @Value("${jwt.oauth2-temp-expiration:600000}") // 10 minutes
+    private Long oauth2TempExpiration;
+
     private static final String TOKEN_TYPE_ACCESS = "access";
     private static final String TOKEN_TYPE_RECOVERY = "recovery";
+    private static final String TOKEN_TYPE_OAUTH2_TEMP = "oauth2_temp";
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
@@ -125,6 +129,50 @@ public class JwtUtil {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    // OAuth2 임시 토큰 생성 (회원가입용, 10분 유효)
+    public String generateOAuth2TempToken(String email, String provider, String providerId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", TOKEN_TYPE_OAUTH2_TEMP);
+        claims.put("email", email);
+        claims.put("provider", provider);
+        claims.put("providerId", providerId);
+        return createToken(claims, email, oauth2TempExpiration);
+    }
+
+    // OAuth2 임시 토큰 여부 확인
+    public boolean isOAuth2TempToken(String token) {
+        try {
+            String tokenType = extractTokenType(token);
+            return TOKEN_TYPE_OAUTH2_TEMP.equals(tokenType);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // OAuth2 임시 토큰 유효성 검증
+    public boolean validateOAuth2TempToken(String token) {
+        try {
+            return isOAuth2TempToken(token) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // OAuth2 임시 토큰에서 이메일 추출
+    public String extractOAuth2Email(String token) {
+        return extractClaim(token, claims -> claims.get("email", String.class));
+    }
+
+    // OAuth2 임시 토큰에서 provider 추출
+    public String extractOAuth2Provider(String token) {
+        return extractClaim(token, claims -> claims.get("provider", String.class));
+    }
+
+    // OAuth2 임시 토큰에서 providerId 추출
+    public String extractOAuth2ProviderId(String token) {
+        return extractClaim(token, claims -> claims.get("providerId", String.class));
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {

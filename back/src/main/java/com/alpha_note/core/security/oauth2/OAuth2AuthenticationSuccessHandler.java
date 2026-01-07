@@ -5,6 +5,7 @@ import com.alpha_note.core.user.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -16,6 +17,7 @@ import java.io.IOException;
 /**
  * OAuth2 인증 성공 후 처리를 담당하는 핸들러
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -46,13 +48,65 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // AppUserPrincipal에서 User 엔티티 추출
         AppUserPrincipal principal = (AppUserPrincipal) authentication.getPrincipal();
         User user = principal.getUser();
-
-        // User 정보로 JWT 토큰 생성
+        
+        // OAuth2 클라이언트 등록 ID로 로그인/회원가입 구분
+        // registrationId 추출: OAuth2AuthenticationToken에서 가져옴
+        String registrationId = null;
+        if (authentication instanceof org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken) {
+            registrationId = ((org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken) authentication)
+                    .getAuthorizedClientRegistrationId();
+        }
+        
+        boolean isSignupMode = "google-signup".equals(registrationId);
+        
+        log.info("OAuth2 authentication success: registrationId={}, email={}, isNewUser={}", 
+                registrationId, user.getEmail(), principal.isNewUser());
+        
+        // signup 모드에서 신규 사용자: 임시 토큰 발급
+        if (isSignupMode && principal.isNewUser()) {
+            String tempToken = jwtUtil.generateOAuth2TempToken(
+                    user.getEmail(),
+                    user.getProvider().name(),
+                    user.getProviderId()
+            );
+            
+            log.info("Issued temporary token for signup: email={}", user.getEmail());
+            
+            return UriComponentsBuilder.fromUriString(redirectUri)
+                    .queryParam("tempToken", tempToken)
+                    .queryParam("mode", "signup")
+                    .build()
+                    .toUriString();
+        }
+        
+        // signup 모드에서 기존 사용자: 에러
+        if (isSignupMode && !principal.isNewUser()) {
+            log.warn("Signup attempt with existing user: email={}", user.getEmail());
+            
+            return UriComponentsBuilder.fromUriString(redirectUri)
+                    .queryParam("errorCode", "A007")  // OAUTH2_SIGNUP_ALREADY_REGISTERED
+                    .build()
+                    .toUriString();
+        }
+        
+        // login 모드에서 신규 사용자: 에러
+        if (!isSignupMode && principal.isNewUser()) {
+            log.warn("Login attempt with new user: email={}", user.getEmail());
+            
+            return UriComponentsBuilder.fromUriString(redirectUri)
+                    .queryParam("errorCode", "A008")  // OAUTH2_LOGIN_NOT_REGISTERED
+                    .build()
+                    .toUriString();
+        }
+        
+        // login 모드에서 기존 사용자: 정상 토큰 발급
         String token = jwtUtil.generateToken(user);
-
-        // UriComponentsBuilder를 사용하여 안전하게 URL 생성
+        
+        log.info("Issued access token for login: email={}", user.getEmail());
+        
         return UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("token", token)  // ?token=생성된JWT 추가
-                .build().toUriString();
+                .queryParam("token", token)
+                .build()
+                .toUriString();
     }
 }

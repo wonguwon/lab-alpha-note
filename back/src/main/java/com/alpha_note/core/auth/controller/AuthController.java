@@ -4,22 +4,27 @@ import com.alpha_note.core.auth.dto.AuthResponse;
 import com.alpha_note.core.auth.dto.EmailCheckRequest;
 import com.alpha_note.core.auth.dto.EmailCheckResponse;
 import com.alpha_note.core.auth.dto.LoginRequest;
+import com.alpha_note.core.auth.dto.OAuth2RegisterRequest;
 import com.alpha_note.core.auth.dto.RegisterRequest;
 import com.alpha_note.core.auth.service.AuthService;
 import com.alpha_note.core.common.exception.CustomException;
 import com.alpha_note.core.common.exception.ErrorCode;
 import com.alpha_note.core.common.response.ApiResponse;
 import com.alpha_note.core.security.jwt.JwtUtil;
+import com.alpha_note.core.security.oauth2.OAuth2UserSynchronizer;
 import com.alpha_note.core.user.dto.UserResponse;
+import com.alpha_note.core.user.entity.AuthProvider;
 import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -28,6 +33,7 @@ public class AuthController {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final OAuth2UserSynchronizer oauth2UserSynchronizer;
 
     @PostMapping("/email/check")
     public ResponseEntity<ApiResponse<EmailCheckResponse>> checkEmail(@Valid @RequestBody EmailCheckRequest request) {
@@ -114,5 +120,65 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok(ApiResponse.success("계정이 성공적으로 복구되었습니다.", response));
+    }
+
+    /**
+     * OAuth2 회원가입 완료
+     * POST /api/v1/auth/oauth2/register
+     * - 임시 토큰 검증 후 추가 정보 입력받아 회원가입 완료
+     */
+    @PostMapping("/oauth2/register")
+    @Transactional
+    public ResponseEntity<ApiResponse<AuthResponse>> oauth2Register(@Valid @RequestBody OAuth2RegisterRequest request) {
+        log.info("OAuth2 register request received");
+
+        // 임시 토큰 검증
+        if (!jwtUtil.validateOAuth2TempToken(request.getTempToken())) {
+            log.warn("Invalid or expired OAuth2 temp token");
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
+
+        // 임시 토큰에서 정보 추출
+        String email = jwtUtil.extractOAuth2Email(request.getTempToken());
+        String provider = jwtUtil.extractOAuth2Provider(request.getTempToken());
+        String providerId = jwtUtil.extractOAuth2ProviderId(request.getTempToken());
+
+        log.info("OAuth2 register: email={}, provider={}", email, provider);
+
+        // 이메일 중복 체크 (다시 확인)
+        if (userRepository.existsByEmailAndIsDeletedFalse(email)) {
+            log.warn("Email already exists: {}", email);
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        // 닉네임 중복 체크
+        if (userRepository.existsByNicknameAndIsDeletedFalse(request.getNickname())) {
+            log.warn("Nickname already exists: {}", request.getNickname());
+            throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        // 사용자 등록
+        User user = oauth2UserSynchronizer.registerNewUser(
+                AuthProvider.valueOf(provider),
+                providerId,
+                email,
+                request.getNickname(),
+                request.isEmailSubscribed(),
+                null  // 프로필 이미지는 기본 이미지 사용
+        );
+
+        // 정식 JWT 토큰 발급
+        String token = jwtUtil.generateToken(user);
+
+        AuthResponse response = AuthResponse.builder()
+                .token(token)
+                .nickname(user.getNickname())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
+
+        log.info("OAuth2 register completed: userId={}, email={}", user.getId(), email);
+
+        return ResponseEntity.ok(ApiResponse.success("회원가입이 완료되었습니다.", response));
     }
 }

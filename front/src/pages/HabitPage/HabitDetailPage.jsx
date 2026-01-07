@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { habitService } from '../../api/services';
 import useAuthStore from '../../store/authStore';
 import Modal from '../../components/common/Modal/Modal';
+import { ButtonSpinner } from '../../components/common/Loading';
 import * as S from './HabitDetailPage.styled';
 
 const HabitDetailPage = () => {
@@ -592,7 +593,12 @@ const HabitDetailPage = () => {
             variant: 'default'
           },
           {
-            label: isSubmitting ? '저장 중...' : '저장',
+            label: isSubmitting ? (
+              <>
+                저장 중
+                <ButtonSpinner size="small" />
+              </>
+            ) : '저장',
             onClick: handleUpdateRecord,
             variant: 'primary',
             disabled: isSubmitting

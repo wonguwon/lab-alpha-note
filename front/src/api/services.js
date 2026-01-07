@@ -47,6 +47,15 @@ export const authService = {
       }
     });
   },
+
+  // OAuth2 회원가입 - 반환: { token, nickname, email, role }
+  oauth2Register: async (tempToken, nickname, emailSubscribed) => {
+    return await api.post(API_ENDPOINTS.AUTH.OAUTH2_REGISTER, {
+      tempToken,
+      nickname,
+      emailSubscribed
+    });
+  },
 };
 
 // 스토리지 관련 API 서비스

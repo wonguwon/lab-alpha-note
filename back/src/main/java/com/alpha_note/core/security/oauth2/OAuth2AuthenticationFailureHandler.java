@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -26,45 +28,29 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
 
-        // OAuth2AuthenticationException에서 에러 메시지 추출
-        String errorMessage = extractErrorMessage(exception);
-
-        // 에러 메시지를 쿼리 파라미터로 포함한 리다이렉트 URL 생성
-        String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("error", errorMessage)
-                .build().toUriString();
-
-        log.error("OAuth2 authentication failed: {} (errorMessage: {})", 
-                exception.getMessage(), errorMessage);
-
-        // 프론트엔드로 리다이렉트
-        getRedirectStrategy().sendRedirect(request, response, targetUrl);
-    }
-
-    /**
-     * OAuth2AuthenticationException에서 사용자에게 표시할 에러 메시지 추출
-     * 1순위: OAuth2Error의 description
-     * 2순위: exception의 message
-     * 3순위: 기본 메시지
-     */
-    private String extractErrorMessage(AuthenticationException exception) {
-        // OAuth2AuthenticationException인 경우 OAuth2Error에서 추출
-        if (exception instanceof org.springframework.security.oauth2.core.OAuth2AuthenticationException) {
-            org.springframework.security.oauth2.core.OAuth2AuthenticationException oauth2Exception =
-                    (org.springframework.security.oauth2.core.OAuth2AuthenticationException) exception;
+        String errorCode = "A009"; // 기본값: 일반 OAuth2 에러
+        
+        // OAuth2AuthenticationException인 경우 에러 코드 확인
+        if (exception instanceof OAuth2AuthenticationException) {
+            OAuth2AuthenticationException oauth2Exception = (OAuth2AuthenticationException) exception;
+            OAuth2Error error = oauth2Exception.getError();
             
-            if (oauth2Exception.getError() != null && 
-                oauth2Exception.getError().getDescription() != null) {
-                return oauth2Exception.getError().getDescription();
+            // Provider 불일치 에러인 경우 A010으로 구분
+            if ("provider_mismatch".equals(error.getErrorCode())) {
+                errorCode = "A010";
             }
         }
 
-        // exception의 message 확인
-        if (exception.getMessage() != null && !exception.getMessage().isEmpty()) {
-            return exception.getMessage();
-        }
+        String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
+                .queryParam("errorCode", errorCode)
+                .build()
+                .encode()
+                .toUriString();
 
-        // 기본 메시지
-        return "OAuth2 로그인 중 오류가 발생했습니다. 다시 시도해주세요.";
+        log.error("OAuth2 authentication failed: {} (errorCode: {}, exception: {})", 
+                exception.getMessage(), errorCode, exception.getClass().getSimpleName());
+
+        // 프론트엔드로 리다이렉트
+        getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 }
