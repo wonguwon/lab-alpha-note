@@ -34,7 +34,7 @@ public class OAuth2UserSynchronizer {
     private final ImageProcessingService imageProcessingService;
     private final Random random = new Random();
     private static final int MAX_NICKNAME_RETRY = 10;
-    
+
     /**
      * User 동기화 결과
      */

@@ -108,7 +108,7 @@ public class CommentService {
             throw new CustomException(ErrorCode.QUESTION_NOT_FOUND);
         }
 
-        List<QuestionComment> comments = questionCommentRepository.findByQuestionIdAndIsDeletedFalseOrderByCreatedAtAsc(questionId);
+        List<QuestionComment> comments = questionCommentRepository.findByQuestionIdAndIsDeletedFalseOrderByCreatedAtDesc(questionId);
         return comments.stream()
                 .map(this::buildQuestionCommentResponse)
                 .collect(Collectors.toList());
@@ -123,7 +123,7 @@ public class CommentService {
             throw new CustomException(ErrorCode.ANSWER_NOT_FOUND);
         }
 
-        List<AnswerComment> comments = answerCommentRepository.findByAnswerIdAndIsDeletedFalseOrderByCreatedAtAsc(answerId);
+        List<AnswerComment> comments = answerCommentRepository.findByAnswerIdAndIsDeletedFalseOrderByCreatedAtDesc(answerId);
         return comments.stream()
                 .map(this::buildAnswerCommentResponse)
                 .collect(Collectors.toList());

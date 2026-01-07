@@ -27,6 +27,8 @@ export const API_ENDPOINTS = {
     EMAIL_SEND: '/auth/email/send',
     EMAIL_VERIFY: '/auth/email/verify',
     EMAIL_CHECK: '/auth/email/check',
+    PASSWORD_RESET_REQUEST: '/auth/password/reset/request',
+    PASSWORD_RESET_CONFIRM: '/auth/password/reset/confirm',
   },
   // 사용자 관련
   USER: {

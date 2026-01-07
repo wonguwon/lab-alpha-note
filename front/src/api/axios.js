@@ -30,29 +30,9 @@ api.interceptors.request.use(
 // Response 인터셉터 - 에러 처리 및 응답 형식 통일
 api.interceptors.response.use(
   (response) => {
-    const data = response.data;
-
-    // 서버 응답 형식: { status: 'success'|'error', message, data, code }
-    // 또는 구 형식: { success: true|false, message, data, errorCode }
-
-    const isSuccess = data.status === 'success' || data.success === true;
-
-    if (!isSuccess) {
-      // 성공이 아닌 응답을 에러로 변환
-      const error = new Error(data.message || '요청 처리 실패');
-      error.response = {
-        data: {
-          message: data.message,
-          errorCode: data.errorCode,
-          status: response.status,
-          data: data.data
-        }
-      };
-      return Promise.reject(error);
-    }
-
+    // HTTP 200은 항상 성공으로 처리 (표준 HTTP 상태 코드 기반)
     // 성공 시 data만 반환 (컴포넌트에서 바로 사용)
-    return data.data;
+    return response.data.data;
   },
   (error) => {
     if (error.response) {
@@ -73,14 +53,18 @@ api.interceptors.response.use(
       // 에러 메시지 표준화
       const errorMessage = data?.message || getDefaultErrorMessage(status);
 
-      // 에러 객체 표준화
+      // 에러 객체 표준화 (원본 데이터 보존)
       const standardError = new Error(errorMessage);
       standardError.response = {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        headers: error.response.headers,
         data: {
+          ...data,  // 원본 data 전체 보존
+          // 명시적으로 필드 확인 (fallback)
           message: errorMessage,
-          errorCode: data?.errorCode,
-          status: status,
-          data: data?.data  // 원본 data 포함 (recoveryToken 등)
+          errorCode: data?.errorCode || data?.code,
+          status: status
         }
       };
 

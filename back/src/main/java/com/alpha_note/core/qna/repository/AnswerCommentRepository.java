@@ -13,8 +13,8 @@ public interface AnswerCommentRepository extends JpaRepository<AnswerComment, Lo
     // 기본 조회
     Optional<AnswerComment> findByIdAndIsDeletedFalse(Long id);
 
-    // 답변별 댓글 조회 (생성일 오름차순)
-    List<AnswerComment> findByAnswerIdAndIsDeletedFalseOrderByCreatedAtAsc(Long answerId);
+    // 답변별 댓글 조회 (생성일 내림차순 - 최신순)
+    List<AnswerComment> findByAnswerIdAndIsDeletedFalseOrderByCreatedAtDesc(Long answerId);
 
     // 사용자별 댓글 조회
     List<AnswerComment> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId);

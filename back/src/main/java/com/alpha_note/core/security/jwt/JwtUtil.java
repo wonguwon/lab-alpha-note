@@ -31,9 +31,13 @@ public class JwtUtil {
     @Value("${jwt.oauth2-temp-expiration:600000}") // 10 minutes
     private Long oauth2TempExpiration;
 
+    @Value("${jwt.password-reset-expiration:3600000}") // 1 hour
+    private Long passwordResetExpiration;
+
     private static final String TOKEN_TYPE_ACCESS = "access";
     private static final String TOKEN_TYPE_RECOVERY = "recovery";
     private static final String TOKEN_TYPE_OAUTH2_TEMP = "oauth2_temp";
+    private static final String TOKEN_TYPE_PASSWORD_RESET = "password_reset";
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
@@ -45,6 +49,10 @@ public class JwtUtil {
 
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    public Date extractIssuedAt(String token) {
+        return extractClaim(token, Claims::getIssuedAt);
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -178,5 +186,33 @@ public class JwtUtil {
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    // 비밀번호 재설정 토큰 생성 (1시간 유효)
+    public String generatePasswordResetToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", TOKEN_TYPE_PASSWORD_RESET);
+        claims.put("userId", user.getId());
+        claims.put("email", user.getEmail());
+        return createToken(claims, user.getUsername(), passwordResetExpiration);
+    }
+
+    // 비밀번호 재설정 토큰 여부 확인
+    public boolean isPasswordResetToken(String token) {
+        try {
+            String tokenType = extractTokenType(token);
+            return TOKEN_TYPE_PASSWORD_RESET.equals(tokenType);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // 비밀번호 재설정 토큰 유효성 검증
+    public boolean validatePasswordResetToken(String token) {
+        try {
+            return isPasswordResetToken(token) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

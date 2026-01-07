@@ -184,9 +184,9 @@ const TiptapEditor = ({ content, onChange, placeholder = '내용을 입력하세
       return;
     }
 
-    // 파일 크기 제한 (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('이미지 크기는 5MB 이하여야 합니다.');
+    // 파일 크기 제한 (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('이미지 크기는 10MB 이하여야 합니다.');
       return;
     }
 
@@ -197,7 +197,8 @@ const TiptapEditor = ({ content, onChange, placeholder = '내용을 입력하세
       const { uploadUrl, fileUrl } = await storageService.getPresignedUrl(
         file.name,
         file.type,
-        'public/qna'
+        'public/qna',
+        file.size
       );
 
       // 2. S3에 파일 업로드

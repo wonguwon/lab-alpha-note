@@ -56,16 +56,31 @@ export const authService = {
       emailSubscribed
     });
   },
+
+  // 비밀번호 찾기 요청 (재설정 링크 발송)
+  requestPasswordReset: async (email) => {
+    return await api.post(API_ENDPOINTS.AUTH.PASSWORD_RESET_REQUEST, { email });
+  },
+
+  // 비밀번호 재설정
+  confirmPasswordReset: async (token, newPassword, confirmPassword) => {
+    return await api.post(API_ENDPOINTS.AUTH.PASSWORD_RESET_CONFIRM, {
+      token,
+      newPassword,
+      confirmPassword
+    });
+  },
 };
 
 // 스토리지 관련 API 서비스
 export const storageService = {
   // Presigned URL 발급 - 반환: { uploadUrl, fileUrl, key, expiresIn }
-  getPresignedUrl: async (fileName, contentType, filePath) => {
+  getPresignedUrl: async (fileName, contentType, filePath, fileSize) => {
     return await api.post(API_ENDPOINTS.STORAGE.PRESIGNED_URL, {
       fileName,
       contentType,
-      filePath
+      filePath,
+      fileSize
     });
   },
 
@@ -116,7 +131,8 @@ export const userService = {
     const { uploadUrl, fileUrl } = await storageService.getPresignedUrl(
       file.name,
       file.type,
-      `public/profiles/user-${userId}`
+      `public/profiles/user-${userId}`,
+      file.size
     );
 
     // 2. S3에 파일 직접 업로드

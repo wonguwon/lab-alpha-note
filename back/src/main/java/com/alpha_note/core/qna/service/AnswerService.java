@@ -85,7 +85,7 @@ public class AnswerService {
      */
     @Transactional(readOnly = true)
     public Page<AnswerResponse> getAnswersByUser(Long userId, Pageable pageable, Long currentUserId) {
-        Page<Answer> answers = answerRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
+        Page<Answer> answers = answerRepository.findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(userId, pageable);
         return answers.map(answer -> buildAnswerResponse(answer, currentUserId));
     }
 

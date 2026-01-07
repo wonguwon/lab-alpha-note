@@ -125,9 +125,9 @@ const ProfilePage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 파일 크기 체크 (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMessage('이미지 파일은 5MB 이하만 업로드 가능합니다.');
+    // 파일 크기 체크 (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMessage('이미지 파일은 10MB 이하만 업로드 가능합니다.');
       return;
     }
 

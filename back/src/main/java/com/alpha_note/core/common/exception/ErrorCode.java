@@ -27,6 +27,10 @@ public enum ErrorCode {
     OAUTH2_LOGIN_NOT_REGISTERED(HttpStatus.UNAUTHORIZED, "A008", "회원가입이 필요합니다."),
     OAUTH2_AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "A009", "OAuth2 인증에 실패했습니다."),
     OAUTH2_PROVIDER_MISMATCH(HttpStatus.CONFLICT, "A010", "다른 로그인 방식으로 가입된 계정입니다."),
+    SOCIAL_ACCOUNT_PASSWORD_RESET(HttpStatus.BAD_REQUEST, "A011", "소셜 가입된 계정입니다. 소셜 로그인을 이용해주세요."),
+    INVALID_PASSWORD_RESET_TOKEN(HttpStatus.UNAUTHORIZED, "A012", "유효하지 않은 비밀번호 재설정 토큰입니다."),
+    EXPIRED_PASSWORD_RESET_TOKEN(HttpStatus.UNAUTHORIZED, "A013", "만료된 비밀번호 재설정 토큰입니다."),
+    PASSWORD_RESET_TOKEN_ALREADY_USED(HttpStatus.BAD_REQUEST, "A014", "이미 사용된 비밀번호 재설정 토큰입니다."),
     
     // 사용자 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),

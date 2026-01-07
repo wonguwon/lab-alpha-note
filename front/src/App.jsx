@@ -5,6 +5,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage/ResetPasswordPage';
 import SocialSignupPage from './pages/SignupPage/SocialSignupPage';
 import ProfilePage from './pages/ProfilePage';
 import OAuth2RedirectPage from './pages/OAuth2RedirectPage';
@@ -62,6 +64,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signup/social" element={<SocialSignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

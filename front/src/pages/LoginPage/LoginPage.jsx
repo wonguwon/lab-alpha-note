@@ -178,6 +178,10 @@ const LoginPage = () => {
           <span>아직 계정이 없으신가요?</span>
           <Link to="/signup">회원가입</Link>
         </SignupLink>
+        <SignupLink style={{ marginTop: '8px' }}>
+          <span>비밀번호를 잊으셨나요?</span>
+          <Link to="/forgot-password">비밀번호 찾기</Link>
+        </SignupLink>
       </LoginCard>
 
       {/* 계정 복구 모달 */}

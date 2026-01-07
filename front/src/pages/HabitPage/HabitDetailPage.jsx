@@ -559,7 +559,6 @@ const HabitDetailPage = () => {
                               onClick={() => handleRecordClick(record)}
                               $clickable={isMyHabit}
                             >
-                              <S.RecordNumber>{index + 1}회차</S.RecordNumber>
                               <S.RecordNoteText>
                                 {record.note || '...'}
                               </S.RecordNoteText>

@@ -321,7 +321,8 @@ const QuestionDetailPage = () => {
 
     try {
       const newComment = await qnaService.createQuestionComment(id, { content: questionComment });
-      setQuestionComments([...questionComments, newComment]);
+      // 최신순 정렬을 위해 맨 앞에 추가
+      setQuestionComments([newComment, ...questionComments]);
       setQuestionComment('');
       // 댓글 개수 증가
       setQuestion({ ...question, commentCount: question.commentCount + 1 });
@@ -355,7 +356,8 @@ const QuestionDetailPage = () => {
     try {
       const newComment = await qnaService.createAnswerComment(answerId, { content: comment });
       const currentComments = answerCommentsMap[answerId] || [];
-      setAnswerCommentsMap({ ...answerCommentsMap, [answerId]: [...currentComments, newComment] });
+      // 최신순 정렬을 위해 맨 앞에 추가
+      setAnswerCommentsMap({ ...answerCommentsMap, [answerId]: [newComment, ...currentComments] });
       setAnswerComments({ ...answerComments, [answerId]: '' });
 
       // 답변의 댓글 개수 증가

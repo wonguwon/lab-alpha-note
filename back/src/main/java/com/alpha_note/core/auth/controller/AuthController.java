@@ -5,6 +5,8 @@ import com.alpha_note.core.auth.dto.EmailCheckRequest;
 import com.alpha_note.core.auth.dto.EmailCheckResponse;
 import com.alpha_note.core.auth.dto.LoginRequest;
 import com.alpha_note.core.auth.dto.OAuth2RegisterRequest;
+import com.alpha_note.core.auth.dto.PasswordResetConfirmRequest;
+import com.alpha_note.core.auth.dto.PasswordResetRequest;
 import com.alpha_note.core.auth.dto.RegisterRequest;
 import com.alpha_note.core.auth.service.AuthService;
 import com.alpha_note.core.common.exception.CustomException;
@@ -180,5 +182,27 @@ public class AuthController {
         log.info("OAuth2 register completed: userId={}, email={}", user.getId(), email);
 
         return ResponseEntity.ok(ApiResponse.success("회원가입이 완료되었습니다.", response));
+    }
+
+    /**
+     * 비밀번호 찾기 요청 (재설정 링크 발송)
+     * POST /api/v1/auth/password/reset/request
+     */
+    @PostMapping("/password/reset/request")
+    public ResponseEntity<ApiResponse<Void>> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+        log.info("Password reset request received {}",  request);
+        authService.requestPasswordReset(request);
+        return ResponseEntity.ok(ApiResponse.success("비밀번호 재설정 링크가 발송되었습니다.", null));
+    }
+
+    /**
+     * 비밀번호 재설정
+     * POST /api/v1/auth/password/reset/confirm
+     */
+    @PostMapping("/password/reset/confirm")
+    @Transactional
+    public ResponseEntity<ApiResponse<Void>> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("비밀번호가 재설정되었습니다.", null));
     }
 }

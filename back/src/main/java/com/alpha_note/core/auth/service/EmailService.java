@@ -54,6 +54,30 @@ public class EmailService {
     }
 
     /**
+     * 비밀번호 재설정 링크 이메일 전송
+     *
+     * @param to        수신자 이메일
+     * @param resetLink 비밀번호 재설정 링크
+     */
+    public void sendPasswordResetEmail(String to, String resetLink) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject("[AlphaNote] 비밀번호 재설정");
+            helper.setText(buildPasswordResetEmailContent(resetLink), true);
+
+            mailSender.send(message);
+            log.info("Password reset email sent to: {}", to);
+
+        } catch (MessagingException e) {
+            log.error("Failed to send password reset email to: {}", to, e);
+            throw new CustomException(ErrorCode.EMAIL_SEND_FAILED);
+        }
+    }
+
+    /**
      * 문의사항/에러 보고 이메일 전송
      *
      * @param request 문의 요청 정보
@@ -88,6 +112,18 @@ public class EmailService {
         Context context = new Context();
         context.setVariable("code", code);
         return templateEngine.process("email/verification-code", context);
+    }
+
+    /**
+     * 비밀번호 재설정 이메일 본문 생성
+     *
+     * @param resetLink 재설정 링크
+     * @return HTML 문자열
+     */
+    private String buildPasswordResetEmailContent(String resetLink) {
+        Context context = new Context();
+        context.setVariable("resetLink", resetLink);
+        return templateEngine.process("email/password-reset", context);
     }
 
     /**
