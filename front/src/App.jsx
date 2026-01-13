@@ -20,6 +20,8 @@ import QnAPage, { AskQuestionPage, QuestionDetailPage, AnswerPage, EditQuestionP
 import useAuthStore from './store/authStore';
 import { setAuthStoreGetter } from './api/axios';
 import { authService } from './api/services';
+import BlogPage from './pages/BlogPage/BlogPage';
+import BlogCreatePage from './pages/BlogPage/BlogCreatePage';
 
 function App() {
   const { token, setUser, logout } = useAuthStore();
@@ -61,6 +63,8 @@ function App() {
           <Route path="/qna/:id/edit" element={<ProtectedRoute><EditQuestionPage /></ProtectedRoute>} />
           <Route path="/qna/:id/answer" element={<ProtectedRoute><AnswerPage /></ProtectedRoute>} />
           <Route path="/qna/:id/answer/:answerId/edit" element={<ProtectedRoute><EditAnswerPage /></ProtectedRoute>} />
+          <Route path="/blogs" element={<BlogPage />} />
+          <Route path="/blogs/create" element={<ProtectedRoute><BlogCreatePage /></ProtectedRoute>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signup/social" element={<SocialSignupPage />} />

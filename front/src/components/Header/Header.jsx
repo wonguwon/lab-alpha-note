@@ -78,6 +78,13 @@ const Header = () => {
             >
               Habit
             </NavLink>
+            <NavLink
+              as={Link}
+              to="/blogs"
+              className={location.pathname.startsWith('/blogs') ? 'active' : ''}
+            >
+              Blog
+            </NavLink>
           </Navigation>
         </CenterSection>
 
