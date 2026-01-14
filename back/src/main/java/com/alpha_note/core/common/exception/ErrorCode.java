@@ -54,10 +54,6 @@ public enum ErrorCode {
     EMAIL_SEND_COOLDOWN(HttpStatus.TOO_MANY_REQUESTS, "E005", "이메일은 60초마다 전송할 수 있습니다."),
     EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "E006", "이메일 인증이 완료되지 않았습니다."),
 
-    // 노트 관련 에러 (향후 추가)
-    NOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "노트를 찾을 수 없습니다."),
-    NOTE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N002", "노트에 접근할 권한이 없습니다."),
-
     // QnA 관련 에러
     QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "질문을 찾을 수 없습니다."),
     QUESTION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "Q002", "질문에 접근할 권한이 없습니다."),
@@ -86,7 +82,11 @@ public enum ErrorCode {
     HABIT_DELETED(HttpStatus.GONE, "H007", "삭제된 습관입니다."),
     FUTURE_RECORD_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "H008", "미래 날짜에 기록을 남길 수 없습니다."),
     RECORD_DATE_BEFORE_START_DATE(HttpStatus.BAD_REQUEST, "H009", "습관 시작일 이전에 기록을 남길 수 없습니다."),
-    HABIT_END_DATE_PASSED(HttpStatus.BAD_REQUEST, "H010", "습관 종료일 이후에 기록을 남길 수 없습니다.");
+    HABIT_END_DATE_PASSED(HttpStatus.BAD_REQUEST, "H010", "습관 종료일 이후에 기록을 남길 수 없습니다."),
+
+    // 알림 관련 에러
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "알림을 찾을 수 없습니다."),
+    NOTIFICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N002", "알림에 접근할 권한이 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

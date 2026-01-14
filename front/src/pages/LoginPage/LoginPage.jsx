@@ -32,7 +32,7 @@ const LoginPage = () => {
 
   const { isOpen: isAlertOpen, showAlert, alertProps } = useAlert();
 
-  const { login, setLoading, setError, isLoading } = useAuthStore();
+  const { login, setUser, setLoading, setError, isLoading } = useAuthStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,14 +40,18 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      // API 로그인 호출 - 반환: { token, user }
-      const data = await authService.login({
+      // API 로그인 호출 - 쿠키가 자동으로 설정됨
+      await authService.login({
         email: email.value,
         password: password.value
       });
 
-      // Zustand 스토어에 토큰 저장 (사용자 정보는 App.jsx에서 자동 로드)
-      login(data.token);
+      // 사용자 정보 로드
+      const userData = await authService.getUserInfo();
+      setUser(userData);
+      
+      // 로그인 상태 설정
+      login();
 
       // 홈페이지로 리다이렉트
       navigate('/');
@@ -83,10 +87,15 @@ const LoginPage = () => {
     setErrorMessage('');
 
     try {
-      const data = await authService.recoverAccount(recoveryData.recoveryToken);
+      await authService.recoverAccount(recoveryData.recoveryToken);
 
-      // 복구 성공 - 정상 토큰으로 로그인
-      login(data.token);
+      // 사용자 정보 로드
+      const userData = await authService.getUserInfo();
+      setUser(userData);
+      
+      // 로그인 상태 설정
+      login();
+      
       showAlert('계정이 성공적으로 복구되었습니다.', {
         variant: 'success',
         onClose: () => navigate('/')

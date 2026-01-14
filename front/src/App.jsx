@@ -17,35 +17,55 @@ import HabitPage from './pages/HabitPage';
 import HabitCreatePage from './pages/HabitPage/HabitCreatePage';
 import HabitDetailPage from './pages/HabitPage/HabitDetailPage';
 import QnAPage, { AskQuestionPage, QuestionDetailPage, AnswerPage, EditQuestionPage, EditAnswerPage } from './pages/QnAPage';
+import NotificationPage from './pages/NotificationPage';
 import useAuthStore from './store/authStore';
+import useNotificationStore from './store/notificationStore';
 import { setAuthStoreGetter } from './api/axios';
 import { authService } from './api/services';
 
 function App() {
-  const { token, setUser, logout } = useAuthStore();
+  const { user, setUser, logout, isAuthenticated } = useAuthStore();
+  const { connectSSE, disconnectSSE } = useNotificationStore();
 
   // axios가 authStore에 접근할 수 있도록 설정
   useEffect(() => {
     setAuthStoreGetter(() => useAuthStore.getState());
   }, []);
 
-  // 앱 시작 시 토큰이 있으면 사용자 정보 로드
+  // 앱 시작 시 쿠키가 있으면 사용자 정보 로드
   useEffect(() => {
     const loadUserInfo = async () => {
-      if (token) {
-        try {
-          const data = await authService.getUserInfo();
-          setUser(data);
-        } catch (error) {
-          console.error('사용자 정보 로드 실패:', error);
-          // 토큰이 만료되었거나 유효하지 않으면 로그아웃
-          logout();
-        }
+      // 사용자 정보가 이미 있으면 스킵
+      if (user) return;
+
+      try {
+        const data = await authService.getUserInfo();
+        setUser(data);
+      } catch (error) {
+        console.error('사용자 정보 로드 실패:', error);
+        // 쿠키가 만료되었거나 유효하지 않으면 로그아웃
+        logout();
       }
     };
 
     loadUserInfo();
-  }, [token, setUser, logout]);
+  }, [user, setUser, logout]);
+
+  // 로그인 상태에 따라 SSE 연결 관리
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // 로그인 상태면 SSE 연결 시작
+      connectSSE();
+    } else {
+      // 로그아웃 상태면 SSE 연결 종료
+      disconnectSSE();
+    }
+
+    // 컴포넌트 언마운트 시 SSE 연결 정리
+    return () => {
+      disconnectSSE();
+    };
+  }, [isAuthenticated, user, connectSSE, disconnectSSE]);
 
   return (
     <Router>
@@ -67,6 +87,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsPage />} />

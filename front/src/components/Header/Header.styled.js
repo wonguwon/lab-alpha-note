@@ -163,6 +163,7 @@ export const IconButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 
   svg {
     width: 18px;
@@ -174,6 +175,25 @@ export const IconButton = styled.button`
     border-color: ${props => props.theme.colors.gray[300]};
     color: ${props => props.theme.colors.gray[900]};
   }
+`;
+
+/* 알림 배지 */
+export const NotificationBadge = styled.span`
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: ${props => props.theme.colors.danger[500]};
+  color: ${props => props.theme.colors.white};
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 ${props => props.theme.spacing[1]};
+  font-size: 10px;
+  font-weight: ${props => props.theme.fonts.weight.bold};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid ${props => props.theme.colors.white};
 `;
 
 /* 모바일 햄버거 버튼 */

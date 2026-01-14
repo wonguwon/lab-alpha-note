@@ -6,6 +6,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ import java.io.IOException;
 
 /**
  * JWT 인증 필터
- * 요청 헤더에서 JWT 토큰을 추출하고 검증
+ * 요청 헤더 또는 쿠키에서 JWT 토큰을 추출하고 검증
  */
 @Slf4j
 @Component
@@ -37,17 +38,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        String jwt = null;
 
-        // Authorization 헤더가 없거나 Bearer로 시작하지 않으면 다음 필터로
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // 1. Authorization 헤더에서 토큰 추출 (우선)
+        final String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        }
+
+        // 2. 헤더에 없으면 쿠키에서 토큰 추출
+        if (jwt == null) {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("access_token".equals(cookie.getName())) {
+                        jwt = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 토큰이 없으면 다음 필터로
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            // JWT 토큰 추출
-            final String jwt = authHeader.substring(7);
             final String username = jwtUtil.extractUsername(jwt);
 
             // username이 있고 아직 인증되지 않은 경우

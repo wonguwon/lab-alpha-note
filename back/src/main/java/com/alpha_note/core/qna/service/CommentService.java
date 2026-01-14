@@ -6,6 +6,10 @@ import com.alpha_note.core.qna.dto.request.CreateCommentRequest;
 import com.alpha_note.core.qna.dto.response.CommentResponse;
 import com.alpha_note.core.qna.entity.AnswerComment;
 import com.alpha_note.core.qna.entity.QuestionComment;
+import com.alpha_note.core.notification.enums.NotificationType;
+import com.alpha_note.core.notification.service.NotificationService;
+import com.alpha_note.core.qna.entity.Answer;
+import com.alpha_note.core.qna.entity.Question;
 import com.alpha_note.core.qna.repository.*;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +30,7 @@ public class CommentService {
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     /**
      * 질문 댓글 작성
@@ -51,10 +56,22 @@ public class CommentService {
 
         QuestionComment savedComment = questionCommentRepository.save(comment);
 
-        // 질문의 마지막 활동 시간 업데이트
+        // 질문의 마지막 활동 시간 업데이트 및 알림 생성
         questionRepository.findById(questionId).ifPresent(question -> {
             question.updateLastActivity();
             questionRepository.save(question);
+
+            // 알림 생성 (질문 작성자에게, 질문 작성자가 댓글 작성자가 아닌 경우)
+            if (!question.getUserId().equals(userId)) {
+                notificationService.createNotification(
+                        question.getUserId(),
+                        NotificationType.NEW_QUESTION_COMMENT,
+                        NotificationType.NEW_QUESTION_COMMENT.getTitle(),
+                        String.format("질문 '%s'에 새로운 댓글이 작성되었습니다.", question.getTitle()),
+                        "QUESTION",
+                        questionId
+                );
+            }
         });
 
         log.info("질문 댓글 작성 완료 - commentId: {}, questionId: {}, userId: {}", savedComment.getId(), questionId, userId);
@@ -86,12 +103,24 @@ public class CommentService {
 
         AnswerComment savedComment = answerCommentRepository.save(comment);
 
-        // 질문의 마지막 활동 시간 업데이트 (답변의 질문)
+        // 질문의 마지막 활동 시간 업데이트 (답변의 질문) 및 알림 생성
         answerRepository.findById(answerId).ifPresent(answer -> {
             questionRepository.findById(answer.getQuestionId()).ifPresent(question -> {
                 question.updateLastActivity();
                 questionRepository.save(question);
             });
+
+            // 알림 생성 (답변 작성자에게, 답변 작성자가 댓글 작성자가 아닌 경우)
+            if (!answer.getUserId().equals(userId)) {
+                notificationService.createNotification(
+                        answer.getUserId(),
+                        NotificationType.NEW_ANSWER_COMMENT,
+                        NotificationType.NEW_ANSWER_COMMENT.getTitle(),
+                        "답변에 새로운 댓글이 작성되었습니다.",
+                        "ANSWER",
+                        answerId
+                );
+            }
         });
 
         log.info("답변 댓글 작성 완료 - commentId: {}, answerId: {}, userId: {}", savedComment.getId(), answerId, userId);

@@ -2,6 +2,7 @@ package com.alpha_note.core.security.oauth2;
 
 import com.alpha_note.core.security.jwt.JwtUtil;
 import com.alpha_note.core.user.entity.User;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     // 인증 성공 후 리다이렉트할 프론트엔드 URL
     @Value("${app.oauth2.authorized-redirect-uri:http://localhost:3000/oauth2/redirect}")
     private String redirectUri;
+
+    // JWT 만료 시간 (쿠키 설정용)
+    @Value("${jwt.expiration:86400000}") // 24 hours
+    private Long jwtExpiration;
 
     // OAuth2 인증 성공 시 호출되는 메인 메서드
     @Override
@@ -102,11 +107,29 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // login 모드에서 기존 사용자: 정상 토큰 발급
         String token = jwtUtil.generateToken(user);
         
+        // HttpOnly 쿠키에 토큰 저장
+        setAuthCookie(response, token);
+        
         log.info("Issued access token for login: email={}", user.getEmail());
         
+        // 쿠키가 설정되었으므로 URL에서 토큰 제거 (보안상 권장)
         return UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("token", token)
+                .queryParam("success", "true")
                 .build()
                 .toUriString();
+    }
+
+    /**
+     * HttpOnly 쿠키에 JWT 토큰 설정
+     */
+    private void setAuthCookie(HttpServletResponse response, String token) {
+        Cookie cookie = new Cookie("access_token", token);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false); // 개발 환경: false, 프로덕션: true (HTTPS)
+        cookie.setPath("/");
+        cookie.setMaxAge((int) (jwtExpiration / 1000)); // 초 단위로 변환
+        cookie.setAttribute("SameSite", "Lax"); // CSRF 방어
+        
+        response.addCookie(cookie);
     }
 }

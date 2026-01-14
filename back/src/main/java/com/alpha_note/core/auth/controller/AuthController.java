@@ -21,10 +21,14 @@ import com.alpha_note.core.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Slf4j
 @RestController
@@ -36,6 +40,9 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final OAuth2UserSynchronizer oauth2UserSynchronizer;
+
+    @Value("${jwt.expiration:86400000}") // 24 hours
+    private Long jwtExpiration;
 
     @PostMapping("/email/check")
     public ResponseEntity<ApiResponse<EmailCheckResponse>> checkEmail(@Valid @RequestBody EmailCheckRequest request) {
@@ -50,14 +57,32 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> register(
+            @Valid @RequestBody RegisterRequest request,
+            HttpServletResponse httpResponse) {
         AuthResponse response = authService.register(request);
+        
+        // HttpOnly 쿠키에 토큰 저장
+        setAuthCookie(httpResponse, response.getToken());
+        
+        // 응답에서 토큰 제거 (보안상 권장)
+        response.setToken(null);
+        
         return ResponseEntity.ok(ApiResponse.success("회원가입이 성공적으로 완료되었습니다.", response));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse httpResponse) {
         AuthResponse response = authService.login(request);
+        
+        // HttpOnly 쿠키에 토큰 저장
+        setAuthCookie(httpResponse, response.getToken());
+        
+        // 응답에서 토큰 제거 (보안상 권장)
+        response.setToken(null);
+        
         return ResponseEntity.ok(ApiResponse.success("로그인이 성공적으로 완료되었습니다.", response));
     }
 
@@ -75,7 +100,8 @@ public class AuthController {
     @PostMapping("/recover")
     @Transactional
     public ResponseEntity<ApiResponse<AuthResponse>> recoverAccount(
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader("Authorization") String authHeader,
+            HttpServletResponse httpResponse) {
 
         // Bearer 토큰 추출
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -121,6 +147,12 @@ public class AuthController {
                 .role(recoveredUser.getRole().name())
                 .build();
 
+        // HttpOnly 쿠키에 토큰 저장
+        setAuthCookie(httpResponse, accessToken);
+        
+        // 응답에서 토큰 제거 (보안상 권장)
+        response.setToken(null);
+
         return ResponseEntity.ok(ApiResponse.success("계정이 성공적으로 복구되었습니다.", response));
     }
 
@@ -131,7 +163,9 @@ public class AuthController {
      */
     @PostMapping("/oauth2/register")
     @Transactional
-    public ResponseEntity<ApiResponse<AuthResponse>> oauth2Register(@Valid @RequestBody OAuth2RegisterRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> oauth2Register(
+            @Valid @RequestBody OAuth2RegisterRequest request,
+            HttpServletResponse httpResponse) {
         log.info("OAuth2 register request received");
 
         // 임시 토큰 검증
@@ -179,9 +213,32 @@ public class AuthController {
                 .role(user.getRole().name())
                 .build();
 
+        // HttpOnly 쿠키에 토큰 저장
+        setAuthCookie(httpResponse, token);
+        
+        // 응답에서 토큰 제거 (보안상 권장)
+        response.setToken(null);
+
         log.info("OAuth2 register completed: userId={}, email={}", user.getId(), email);
 
         return ResponseEntity.ok(ApiResponse.success("회원가입이 완료되었습니다.", response));
+    }
+
+    /**
+     * 로그아웃
+     * POST /api/v1/auth/logout
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            HttpServletRequest request,
+            HttpServletResponse httpResponse) {
+        
+        // 쿠키 삭제
+        deleteAuthCookie(httpResponse);
+        
+        log.info("User logged out");
+        
+        return ResponseEntity.ok(ApiResponse.success("로그아웃이 성공적으로 완료되었습니다.", null));
     }
 
     /**
@@ -204,5 +261,32 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
         authService.resetPassword(request);
         return ResponseEntity.ok(ApiResponse.success("비밀번호가 재설정되었습니다.", null));
+    }
+
+    /**
+     * HttpOnly 쿠키에 JWT 토큰 설정
+     */
+    private void setAuthCookie(HttpServletResponse response, String token) {
+        Cookie cookie = new Cookie("access_token", token);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false); // 개발 환경: false, 프로덕션: true (HTTPS)
+        cookie.setPath("/");
+        cookie.setMaxAge((int) (jwtExpiration / 1000)); // 초 단위로 변환
+        cookie.setAttribute("SameSite", "Lax"); // CSRF 방어
+        
+        response.addCookie(cookie);
+    }
+
+    /**
+     * 인증 쿠키 삭제
+     */
+    private void deleteAuthCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie("access_token", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // 즉시 만료
+        
+        response.addCookie(cookie);
     }
 }

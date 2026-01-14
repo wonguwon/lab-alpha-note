@@ -376,6 +376,29 @@ export const supportService = {
   },
 };
 
+// 알림 관련 API 서비스
+export const notificationService = {
+  // 알림 목록 조회 - 반환: Page<Notification>
+  getNotifications: async (params = {}) => {
+    return await api.get(API_ENDPOINTS.NOTIFICATION.NOTIFICATIONS, { params });
+  },
+
+  // 읽지 않은 알림 개수 조회 - 반환: { unreadCount }
+  getUnreadCount: async () => {
+    return await api.get(API_ENDPOINTS.NOTIFICATION.UNREAD_COUNT);
+  },
+
+  // 알림 읽음 처리 - 반환: { success, message }
+  markAsRead: async (id) => {
+    return await api.patch(API_ENDPOINTS.NOTIFICATION.MARK_AS_READ(id));
+  },
+
+  // 전체 알림 읽음 처리 - 반환: { success, message }
+  markAllAsRead: async () => {
+    return await api.patch(API_ENDPOINTS.NOTIFICATION.MARK_ALL_AS_READ);
+  },
+};
+
 // 에러 처리 래퍼 함수
 export const withErrorHandling = (apiCall) => {
   return async (...args) => {

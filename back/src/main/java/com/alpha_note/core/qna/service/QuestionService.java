@@ -7,6 +7,8 @@ import com.alpha_note.core.qna.dto.request.UpdateQuestionRequest;
 import com.alpha_note.core.qna.dto.response.*;
 import com.alpha_note.core.qna.entity.*;
 import com.alpha_note.core.qna.enums.SearchType;
+import com.alpha_note.core.notification.enums.NotificationType;
+import com.alpha_note.core.notification.service.NotificationService;
 import com.alpha_note.core.qna.repository.*;
 import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
@@ -36,6 +38,7 @@ public class QuestionService {
     private final AnswerCommentRepository answerCommentRepository;
     private final AnswerVoteRepository answerVoteRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
     private final ViewCountService viewCountService;
 
     /**
@@ -245,6 +248,16 @@ public class QuestionService {
 
         questionRepository.save(question);
         answerRepository.save(answer);
+
+        // 알림 생성 (답변 작성자에게)
+        notificationService.createNotification(
+                answer.getUserId(),
+                NotificationType.ANSWER_ACCEPTED,
+                NotificationType.ANSWER_ACCEPTED.getTitle(),
+                String.format("질문 '%s'에서 답변이 채택되었습니다.", question.getTitle()),
+                "ANSWER",
+                answerId
+        );
 
         log.info("답변 채택 완료 - questionId: {}, answerId: {}", questionId, answerId);
     }

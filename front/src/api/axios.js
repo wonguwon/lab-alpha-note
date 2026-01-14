@@ -13,15 +13,13 @@ export const setAuthStoreGetter = (getter) => {
   getAuthStore = getter;
 };
 
-// Request 인터셉터 - 토큰 자동 첨부
+// Request 인터셉터
+// 쿠키가 자동으로 전송되므로 Authorization 헤더를 별도로 설정하지 않음
+// (하위 호환성을 위해 필요 시 헤더 기반 인증도 지원 가능)
 api.interceptors.request.use(
   (config) => {
-    if (getAuthStore) {
-      const token = getAuthStore().token;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
+    // withCredentials 설정 (쿠키 전송을 위해 필요)
+    config.withCredentials = true;
     return config;
   },
   (error) => Promise.reject(error)

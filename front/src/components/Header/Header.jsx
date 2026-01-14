@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { IoNotificationsOutline, IoLogOutOutline, IoPersonCircle, IoMenu, IoClose } from 'react-icons/io5';
 import useAuthStore from '../../store/authStore';
+import useNotificationStore from '../../store/notificationStore';
+import { authService } from '../../api/services';
 import {
   HeaderWrapper,
   HeaderContainer,
@@ -15,6 +17,7 @@ import {
   ProfileButton,
   ProfileImage,
   IconButton,
+  NotificationBadge,
   MobileMenuButton,
   MobileMenu,
   MobileNavLink,
@@ -25,12 +28,28 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuthStore();
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-    setIsMobileMenuOpen(false);
+  // 알림 개수 조회 (로그인 상태일 때만)
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUnreadCount();
+    }
+  }, [isAuthenticated, fetchUnreadCount]);
+
+  const handleLogout = async () => {
+    try {
+      // 백엔드에서 쿠키 삭제
+      await authService.logout();
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+    } finally {
+      // 프론트엔드 상태 초기화
+      logout();
+      navigate('/');
+      setIsMobileMenuOpen(false);
+    }
   };
 
   const handleProfileClick = () => {
@@ -39,8 +58,7 @@ const Header = () => {
   };
 
   const handleNotificationClick = () => {
-    // TODO: 알림 페이지 또는 모달 구현
-    console.log('알림 클릭');
+    navigate('/notifications');
     setIsMobileMenuOpen(false);
   };
 
@@ -87,6 +105,7 @@ const Header = () => {
             <>
               <IconButton onClick={handleNotificationClick} title="알림">
                 <IoNotificationsOutline />
+                {unreadCount > 0 && <NotificationBadge>{unreadCount > 99 ? '99+' : unreadCount}</NotificationBadge>}
               </IconButton>
               <IconButton onClick={handleLogout} title="로그아웃">
                 <IoLogOutOutline />
