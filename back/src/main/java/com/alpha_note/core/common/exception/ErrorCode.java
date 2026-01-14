@@ -86,7 +86,12 @@ public enum ErrorCode {
 
     // 알림 관련 에러
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "알림을 찾을 수 없습니다."),
-    NOTIFICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N002", "알림에 접근할 권한이 없습니다.");
+    NOTIFICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N002", "알림에 접근할 권한이 없습니다."),
+
+    // 목표 관련 에러
+    YEARLY_GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "G001", "목표를 찾을 수 없습니다."),
+    YEARLY_GOAL_ACCESS_DENIED(HttpStatus.FORBIDDEN, "G002", "목표에 접근할 권한이 없습니다."),
+    INVALID_GOAL_INDEX(HttpStatus.BAD_REQUEST, "G003", "유효하지 않은 목표 인덱스입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

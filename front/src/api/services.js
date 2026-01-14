@@ -399,6 +399,44 @@ export const notificationService = {
   },
 };
 
+// Goal 관련 API 서비스
+export const goalService = {
+  // 목표 생성/업데이트 - 반환: YearlyGoal 객체
+  createYearlyGoal: async (data) => {
+    return await api.post(API_ENDPOINTS.GOAL.GOALS, data);
+  },
+
+  // 목표 수정 - 반환: YearlyGoal 객체
+  updateYearlyGoal: async (id, data) => {
+    return await api.patch(API_ENDPOINTS.GOAL.GOAL_DETAIL(id), data);
+  },
+
+  // 목표 달성 여부 토글 - 반환: YearlyGoal 객체
+  toggleGoalItem: async (id, goalIndex) => {
+    return await api.patch(API_ENDPOINTS.GOAL.GOAL_TOGGLE(id), { goalIndex });
+  },
+
+  // 목표 삭제 - 반환: null
+  deleteYearlyGoal: async (id) => {
+    return await api.delete(API_ENDPOINTS.GOAL.GOAL_DETAIL(id));
+  },
+
+  // 내 목표 조회 (특정 연도) - 반환: YearlyGoal 객체
+  getMyYearlyGoal: async (year) => {
+    return await api.get(API_ENDPOINTS.GOAL.MY_GOAL_BY_YEAR(year));
+  },
+
+  // 내 모든 목표 조회 - 반환: YearlyGoal 배열
+  getAllMyYearlyGoals: async () => {
+    return await api.get(API_ENDPOINTS.GOAL.MY_GOALS);
+  },
+
+  // 공개 목표 조회 (특정 연도) - 반환: YearlyGoal 배열
+  getPublicYearlyGoals: async (year) => {
+    return await api.get(API_ENDPOINTS.GOAL.PUBLIC_GOALS(year));
+  },
+};
+
 // 에러 처리 래퍼 함수
 export const withErrorHandling = (apiCall) => {
   return async (...args) => {

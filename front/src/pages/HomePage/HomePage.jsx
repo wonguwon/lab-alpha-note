@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
-import { qnaService, habitService } from '../../api/services';
+import { qnaService, habitService, goalService } from '../../api/services';
 import {
   HomeContainer,
   HeroSection,
@@ -32,14 +32,19 @@ import {
   FeatureCard,
   FeatureIcon,
   FeatureTitle,
-  FeatureDescription
+  FeatureDescription,
+  GoalSection,
+  GoalListHome,
+  GoalItemHome,
+  GoalTextHome
 } from './HomePage.styled';
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [recentQuestions, setRecentQuestions] = useState([]);
   const [recentHabits, setRecentHabits] = useState([]);
+  const [myYearlyGoal, setMyYearlyGoal] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -69,6 +74,20 @@ const HomePage = () => {
 
         setRecentQuestions(questionsData.content || []);
         setRecentHabits(habitsData.habits || []);
+
+        // 로그인한 경우 올해 목표 가져오기
+        if (isAuthenticated) {
+          try {
+            const currentYear = new Date().getFullYear();
+            const goalData = await goalService.getMyYearlyGoal(currentYear);
+            setMyYearlyGoal(goalData);
+          } catch (error) {
+            // 목표가 없으면 404 에러가 발생할 수 있으므로 무시
+            if (error.response?.status !== 404) {
+              console.error('목표 로딩 실패:', error);
+            }
+          }
+        }
       } catch (error) {
         console.error('데이터 로딩 실패:', error);
       } finally {
@@ -77,7 +96,7 @@ const HomePage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [isAuthenticated]);
 
   const formatTimeAgo = (dateString) => {
     const date = new Date(dateString);
@@ -104,8 +123,12 @@ const HomePage = () => {
     }
   };
 
-  const handleLearnMore = () => {
-    navigate('/qna');
+  const handleGoalSetting = () => {
+    if (isAuthenticated) {
+      navigate('/goals');
+    } else {
+      navigate('/login');
+    }
   };
 
   return (
@@ -122,9 +145,31 @@ const HomePage = () => {
         </HeroDescription>
         <CTAButtons>
           <Button className="primary" onClick={handleGetStarted}>습관 기록하기</Button>
-          <Button className="secondary" onClick={handleLearnMore}>Q&A 둘러보기</Button>
+          <Button className="secondary" onClick={handleGoalSetting}>목표 설정하기</Button>
         </CTAButtons>
       </HeroSection>
+
+      {/* 올해 목표 섹션 */}
+      {isAuthenticated && !loading && myYearlyGoal && myYearlyGoal.goals && myYearlyGoal.goals.length > 0 && (
+        <ContentSection>
+          <SectionTitle>🎯 {new Date().getFullYear()}년 목표</SectionTitle>
+          <GoalSection>
+            <GoalListHome>
+              {myYearlyGoal.goals.map((goal, index) => (
+                <GoalItemHome 
+                  key={index} 
+                  $completed={goal.completed || false}
+                  onClick={() => navigate('/goals')}
+                >
+                  <GoalTextHome $completed={goal.completed || false}>
+                    {goal.text}
+                  </GoalTextHome>
+                </GoalItemHome>
+              ))}
+            </GoalListHome>
+          </GoalSection>
+        </ContentSection>
+      )}
 
       {/* 최근 Q&A 및 습관 섹션 */}
       {!loading && (recentQuestions.length > 0 || recentHabits.length > 0) && (
@@ -168,7 +213,7 @@ const HomePage = () => {
             {/* 최근 습관 */}
             <PreviewSection>
               <PreviewHeader>
-                <PreviewTitle>🎯 최근 습관</PreviewTitle>
+                <PreviewTitle>📅 최근 습관</PreviewTitle>
                 <ViewAllButton onClick={() => navigate('/habits')}>
                   전체보기 →
                 </ViewAllButton>
@@ -206,8 +251,8 @@ const HomePage = () => {
         <SectionTitle>AlphaNote가 제공하는 기능</SectionTitle>
 
         <FeatureGrid>
-          <FeatureCard style={{ cursor: 'pointer' }}>
-            <FeatureIcon>🎯</FeatureIcon>
+          <FeatureCard style={{ cursor: 'pointer' }} onClick={() => navigate('/habits')}>
+            <FeatureIcon>📅</FeatureIcon>
             <FeatureTitle>습관 트래킹</FeatureTitle>
             <FeatureDescription>
               매일의 습관을 기록하고 시각화하세요.
@@ -215,7 +260,7 @@ const HomePage = () => {
             </FeatureDescription>
           </FeatureCard>
 
-          <FeatureCard style={{ cursor: 'pointer' }}>
+          <FeatureCard style={{ cursor: 'pointer' }} onClick={() => navigate('/qna')}>
             <FeatureIcon>💬</FeatureIcon>
             <FeatureTitle>Q&A 커뮤니티</FeatureTitle>
             <FeatureDescription>
@@ -224,12 +269,12 @@ const HomePage = () => {
             </FeatureDescription>
           </FeatureCard>
 
-          <FeatureCard style={{ cursor: 'pointer' }}>
-            <FeatureIcon>🏷️</FeatureIcon>
-            <FeatureTitle>태그 시스템</FeatureTitle>
+          <FeatureCard style={{ cursor: 'pointer' }} onClick={() => navigate('/goals')}>
+            <FeatureIcon>🎯</FeatureIcon>
+            <FeatureTitle>목표 관리</FeatureTitle>
             <FeatureDescription>
-              질문과 답변에 태그를 추가하여 쉽게 분류하고 검색할 수 있습니다.
-              관심있는 주제를 빠르게 찾아보세요.
+              연간 목표를 설정하고 달성 여부를 추적하세요.
+              목표를 달성하면서 성장의 과정을 기록할 수 있습니다.
             </FeatureDescription>
           </FeatureCard>
         </FeatureGrid>

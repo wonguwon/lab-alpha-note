@@ -81,4 +81,13 @@ export const API_ENDPOINTS = {
     MARK_AS_READ: (id) => `/notifications/${id}/read`,
     MARK_ALL_AS_READ: '/notifications/read-all',
   },
+  // Goal 관련
+  GOAL: {
+    GOALS: '/goals',
+    GOAL_DETAIL: (id) => `/goals/${id}`,
+    GOAL_TOGGLE: (id) => `/goals/${id}/toggle`,
+    MY_GOALS: '/goals/me',
+    MY_GOAL_BY_YEAR: (year) => `/goals/me/${year}`,
+    PUBLIC_GOALS: (year) => `/goals/public/${year}`,
+  },
 };
