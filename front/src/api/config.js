@@ -71,7 +71,8 @@ export const API_ENDPOINTS = {
   },
   // Blog 관련
   BLOG: {
-    BLOGS: '/blogs'
+    BLOGS: '/blogs',
+    BLOG_DETAIL: (id) => `/blogs/${id}`,
   },
   // Support 관련
   SUPPORT: {

@@ -296,3 +296,10 @@ export const EmptyDescription = styled.p`
   color: ${props => props.theme.colors.gray[600]};
   margin-bottom: ${props => props.theme.spacing[6]};
 `;
+
+export const Loading = styled.div`
+  text-align: center;
+  padding: ${props => props.theme.spacing[10]};
+  color: ${props => props.theme.colors.gray[500]};
+  font-size: ${props => props.theme.fonts.size.lg};
+`;

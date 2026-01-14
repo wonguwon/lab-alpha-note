@@ -368,6 +368,35 @@ export const habitService = {
 };
 
 
+// Blog 관련 API 서비스
+export const blogService = {
+  // 블로그 목록 조회 - 반환: Page<Blog>
+  getBlogs: async (params = {}) => {
+    return await api.get(API_ENDPOINTS.BLOG.BLOGS, { params });
+  },
+
+  // 블로그 생성 - 반환: Blog 객체
+  createBlog: async (data) => {
+    return await api.post(API_ENDPOINTS.BLOG.BLOGS, data);
+  },
+
+  // 블로그 상세 조회 - 반환: Blog 객체
+  getBlog: async (id) => {
+    return await api.get(API_ENDPOINTS.BLOG.BLOG_DETAIL(id));
+  },
+
+  // 블로그 수정 - 반환: Blog 객체
+  updateBlog: async (id, data) => {
+    return await api.put(API_ENDPOINTS.BLOG.BLOG_DETAIL(id), data);
+  },
+
+  // 블로그 삭제 - 반환: null
+  deleteBlog: async (id) => {
+    return await api.delete(API_ENDPOINTS.BLOG.BLOG_DETAIL(id));
+  },
+};
+
+
 // Support 관련 API 서비스
 export const supportService = {
   // 문의사항 전송 - 반환: { success, message, data }

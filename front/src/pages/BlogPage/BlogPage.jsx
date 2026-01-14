@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import {
@@ -23,8 +23,10 @@ import {
   EmptyState,
   EmptyIcon,
   EmptyTitle,
-  EmptyDescription
+  EmptyDescription,
+  Loading
 } from './BlogPage.styled';
+import { blogService } from '../../api/services';
 
 const BlogPage = () => {
     const navigate = useNavigate();
@@ -32,18 +34,42 @@ const BlogPage = () => {
     const [sortType, setSortType] = useState('LATEST');
 
 
-    // 임시 데이터 (나중에 API 연동 시 교체)
-    const blogPosts = [
-        // {
-        //     id: 1,
-        //     title: '첫 번째 블로그 글',
-        //     excerpt: '이것은 블로그 글의 요약입니다. 내용을 확인할 수 있습니다.',
-        //     author: 'User1',
-        //     createdAt: '2025-01-13',
-        //     tag: '일상',
-        //     image: ''
-        // }
-    ];
+    const [blogs, setBlogs] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+
+
+    useEffect(() => {
+        loadBlogs();
+    }, [sortType]);
+
+    const loadBlogs = async () => {
+        setLoading(true);
+        try {
+            const params = {
+                page: 0, // 일단 첫 페이지만
+                size: 20,
+                sortType: sortType // LATEST, POPULAR, FEED 그대로 전달
+            };
+            
+            // API 호출
+            const response = await blogService.getBlogs(params);
+            
+            // 응답 구조에 따라 데이터 설정 (Page 객체 가정)
+            if (response && response.content) {
+                setBlogs(response.content);
+                setTotalPages(response.totalPages);
+            } else if (Array.isArray(response)) {
+                 setBlogs(response);
+            }
+            
+        } catch (error) {
+            console.error('블로그 목록 조회 실패:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleCreatePost = () => {
         if (!isAuthenticated) {
@@ -93,7 +119,9 @@ const BlogPage = () => {
 
             </FilterSection>
 
-            {blogPosts.length === 0 ? (
+            {loading ? (
+                <Loading>블로그 글을 불러오는 중...</Loading>
+            ) : blogs.length === 0 ? (
                 <EmptyState>
                     <EmptyIcon>📝</EmptyIcon>
                     <EmptyTitle>아직 작성된 글이 없습니다</EmptyTitle>
@@ -106,16 +134,16 @@ const BlogPage = () => {
                 </EmptyState>
             ) : (
                 <BlogList>
-                    {blogPosts.map(post => (
+                    {blogs.map(post => (
                         <BlogCard key={post.id} onClick={() => navigate(`/blog/${post.id}`)}>
-                            <BlogCardImage $src={post.image} />
+                            <BlogCardImage $src={post.thumbnail || post.image} />
                             <BlogCardContent>
-                                <BlogTag>{post.tag}</BlogTag>
+                                {post.category && <BlogTag>{post.category}</BlogTag>}
                                 <BlogTitle>{post.title}</BlogTitle>
-                                <BlogExcerpt>{post.excerpt}</BlogExcerpt>
+                                <BlogExcerpt>{post.summary || post.content?.substring(0, 100)}...</BlogExcerpt>
                                 <BlogMeta>
-                                    <AuthorInfo>by {post.author}</AuthorInfo>
-                                    <BlogDate>{post.createdAt}</BlogDate>
+                                    <AuthorInfo>by {post.authorName || post.nickname || 'Unknown'}</AuthorInfo>
+                                    <BlogDate>{new Date(post.createdAt).toLocaleDateString()}</BlogDate>
                                 </BlogMeta>
                             </BlogCardContent>
                         </BlogCard>
