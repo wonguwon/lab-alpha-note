@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
   QNA: {
     QUESTIONS: '/qna/questions',
     QUESTIONS_SEARCH: '/qna/questions/search',
+    QUESTIONS_BY_USER: (userId) => `/qna/questions/user/${userId}`,
     QUESTION_DETAIL: (id) => `/qna/questions/${id}`,
     ANSWERS: (questionId) => `/qna/questions/${questionId}/answers`,
     ANSWER_DETAIL: (answerId) => `/qna/answers/${answerId}`,

@@ -181,6 +181,11 @@ export const qnaService = {
     return await api.get(API_ENDPOINTS.QNA.QUESTIONS_SEARCH, { params });
   },
 
+  // 사용자별 질문 조회 - 반환: { content: [], page, size, totalElements, totalPages }
+  getQuestionsByUser: async (userId, params) => {
+    return await api.get(API_ENDPOINTS.QNA.QUESTIONS_BY_USER(userId), { params });
+  },
+
   // 질문 상세 조회 - 반환: Question 객체
   getQuestionDetail: async (id) => {
     return await api.get(API_ENDPOINTS.QNA.QUESTION_DETAIL(id));

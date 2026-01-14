@@ -95,7 +95,7 @@ public class QuestionService {
      */
     @Transactional(readOnly = true)
     public Page<QuestionResponse> getQuestions(Pageable pageable, Long currentUserId) {
-        Page<Question> questions = questionRepository.findAllByIsDeletedFalseOrderByCreatedAtDesc(pageable);
+        Page<Question> questions = questionRepository.findAllByIsDeletedFalse(pageable);
         return questions.map(q -> buildQuestionResponse(q, currentUserId));
     }
 
@@ -139,7 +139,7 @@ public class QuestionService {
      */
     @Transactional(readOnly = true)
     public Page<QuestionResponse> getQuestionsByUser(Long userId, Pageable pageable, Long currentUserId) {
-        Page<Question> questions = questionRepository.findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(userId, pageable);
+        Page<Question> questions = questionRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
         return questions.map(q -> buildQuestionResponse(q, currentUserId));
     }
 
