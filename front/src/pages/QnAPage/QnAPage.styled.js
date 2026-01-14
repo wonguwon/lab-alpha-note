@@ -13,6 +13,47 @@ export const QnAHeader = styled.div`
   ${flexBetween}
   margin-bottom: ${props => props.theme.spacing[6]};
   gap: ${props => props.theme.spacing[3]};
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: ${props => props.theme.spacing[4]};
+  }
+`;
+
+export const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[3]};
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    width: 100%;
+  }
+`;
+
+export const ToggleGroup = styled.div`
+  display: flex;
+  background: ${props => props.theme.colors.gray[100]};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  padding: ${props => props.theme.spacing[1]};
+`;
+
+export const ToggleButton = styled.button`
+  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[4]};
+  background: ${props => props.$active ? props.theme.colors.white : 'transparent'};
+  color: ${props => props.$active ? props.theme.colors.primary[600] : props.theme.colors.gray[600]};
+  border: none;
+  border-radius: ${props => props.theme.borderRadius.base};
+  font-weight: ${props => props.$active ? props.theme.fonts.weight.semibold : props.theme.fonts.weight.medium};
+  font-size: ${props => props.theme.fonts.size.sm};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+  white-space: nowrap;
+  box-shadow: ${props => props.$active ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'};
+
+  &:hover {
+    color: ${props => props.theme.colors.primary[600]};
+  }
 `;
 
 /* 제목 및 통계 영역 */
