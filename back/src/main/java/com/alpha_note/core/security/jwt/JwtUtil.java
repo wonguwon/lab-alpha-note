@@ -34,10 +34,14 @@ public class JwtUtil {
     @Value("${jwt.password-reset-expiration:3600000}") // 1 hour
     private Long passwordResetExpiration;
 
+    @Value("${jwt.refresh-expiration:604800000}") // 7 days
+    private Long refreshExpiration;
+
     private static final String TOKEN_TYPE_ACCESS = "access";
     private static final String TOKEN_TYPE_RECOVERY = "recovery";
     private static final String TOKEN_TYPE_OAUTH2_TEMP = "oauth2_temp";
     private static final String TOKEN_TYPE_PASSWORD_RESET = "password_reset";
+    private static final String TOKEN_TYPE_REFRESH = "refresh";
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
@@ -211,6 +215,34 @@ public class JwtUtil {
     public boolean validatePasswordResetToken(String token) {
         try {
             return isPasswordResetToken(token) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // 리프레시 토큰 생성 (7일 유효)
+    public String generateRefreshToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", TOKEN_TYPE_REFRESH);
+        claims.put("userId", user.getId());
+        claims.put("email", user.getEmail());
+        return createToken(claims, user.getUsername(), refreshExpiration);
+    }
+
+    // 리프레시 토큰 여부 확인
+    public boolean isRefreshToken(String token) {
+        try {
+            String tokenType = extractTokenType(token);
+            return TOKEN_TYPE_REFRESH.equals(tokenType);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // 리프레시 토큰 유효성 검증 (만료 여부만 체크)
+    public boolean validateRefreshToken(String token) {
+        try {
+            return isRefreshToken(token) && !isTokenExpired(token);
         } catch (Exception e) {
             return false;
         }

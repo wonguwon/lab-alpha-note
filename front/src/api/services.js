@@ -48,6 +48,11 @@ export const authService = {
     });
   },
 
+  // 리프레시 토큰으로 새 액세스 토큰 발급
+  refreshToken: async () => {
+    return await api.post(API_ENDPOINTS.AUTH.REFRESH);
+  },
+
   // OAuth2 회원가입 - 반환: { token, nickname, email, role }
   oauth2Register: async (tempToken, nickname, emailSubscribed) => {
     return await api.post(API_ENDPOINTS.AUTH.OAUTH2_REGISTER, {

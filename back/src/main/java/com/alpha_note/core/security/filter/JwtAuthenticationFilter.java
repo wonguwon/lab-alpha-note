@@ -84,7 +84,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (ExpiredJwtException e) {
-            log.error("JWT token expired: {}", e.getMessage());
+            log.debug("JWT token expired: {}", e.getMessage());
+            // 만료된 토큰은 인증하지 않고 통과시킴 (프론트엔드에서 401 응답 후 리프레시 처리)
+            // SecurityContext에 인증 정보를 설정하지 않으므로 후속 필터에서 401 반환됨
         } catch (MalformedJwtException e) {
             log.error("Invalid JWT token format: {}", e.getMessage());
         } catch (SignatureException e) {

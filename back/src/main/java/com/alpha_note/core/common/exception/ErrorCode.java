@@ -31,6 +31,10 @@ public enum ErrorCode {
     INVALID_PASSWORD_RESET_TOKEN(HttpStatus.UNAUTHORIZED, "A012", "유효하지 않은 비밀번호 재설정 토큰입니다."),
     EXPIRED_PASSWORD_RESET_TOKEN(HttpStatus.UNAUTHORIZED, "A013", "만료된 비밀번호 재설정 토큰입니다."),
     PASSWORD_RESET_TOKEN_ALREADY_USED(HttpStatus.BAD_REQUEST, "A014", "이미 사용된 비밀번호 재설정 토큰입니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A015", "유효하지 않은 리프레시 토큰입니다."),
+    EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A016", "만료된 리프레시 토큰입니다."),
+    REVOKED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A017", "무효화된 리프레시 토큰입니다."),
+    REFRESH_TOKEN_REUSE_DETECTED(HttpStatus.UNAUTHORIZED, "A018", "리프레시 토큰 재사용이 감지되었습니다. 보안을 위해 모든 세션이 종료되었습니다."),
     
     // 사용자 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),

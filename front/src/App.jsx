@@ -40,21 +40,20 @@ function App() {
   // 앱 시작 시 쿠키가 있으면 사용자 정보 로드
   useEffect(() => {
     const loadUserInfo = async () => {
-      // 사용자 정보가 이미 있으면 스킵
-      if (user) return;
-
       try {
         const data = await authService.getUserInfo();
         setUser(data);
       } catch (error) {
         console.error('사용자 정보 로드 실패:', error);
-        // 쿠키가 만료되었거나 유효하지 않으면 로그아웃
-        logout();
+        // 401 에러면 로그아웃 (axios 인터셉터에서 이미 처리되지만 안전장치)
+        if (error.response?.status === 401) {
+          logout();
+        }
       }
     };
 
     loadUserInfo();
-  }, [user, setUser, logout]);
+  }, [setUser, logout]); // user 의존성 제거하여 항상 초기 로드 시 확인
 
   // 로그인 상태에 따라 SSE 연결 관리
   useEffect(() => {

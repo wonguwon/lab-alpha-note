@@ -1,5 +1,6 @@
 package com.alpha_note.core.security.oauth2;
 
+import com.alpha_note.core.auth.service.RefreshTokenService;
 import com.alpha_note.core.security.jwt.JwtUtil;
 import com.alpha_note.core.user.entity.User;
 import jakarta.servlet.http.Cookie;
@@ -25,6 +26,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     // JWT 토큰을 생성하기 위한 유틸리티
     private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     // 인증 성공 후 리다이렉트할 프론트엔드 URL
     @Value("${app.oauth2.authorized-redirect-uri:http://localhost:3000/oauth2/redirect}")
@@ -33,6 +35,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     // JWT 만료 시간 (쿠키 설정용)
     @Value("${jwt.expiration:86400000}") // 24 hours
     private Long jwtExpiration;
+
+    @Value("${jwt.refresh-expiration:604800000}") // 7 days
+    private Long refreshExpiration;
 
     // OAuth2 인증 성공 시 호출되는 메인 메서드
     @Override
@@ -107,10 +112,16 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // login 모드에서 기존 사용자: 정상 토큰 발급
         String token = jwtUtil.generateToken(user);
         
-        // HttpOnly 쿠키에 토큰 저장
+        // 리프레시 토큰 생성 및 저장
+        var refreshToken = refreshTokenService.createRefreshToken(user);
+        
+        // HttpOnly 쿠키에 액세스 토큰 저장
         setAuthCookie(response, token);
         
-        log.info("Issued access token for login: email={}", user.getEmail());
+        // HttpOnly 쿠키에 리프레시 토큰 저장
+        setRefreshTokenCookie(response, refreshToken.getToken());
+        
+        log.info("Issued access token and refresh token for login: email={}", user.getEmail());
         
         // 쿠키가 설정되었으므로 URL에서 토큰 제거 (보안상 권장)
         return UriComponentsBuilder.fromUriString(redirectUri)
@@ -128,6 +139,20 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         cookie.setSecure(false); // 개발 환경: false, 프로덕션: true (HTTPS)
         cookie.setPath("/");
         cookie.setMaxAge((int) (jwtExpiration / 1000)); // 초 단위로 변환
+        cookie.setAttribute("SameSite", "Lax"); // CSRF 방어
+        
+        response.addCookie(cookie);
+    }
+
+    /**
+     * HttpOnly 쿠키에 리프레시 토큰 설정
+     */
+    private void setRefreshTokenCookie(HttpServletResponse response, String token) {
+        Cookie cookie = new Cookie("refresh_token", token);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false); // 개발 환경: false, 프로덕션: true (HTTPS)
+        cookie.setPath("/");
+        cookie.setMaxAge((int) (refreshExpiration / 1000)); // 초 단위로 변환
         cookie.setAttribute("SameSite", "Lax"); // CSRF 방어
         
         response.addCookie(cookie);
