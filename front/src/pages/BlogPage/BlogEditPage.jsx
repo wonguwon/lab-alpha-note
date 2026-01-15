@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import TiptapEditor from '../../components/TiptapEditor';
 import { blogService, storageService } from '../../api/services';
 import {
@@ -29,20 +29,47 @@ import {
   TagList,
   Tag,
   RemoveTagButton
-} from './BlogCreatePage.styled';
+} from './BlogEditPage.styled';
 
-const BlogCreatePage = () => {
+const BlogEditPage = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
+    const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         title: '',
         content: '',
         tags: [],
+        thumbnailUrl: null,
         image: null,
         imagePreview: null
     });
     const [tagInput, setTagInput] = useState('');
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        loadBlog();
+    }, [id]);
+
+    const loadBlog = async () => {
+        try {
+            const data = await blogService.getBlog(id);
+            setFormData({
+                title: data.title,
+                content: data.content,
+                tags: data.tags?.map(tag => typeof tag === 'string' ? tag : tag.name) || [],
+                thumbnailUrl: data.thumbnailUrl,
+                image: null,
+                imagePreview: data.thumbnailUrl
+            });
+        } catch (error) {
+            console.error('블로그 불러오기 실패:', error);
+            alert('게시글을 불러오는데 실패했습니다.');
+            navigate('/blogs');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleTitleChange = (e) => {
         const value = e.target.value;
@@ -128,14 +155,11 @@ const BlogCreatePage = () => {
         setIsSubmitting(true);
 
         try {
-            let thumbnailUrl = null;
+            let finalThumbnailUrl = formData.thumbnailUrl;
 
-            // 대표 이미지가 있는 경우 업로드
+            // 새 이미지가 선택된 경우 업로드
             if (formData.image) {
                 const file = formData.image;
-                
-                // 1. Presigned URL 발급
-                // 파일명 충돌 방지를 위해 현재 시간 추가
                 const fileName = `${Date.now()}_${file.name}`;
                 const { uploadUrl, fileUrl } = await storageService.getPresignedUrl(
                     fileName,
@@ -144,24 +168,22 @@ const BlogCreatePage = () => {
                     file.size
                 );
 
-                // 2. S3에 파일 업로드
                 await storageService.uploadToS3(uploadUrl, file, file.type);
-                
-                thumbnailUrl = fileUrl;
+                finalThumbnailUrl = fileUrl;
             }
 
-             await blogService.createBlog({
+             await blogService.updateBlog(id, {
                 title: formData.title,
                 content: formData.content,
                 tags: formData.tags,
-                thumbnailUrl: thumbnailUrl
+                thumbnailUrl: finalThumbnailUrl
             });
 
-            alert('게시글이 작성되었습니다.');
-            navigate('/blogs');
+            alert('게시글이 수정되었습니다.');
+            navigate(`/blogs/${id}`);
         } catch (error) {
-            console.error(error);
-            alert(error.response?.data?.message || '게시글 작성 중 오류가 발생했습니다.');
+            console.error('블로그 수정 실패:', error);
+            alert(error.response?.data?.message || '게시글 수정 중 오류가 발생했습니다.');
         } finally {
             setIsSubmitting(false);
         }
@@ -169,21 +191,31 @@ const BlogCreatePage = () => {
 
     const handleCancel = () => {
         if (formData.title || formData.content) {
-            if (window.confirm('작성 중인 내용이 있습니다. 정말 취소하시겠습니까?')) {
-                navigate('/blogs');
+            if (window.confirm('수정을 취소하시겠습니까?')) {
+                navigate(`/blogs/${id}`);
             }
         } else {
-            navigate('/blogs');
+            navigate(`/blogs/${id}`);
         }
     };
+
+    if (loading) {
+        return (
+            <CreateContainer>
+                <CreateCard>
+                    <div style={{ padding: '40px', textAlign: 'center' }}>로딩 중...</div>
+                </CreateCard>
+            </CreateContainer>
+        );
+    }
 
     return (
         <CreateContainer>
             <CreateCard>
                 <CreateHeader>
-                    <PageTitle>새 글 작성하기</PageTitle>
+                    <PageTitle>글 수정하기</PageTitle>
                     <PageDescription>
-                        자유롭게 당신의 이야기를 들려주세요.
+                        내용을 자유롭게 수정해주세요.
                     </PageDescription>
                 </CreateHeader>
 
@@ -273,7 +305,7 @@ const BlogCreatePage = () => {
                             취소
                         </CancelButton>
                         <SubmitButton type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? '작성 중...' : '글 게시하기'}
+                            {isSubmitting ? '수정 중...' : '수정 완료'}
                         </SubmitButton>
                     </ButtonGroup>
                 </form>
@@ -282,4 +314,4 @@ const BlogCreatePage = () => {
     );
 };
 
-export default BlogCreatePage;
+export default BlogEditPage;

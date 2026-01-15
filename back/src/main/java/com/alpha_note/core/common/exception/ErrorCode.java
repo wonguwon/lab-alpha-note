@@ -86,7 +86,12 @@ public enum ErrorCode {
     HABIT_DELETED(HttpStatus.GONE, "H007", "삭제된 습관입니다."),
     FUTURE_RECORD_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "H008", "미래 날짜에 기록을 남길 수 없습니다."),
     RECORD_DATE_BEFORE_START_DATE(HttpStatus.BAD_REQUEST, "H009", "습관 시작일 이전에 기록을 남길 수 없습니다."),
-    HABIT_END_DATE_PASSED(HttpStatus.BAD_REQUEST, "H010", "습관 종료일 이후에 기록을 남길 수 없습니다.");
+    HABIT_END_DATE_PASSED(HttpStatus.BAD_REQUEST, "H010", "습관 종료일 이후에 기록을 남길 수 없습니다."),
+
+    // Blog 관련 에러
+    BLOG_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "블로그를 찾을 수 없습니다."),
+    BLOG_ACCESS_DENIED(HttpStatus.FORBIDDEN, "B002", "블로그에 접근할 권한이 없습니다.");
+
 
     private final HttpStatus httpStatus;
     private final String code;

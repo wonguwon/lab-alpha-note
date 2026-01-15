@@ -41,6 +41,9 @@ public class Blog {
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "thumbnail_url", length = 1000)
+    private String thumbnailUrl;
+
     @Column(name = "view_count", nullable = false)
     @Builder.Default
     private Integer viewCount = 0;
@@ -115,9 +118,10 @@ public class Blog {
      * @param title 제목
      * @param content 내용
      */
-    public void update(String title, String content) {
+    public void update(String title, String content, String thumbnailUrl) {
         this.title = title;
         this.content = content;
+        this.thumbnailUrl = thumbnailUrl;
         this.updateLastActivity();
     }
 

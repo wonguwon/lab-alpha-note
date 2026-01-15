@@ -24,7 +24,11 @@ import {
   EmptyIcon,
   EmptyTitle,
   EmptyDescription,
-  Loading
+  Loading,
+  LikeCount,
+  BlogInfoRow,
+  TagList,
+  Tag
 } from './BlogPage.styled';
 import { blogService } from '../../api/services';
 
@@ -101,16 +105,16 @@ const BlogPage = () => {
                         최근
                     </FilterTab>
                     <FilterTab 
-                        $active={sortType === 'FEED'}
-                        onClick={() => handleSortChange('FEED')}
-                    >
-                        피드
-                    </FilterTab>
-                    <FilterTab 
                         $active={sortType === 'POPULAR'}
                         onClick={() => handleSortChange('POPULAR')}
                     >
                         인기
+                    </FilterTab>
+                    <FilterTab 
+                        $active={sortType === 'FEED'}
+                        onClick={() => handleSortChange('FEED')}
+                    >
+                        피드
                     </FilterTab>
                 </FilterTabs>
                 {isAuthenticated && (
@@ -135,15 +139,23 @@ const BlogPage = () => {
             ) : (
                 <BlogList>
                     {blogs.map(post => (
-                        <BlogCard key={post.id} onClick={() => navigate(`/blog/${post.id}`)}>
-                            <BlogCardImage $src={post.thumbnail || post.image} />
+                        <BlogCard key={post.id} onClick={() => navigate(`/blogs/${post.id}`)}>
+                            {post.thumbnailUrl && <BlogCardImage $src={post.thumbnailUrl} />}
                             <BlogCardContent>
                                 {post.category && <BlogTag>{post.category}</BlogTag>}
                                 <BlogTitle>{post.title}</BlogTitle>
-                                <BlogExcerpt>{post.summary || post.content?.substring(0, 100)}...</BlogExcerpt>
+                                <BlogExcerpt>{post.summary || post.contentPreview?.substring(0, 100)}...</BlogExcerpt>
+                                <BlogInfoRow>
+                                    <TagList>
+                                        {post.tags && post.tags.slice(0, 3).map((tag, i) => (
+                                            <Tag key={i}>{typeof tag === 'string' ? tag : tag.name}</Tag>
+                                        ))}
+                                    </TagList>
+                                    <BlogDate>{new Date(post.updatedAt || post.createdAt).toLocaleDateString()}</BlogDate>
+                                </BlogInfoRow>
                                 <BlogMeta>
-                                    <AuthorInfo>by {post.authorName || post.nickname || 'Unknown'}</AuthorInfo>
-                                    <BlogDate>{new Date(post.createdAt).toLocaleDateString()}</BlogDate>
+                                    <AuthorInfo>by {post.userNickname || 'Unknown'}</AuthorInfo>
+                                    <LikeCount>♡ {post.voteCount || 0}</LikeCount>
                                 </BlogMeta>
                             </BlogCardContent>
                         </BlogCard>

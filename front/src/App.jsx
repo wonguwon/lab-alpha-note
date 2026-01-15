@@ -22,6 +22,8 @@ import { setAuthStoreGetter } from './api/axios';
 import { authService } from './api/services';
 import BlogPage from './pages/BlogPage/BlogPage';
 import BlogCreatePage from './pages/BlogPage/BlogCreatePage';
+import BlogDetailPage from './pages/BlogPage/BlogDetailPage';
+import BlogEditPage from './pages/BlogPage/BlogEditPage';
 
 function App() {
   const { token, setUser, logout } = useAuthStore();
@@ -65,6 +67,8 @@ function App() {
           <Route path="/qna/:id/answer/:answerId/edit" element={<ProtectedRoute><EditAnswerPage /></ProtectedRoute>} />
           <Route path="/blogs" element={<BlogPage />} />
           <Route path="/blogs/create" element={<ProtectedRoute><BlogCreatePage /></ProtectedRoute>} />
+          <Route path="/blogs/:id" element={<BlogDetailPage />} />
+          <Route path="/blogs/:id/edit" element={<ProtectedRoute><BlogEditPage /></ProtectedRoute>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signup/social" element={<SocialSignupPage />} />

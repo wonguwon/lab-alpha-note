@@ -265,7 +265,47 @@ export const AuthorInfo = styled.div`
   gap: ${props => props.theme.spacing[2]};
 `;
 
-export const BlogDate = styled.span``;
+export const BlogDate = styled.div`
+  font-size: ${props => props.theme.fonts.size.xs};
+  color: ${props => props.theme.colors.gray[400]};
+  white-space: nowrap;
+  margin-left: auto;
+`;
+
+export const BlogInfoRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: ${props => props.theme.spacing[2]};
+  margin-bottom: ${props => props.theme.spacing[3]};
+`;
+
+export const TagList = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing[1]};
+  flex-wrap: wrap;
+  overflow: hidden;
+  height: 24px; // Limit height to one line if possible or let it wrap safely
+`;
+
+export const Tag = styled.span`
+  background: ${props => props.theme.colors.gray[100]};
+  color: ${props => props.theme.colors.gray[600]};
+  font-size: ${props => props.theme.fonts.size.xs};
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+`;
+
+export const LikeCount = styled.span`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[1]};
+  color: ${props => props.theme.colors.rose ? props.theme.colors.rose[500] : props.theme.colors.gray[500]};
+  font-weight: ${props => props.theme.fonts.weight.medium};
+`;
 
 export const EmptyState = styled.div`
   display: flex;
