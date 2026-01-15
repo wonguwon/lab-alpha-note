@@ -394,6 +394,26 @@ export const blogService = {
   deleteBlog: async (id) => {
     return await api.delete(API_ENDPOINTS.BLOG.BLOG_DETAIL(id));
   },
+
+  // 블로그 댓글 목록 조회
+  getComments: async (blogId) => {
+    return await api.get(API_ENDPOINTS.BLOG.BLOG_COMMENTS(blogId));
+  },
+
+  // 블로그 댓글 작성
+  createComment: async (blogId, data) => {
+    return await api.post(API_ENDPOINTS.BLOG.BLOG_COMMENTS(blogId), data);
+  },
+
+  // 블로그 댓글 수정
+  updateComment: async (commentId, data) => {
+    return await api.put(API_ENDPOINTS.BLOG.BLOG_COMMENT_DETAIL(commentId), data);
+  },
+
+  // 블로그 댓글 삭제
+  deleteComment: async (commentId) => {
+    return await api.delete(API_ENDPOINTS.BLOG.BLOG_COMMENT_DETAIL(commentId));
+  },
 };
 
 

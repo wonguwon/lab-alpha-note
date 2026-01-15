@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MdEdit, MdDelete, MdArrowBack } from 'react-icons/md';
-import { IoPersonCircle } from 'react-icons/io5';
+import { FaRegCommentDots } from 'react-icons/fa';
+import { IoPersonCircle, IoSend } from 'react-icons/io5';
 import { blogService } from '../../api/services';
 import useAuthStore from '../../store/authStore';
 import {
@@ -24,7 +25,25 @@ import {
   ActionButtons,
   ActionButton,
   EmptyState,
-  LoadingState
+  LoadingState,
+  VoteSection,
+  CommentToggleButton,
+  VoteButton,
+  CommentSection,
+  CommentForm,
+  CommentInputArea,
+  CommentInput,
+  CommentInputFooter,
+  CharacterCount,
+  SendIconButton,
+  CommentList,
+  CommentItem,
+  CommentAuthor,
+  CommentAuthorInfo,
+  CommentTime,
+  CommentContentWrapper,
+  CommentContent,
+  EmptyState as CommentEmptyState
 } from './BlogDetailPage.styled';
 
 const BlogDetailPage = () => {
@@ -35,6 +54,13 @@ const BlogDetailPage = () => {
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Comments state
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const MAX_COMMENT_LENGTH = 500;
 
   useEffect(() => {
     loadBlogDetail();
@@ -70,6 +96,42 @@ const BlogDetailPage = () => {
     } catch (err) {
       console.error('블로그 삭제 실패:', err);
       alert(err.response?.data?.message || '글 삭제에 실패했습니다.');
+    }
+  };
+
+  const toggleComments = () => {
+    const nextShowComments = !showComments;
+    setShowComments(nextShowComments);
+    if (nextShowComments && comments.length === 0) {
+      loadComments();
+    }
+  };
+
+  const loadComments = async () => {
+    setLoadingComments(true);
+    try {
+      const data = await blogService.getComments(id);
+      setComments(data);
+    } catch (err) {
+      console.error('댓글 조회 실패:', err);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    try {
+      await blogService.createComment(id, { content: newComment });
+      setNewComment('');
+      loadComments(); // Refresh comments list
+      // Update blog comment count locally
+      setBlog(prev => ({ ...prev, commentCount: (prev.commentCount || 0) + 1 }));
+    } catch (err) {
+      console.error('댓글 작성 실패:', err);
+      alert(err.response?.data?.message || '댓글 작성에 실패했습니다.');
     }
   };
 
@@ -151,21 +213,97 @@ const BlogDetailPage = () => {
 
         <BlogBody dangerouslySetInnerHTML={{ __html: blog.content }} />
 
-        {isAuthenticated && user?.id === blog.userId && (
-          <ActionBar>
-             {/* Left side spacer or additional actions (like stats) could go here if needed */}
-             <div /> 
+        <ActionBar>
+            <VoteSection>
+            <CommentToggleButton onClick={toggleComments}>
+                <FaRegCommentDots />
+                댓글 {blog.commentCount || 0}
+            </CommentToggleButton>
+            <VoteButton>
+                👍 {blog.voteCount || 0}
+            </VoteButton>
+            </VoteSection>
+            {isAuthenticated && user?.id === blog.userId && (
             <ActionButtons>
-              <ActionButton onClick={handleEdit}>
+                <ActionButton onClick={handleEdit}>
                 <MdEdit size={16} />
                 수정
-              </ActionButton>
-              <ActionButton onClick={handleDelete} $danger>
+                </ActionButton>
+                <ActionButton onClick={handleDelete} $danger>
                 <MdDelete size={16} />
                 삭제
-              </ActionButton>
+                </ActionButton>
             </ActionButtons>
-          </ActionBar>
+            )}
+        </ActionBar>
+
+        {showComments && (
+          <CommentSection>
+            {isAuthenticated && (
+              <CommentForm onSubmit={handleCommentSubmit}>
+                <CommentInputArea>
+                  <CommentInput
+                    placeholder="칭찬과 격려의 댓글은 작성자에게 큰 힘이 됩니다 :)"
+                    value={newComment}
+                    onChange={(e) => {
+                        if (e.target.value.length <= MAX_COMMENT_LENGTH) {
+                            setNewComment(e.target.value);
+                        }
+                    }}
+                    maxLength={MAX_COMMENT_LENGTH}
+                  />
+                  <CommentInputFooter>
+                    <CharacterCount $isOverLimit={newComment.length > MAX_COMMENT_LENGTH}>
+                      {newComment.length}/{MAX_COMMENT_LENGTH}
+                    </CharacterCount>
+                    <SendIconButton
+                      type="submit"
+                      disabled={!newComment.trim()}
+                      title="댓글 작성"
+                    >
+                      <IoSend />
+                    </SendIconButton>
+                  </CommentInputFooter>
+                </CommentInputArea>
+              </CommentForm>
+            )}
+            
+            {loadingComments ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                댓글을 불러오는 중...
+              </div>
+            ) : comments.length > 0 ? (
+              <CommentList>
+                {comments.map((comment) => (
+                  <CommentItem key={comment.id}>
+                    <CommentAuthor>
+                      <CommentAuthorInfo>
+                        {comment.profileImageUrl ? (
+                          <AuthorAvatar
+                            src={comment.profileImageUrl}
+                            alt={comment.userNickname}
+                          />
+                        ) : (
+                          <IoPersonCircle size={36} color="#9ca3af" />
+                        )}
+                        <AuthorName>{comment.userNickname || 'Unknown'}</AuthorName>
+                        <CommentTime>{formatTimeAgo(comment.createdAt, comment.updatedAt)}</CommentTime>
+                      </CommentAuthorInfo>
+                    </CommentAuthor>
+                    <CommentContentWrapper>
+                      <CommentContent>{comment.content}</CommentContent>
+                    </CommentContentWrapper>
+                  </CommentItem>
+                ))}
+              </CommentList>
+            ) : (
+              <CommentEmptyState>
+                <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>
+                  아직 댓글이 없습니다.
+                </div>
+              </CommentEmptyState>
+            )}
+          </CommentSection>
         )}
       </BlogCard>
     </DetailContainer>

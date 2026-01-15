@@ -1,5 +1,6 @@
 package com.alpha_note.core.qna.dto.response;
 
+import com.alpha_note.core.blog.entity.BlogComment;
 import com.alpha_note.core.qna.entity.AnswerComment;
 import com.alpha_note.core.qna.entity.QuestionComment;
 import lombok.AllArgsConstructor;
@@ -34,6 +35,16 @@ public class CommentResponse {
     }
 
     public static CommentResponse from(AnswerComment comment) {
+        return CommentResponse.builder()
+                .id(comment.getId())
+                .userId(comment.getUserId())
+                .content(comment.getContent())
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
+                .build();
+    }
+
+    public static CommentResponse from(BlogComment comment) {
         return CommentResponse.builder()
                 .id(comment.getId())
                 .userId(comment.getUserId())
