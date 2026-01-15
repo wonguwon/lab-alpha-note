@@ -3,6 +3,7 @@ package com.alpha_note.core.security.jwt;
 import com.alpha_note.core.user.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import java.util.function.Function;
 /**
  * JWT 토큰 생성 및 검증 유틸리티
  */
+@Slf4j
 @Component
 public class JwtUtil {
 
@@ -138,7 +140,14 @@ public class JwtUtil {
     public boolean validateRecoveryToken(String token) {
         try {
             return isRecoveryToken(token) && !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            log.debug("Recovery token expired: {}", e.getMessage());
+            return false;
+        } catch (MalformedJwtException | SignatureException e) {
+            log.warn("Invalid recovery token: {}", e.getMessage());
+            return false;
         } catch (Exception e) {
+            log.error("Unexpected error validating recovery token", e);
             return false;
         }
     }
@@ -167,7 +176,14 @@ public class JwtUtil {
     public boolean validateOAuth2TempToken(String token) {
         try {
             return isOAuth2TempToken(token) && !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            log.debug("OAuth2 temp token expired: {}", e.getMessage());
+            return false;
+        } catch (MalformedJwtException | SignatureException e) {
+            log.warn("Invalid OAuth2 temp token: {}", e.getMessage());
+            return false;
         } catch (Exception e) {
+            log.error("Unexpected error validating OAuth2 temp token", e);
             return false;
         }
     }
@@ -215,7 +231,14 @@ public class JwtUtil {
     public boolean validatePasswordResetToken(String token) {
         try {
             return isPasswordResetToken(token) && !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            log.debug("Password reset token expired: {}", e.getMessage());
+            return false;
+        } catch (MalformedJwtException | SignatureException e) {
+            log.warn("Invalid password reset token: {}", e.getMessage());
+            return false;
         } catch (Exception e) {
+            log.error("Unexpected error validating password reset token", e);
             return false;
         }
     }
@@ -243,7 +266,14 @@ public class JwtUtil {
     public boolean validateRefreshToken(String token) {
         try {
             return isRefreshToken(token) && !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            log.debug("Refresh token expired: {}", e.getMessage());
+            return false;
+        } catch (MalformedJwtException | SignatureException e) {
+            log.warn("Invalid refresh token: {}", e.getMessage());
+            return false;
         } catch (Exception e) {
+            log.error("Unexpected error validating refresh token", e);
             return false;
         }
     }

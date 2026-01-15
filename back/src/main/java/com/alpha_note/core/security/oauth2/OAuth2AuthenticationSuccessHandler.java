@@ -39,6 +39,18 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     @Value("${jwt.refresh-expiration:604800000}") // 7 days
     private Long refreshExpiration;
 
+    // 쿠키 Domain 설정 (프로덕션: .alpha-note.co.kr, 개발: null)
+    @Value("${app.cookie.domain:}")
+    private String cookieDomain;
+
+    // 쿠키 Secure 플래그 (프로덕션: true, 개발: false)
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    // 쿠키 SameSite 정책 (프로덕션: None, 개발: Lax)
+    @Value("${app.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
     // OAuth2 인증 성공 시 호출되는 메인 메서드
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -136,10 +148,17 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private void setAuthCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie("access_token", token);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // 개발 환경: false, 프로덕션: true (HTTPS)
+        cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge((int) (jwtExpiration / 1000)); // 초 단위로 변환
-        cookie.setAttribute("SameSite", "Lax"); // CSRF 방어
+        
+        // Domain 설정 (값이 있으면 설정)
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            cookie.setDomain(cookieDomain);
+        }
+        
+        // SameSite 설정
+        cookie.setAttribute("SameSite", cookieSameSite);
         
         response.addCookie(cookie);
     }
@@ -150,10 +169,17 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private void setRefreshTokenCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie("refresh_token", token);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // 개발 환경: false, 프로덕션: true (HTTPS)
+        cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge((int) (refreshExpiration / 1000)); // 초 단위로 변환
-        cookie.setAttribute("SameSite", "Lax"); // CSRF 방어
+        
+        // Domain 설정 (값이 있으면 설정)
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            cookie.setDomain(cookieDomain);
+        }
+        
+        // SameSite 설정
+        cookie.setAttribute("SameSite", cookieSameSite);
         
         response.addCookie(cookie);
     }

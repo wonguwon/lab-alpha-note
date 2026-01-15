@@ -49,6 +49,18 @@ public class AuthController {
     @Value("${jwt.refresh-expiration:604800000}") // 7 days
     private Long refreshExpiration;
 
+    // 쿠키 Domain 설정 (프로덕션: .alpha-note.co.kr, 개발: null)
+    @Value("${app.cookie.domain:}")
+    private String cookieDomain;
+
+    // 쿠키 Secure 플래그 (프로덕션: true, 개발: false)
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    // 쿠키 SameSite 정책 (프로덕션: None, 개발: Lax)
+    @Value("${app.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
     @PostMapping("/email/check")
     public ResponseEntity<ApiResponse<EmailCheckResponse>> checkEmail(@Valid @RequestBody EmailCheckRequest request) {
         boolean available = authService.checkEmailAvailability(request.getEmail());
@@ -356,10 +368,17 @@ public class AuthController {
     private void setAuthCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie("access_token", token);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // 개발 환경: false, 프로덕션: true (HTTPS)
+        cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge((int) (jwtExpiration / 1000)); // 초 단위로 변환
-        cookie.setAttribute("SameSite", "Lax"); // CSRF 방어
+        
+        // Domain 설정 (값이 있으면 설정)
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            cookie.setDomain(cookieDomain);
+        }
+        
+        // SameSite 설정
+        cookie.setAttribute("SameSite", cookieSameSite);
         
         response.addCookie(cookie);
     }
@@ -370,9 +389,14 @@ public class AuthController {
     private void deleteAuthCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie("access_token", null);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false);
+        cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge(0); // 즉시 만료
+        
+        // Domain 설정 (값이 있으면 설정)
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            cookie.setDomain(cookieDomain);
+        }
         
         response.addCookie(cookie);
     }
@@ -383,10 +407,17 @@ public class AuthController {
     private void setRefreshTokenCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie("refresh_token", token);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // 개발 환경: false, 프로덕션: true (HTTPS)
+        cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge((int) (refreshExpiration / 1000)); // 초 단위로 변환
-        cookie.setAttribute("SameSite", "Lax"); // CSRF 방어
+        
+        // Domain 설정 (값이 있으면 설정)
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            cookie.setDomain(cookieDomain);
+        }
+        
+        // SameSite 설정
+        cookie.setAttribute("SameSite", cookieSameSite);
         
         response.addCookie(cookie);
     }
@@ -397,9 +428,14 @@ public class AuthController {
     private void deleteRefreshTokenCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie("refresh_token", null);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false);
+        cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge(0); // 즉시 만료
+        
+        // Domain 설정 (값이 있으면 설정)
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            cookie.setDomain(cookieDomain);
+        }
         
         response.addCookie(cookie);
     }
