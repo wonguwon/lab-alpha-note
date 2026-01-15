@@ -34,11 +34,11 @@ const SocialSignupPage = () => {
   const [tempToken, setTempToken] = useState('');
   const [emailSubscribed, setEmailSubscribed] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // 필드별 에러 메시지
   const [nicknameError, setNicknameError] = useState('');
   const [generalError, setGeneralError] = useState('');
-  
+
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
@@ -97,16 +97,21 @@ const SocialSignupPage = () => {
     setIsLoading(true);
 
     try {
-      await authService.oauth2Register(
+      const response = await authService.oauth2Register(
         tempToken,
         nickname.value,
         emailSubscribed
       );
 
-      // 사용자 정보 로드 (쿠키가 자동으로 설정됨)
-      const userData = await authService.getUserInfo();
-      setUser(userData);
-      
+      // oauth2Register 응답에서 직접 사용자 정보 추출
+      // getMeWithRetry 제거 - 쿠키 전파 타이밍 이슈 회피
+      setUser({
+        email: response.email,
+        nickname: response.nickname,
+        role: response.role,
+        profileImageUrl: response.profileImageUrl || null
+      });
+
       // 로그인 처리
       login();
 
@@ -191,9 +196,9 @@ const SocialSignupPage = () => {
           </TermsSection>
 
           {generalError && (
-            <div style={{ 
-              color: '#e74c3c', 
-              fontSize: '0.875rem', 
+            <div style={{
+              color: '#e74c3c',
+              fontSize: '0.875rem',
               marginTop: '16px',
               padding: '12px',
               backgroundColor: '#fee2e2',

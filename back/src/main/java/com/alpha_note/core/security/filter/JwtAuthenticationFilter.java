@@ -85,14 +85,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (ExpiredJwtException e) {
             log.debug("JWT token expired: {}", e.getMessage());
+            // 응답 헤더에 에러 정보 추가 (클라이언트 디버깅 개선)
+            response.setHeader("X-Auth-Error", "TOKEN_EXPIRED");
+            response.setHeader("X-Auth-Message", "토큰이 만료되었습니다");
             // 만료된 토큰은 인증하지 않고 통과시킴 (프론트엔드에서 401 응답 후 리프레시 처리)
             // SecurityContext에 인증 정보를 설정하지 않으므로 후속 필터에서 401 반환됨
         } catch (MalformedJwtException e) {
             log.error("Invalid JWT token format: {}", e.getMessage());
+            response.setHeader("X-Auth-Error", "INVALID_TOKEN");
+            response.setHeader("X-Auth-Message", "유효하지 않은 토큰 형식입니다");
         } catch (SignatureException e) {
             log.error("JWT signature validation failed: {}", e.getMessage());
+            response.setHeader("X-Auth-Error", "SIGNATURE_INVALID");
+            response.setHeader("X-Auth-Message", "토큰 서명이 유효하지 않습니다");
         } catch (Exception e) {
             log.error("JWT authentication error: {}", e.getMessage());
+            response.setHeader("X-Auth-Error", "AUTH_ERROR");
+            response.setHeader("X-Auth-Message", "인증 처리 중 오류가 발생했습니다");
         }
 
         filterChain.doFilter(request, response);

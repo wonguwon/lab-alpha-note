@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { authService } from '../../api/services';
+import { getMeWithRetry } from '../../api/authUtils';
 import { Loading } from '../../components/common/Loading';
 import {
   RedirectContainer,
@@ -53,13 +54,12 @@ const OAuth2RedirectPage = () => {
         }
 
         // 임시 토큰이 있는 경우 (회원가입 모드)
-        if (tempToken && mode === 'signup') {
+        // mode가 없어도 tempToken이 있으면 회원가입 모드로 처리
+        if (tempToken) {
           setMessage('회원가입을 진행합니다...');
           
-          // 소셜 가입 페이지로 리다이렉트
-          setTimeout(() => {
-            navigate(`/signup/social?tempToken=${tempToken}`);
-          }, 500);
+          // 바로 소셜 가입 페이지로 리다이렉트
+          navigate(`/signup/social?tempToken=${tempToken}`, { replace: true });
           return;
         }
 
@@ -69,13 +69,15 @@ const OAuth2RedirectPage = () => {
         const success = searchParams.get('success');
         if (token || success === 'true') {
           try {
-            const userData = await authService.getUserInfo();
+            // 쿠키 설정 대기 제거 - getMeWithRetry가 재시도 로직을 포함하므로
+            // 첫 번째 요청을 바로 시도하고, 실패 시 자동으로 재시도됨
+            const userData = await getMeWithRetry(5, 500);
             setUser(userData);
             login();
 
             setMessage('로그인 성공! 메인 페이지로 이동합니다...');
 
-            // 1초 후 홈페이지로 리다이렉트
+            // 1초 후 홈페이지로 리다이렉트 (사용자가 메시지를 볼 시간)
             setTimeout(() => {
               navigate('/');
             }, 1000);

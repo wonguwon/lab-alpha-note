@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import useInput from '../../hooks/useInput';
 import useAuthStore from '../../store/authStore';
 import { authService } from '../../api/services';
+import { getMeWithRetry } from '../../api/authUtils';
 import { Alert, Modal } from '../../components/common/Modal';
 import { useAlert } from '../../hooks/useModal';
 import { ButtonSpinner } from '../../components/common/Loading';
@@ -46,8 +47,8 @@ const LoginPage = () => {
         password: password.value
       });
 
-      // 사용자 정보 로드
-      const userData = await authService.getUserInfo();
+      // 사용자 정보 로드 (retry 로직 포함)
+      const userData = await getMeWithRetry();
       setUser(userData);
       
       // 로그인 상태 설정
@@ -89,8 +90,8 @@ const LoginPage = () => {
     try {
       await authService.recoverAccount(recoveryData.recoveryToken);
 
-      // 사용자 정보 로드
-      const userData = await authService.getUserInfo();
+      // 사용자 정보 로드 (retry 로직 포함)
+      const userData = await getMeWithRetry();
       setUser(userData);
       
       // 로그인 상태 설정

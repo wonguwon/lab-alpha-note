@@ -44,10 +44,12 @@ function App() {
         const data = await authService.getUserInfo();
         setUser(data);
       } catch (error) {
-        console.error('사용자 정보 로드 실패:', error);
-        // 401 에러면 로그아웃 (axios 인터셉터에서 이미 처리되지만 안전장치)
+        // 401 에러는 정상적인 상황 (로그인하지 않은 사용자)
+        // 조용히 로그아웃 상태로만 설정 (에러 로그 출력하지 않음)
         if (error.response?.status === 401) {
           logout();
+        } else {
+          console.error('사용자 정보 로드 실패:', error);
         }
       }
     };

@@ -25,17 +25,48 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// 공개 페이지 목록 (인증 없이 접근 가능한 페이지)
+const PUBLIC_PAGES = ['/login', '/signup', '/', '/qna', '/habits'];
+
+// 리프레시 시도하지 않을 엔드포인트 목록
+const REFRESH_EXCLUDED_ENDPOINTS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/oauth2/register',
+  '/auth/recover',
+  '/auth/me'  // 초기 인증 직후 호출 시 쿠키 전파 타이밍 이슈 방지
+];
+
 // 리프레시 토큰 갱신 중 플래그 (무한 루프 방지)
 let isRefreshing = false;
 let failedQueue = [];
 
+// 에러 객체 생성 헬퍼 함수 (중복 제거)
+const createStandardError = (error, data, status) => {
+  const errorMessage = data?.message || getDefaultErrorMessage(status);
+  const standardError = new Error(errorMessage);
+  standardError.response = {
+    status: error.response.status,
+    statusText: error.response.statusText,
+    headers: error.response.headers,
+    data: {
+      ...data,
+      message: errorMessage,
+      errorCode: data?.errorCode || data?.code,
+      status: status
+    }
+  };
+  return standardError;
+};
+
 // 대기 중인 요청 처리
-const processQueue = (error, token = null) => {
+const processQueue = (error) => {
   failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve();
     }
   });
   failedQueue = [];
@@ -56,36 +87,44 @@ api.interceptors.response.use(
 
       // 401 Unauthorized - 인증 오류
       if (status === 401) {
-        const isLoginPage = window.location.pathname === '/login';
-        const isSignupPage = window.location.pathname === '/signup';
-        const isRefreshEndpoint = originalRequest.url?.includes('/auth/refresh');
+        const currentPath = window.location.pathname;
+        // 패턴 매칭으로 공개 페이지 확인 (/signup/social 등 자동 포함)
+        const isPublicPage = PUBLIC_PAGES.some(page => currentPath === page || currentPath.startsWith(page + '/'));
+        const requestUrl = originalRequest.url || '';
+        const isRefreshEndpoint = requestUrl.includes('/auth/refresh');
 
-        // 리프레시 엔드포인트 자체가 401이면 로그아웃 처리 (refresh_token도 없거나 만료됨)
+        // 1) refresh 엔드포인트가 401이면 즉시 로그아웃
         if (isRefreshEndpoint) {
-          if (!isLoginPage && !isSignupPage && getAuthStore) {
+          // 세션 정리 + 로그인 페이지로 리다이렉트
+          if (getAuthStore) {
             getAuthStore().logout();
+          }
+          if (!isPublicPage) {
             window.location.href = '/login';
           }
-          const errorMessage = data?.message || getDefaultErrorMessage(status);
-          const standardError = new Error(errorMessage);
-          standardError.response = {
-            status: error.response.status,
-            statusText: error.response.statusText,
-            headers: error.response.headers,
-            data: {
-              ...data,
-              message: errorMessage,
-              errorCode: data?.errorCode || data?.code,
-              status: status
-            }
-          };
-          return Promise.reject(standardError);
+
+          return Promise.reject(createStandardError(error, data, status));
         }
 
-        // 리프레시 중이 아닌 경우 리프레시 시도 (access_token이 없거나 만료됨)
-        // refresh_token이 있으면 새 access_token을 발급받아 로그인 유지
+        // 리프레시 제외 엔드포인트 확인
+        const isExcludedEndpoint = REFRESH_EXCLUDED_ENDPOINTS.some(
+          endpoint => requestUrl.includes(endpoint)
+        );
+
+        if (isExcludedEndpoint) {
+          return Promise.reject(createStandardError(error, data, status));
+        }
+
+        // 2) 원요청은 딱 1번만 refresh 후 재시도
+        if (originalRequest._retry) {
+          // 이미 한 번 retry했는데도 401이면 에러 반환
+          return Promise.reject(createStandardError(error, data, status));
+        }
+
+        // 3) 동시 요청일 때 refresh는 한 번만 (isRefreshing + queue 패턴)
         if (!isRefreshing) {
           isRefreshing = true;
+          originalRequest._retry = true; // retry 플래그 설정
 
           try {
             // 리프레시 토큰으로 새 액세스 토큰 발급
@@ -93,19 +132,23 @@ api.interceptors.response.use(
             await authService.refreshToken();
 
             // 대기 중인 요청 처리
-            processQueue(null, null);
+            processQueue(null);
 
             // 원래 요청 재시도
             return api(originalRequest);
           } catch (refreshError) {
             // 리프레시 실패 시 대기 중인 요청 모두 실패 처리
-            processQueue(refreshError, null);
+            processQueue(refreshError);
 
-            // 리프레시 실패 = refresh_token도 없거나 만료됨 → 로그아웃
-            if (!isLoginPage && !isSignupPage && getAuthStore) {
+            // 리프레시 실패 = refresh_token도 없거나 만료됨
+            if (!isPublicPage && getAuthStore) {
               console.log('리프레시 토큰 없음 또는 만료 - 자동 로그아웃');
               getAuthStore().logout();
               window.location.href = '/login';
+            } else {
+              if (getAuthStore) {
+                getAuthStore().logout();
+              }
             }
 
             return Promise.reject(refreshError);
@@ -114,6 +157,8 @@ api.interceptors.response.use(
           }
         } else {
           // 리프레시 중인 경우 대기 큐에 추가
+          // ✅ queue에 들어가는 요청도 _retry 플래그 설정
+          originalRequest._retry = true;
           return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
           })
