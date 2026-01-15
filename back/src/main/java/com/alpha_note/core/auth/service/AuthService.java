@@ -37,12 +37,13 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final EmailVerificationService emailVerificationService;
     private final EmailService emailService;
+    private final RefreshTokenService refreshTokenService;
 
     @Value("${app.oauth2.authorized-redirect-uri:http://localhost:3000/oauth2/redirect}")
     private String oauth2RedirectUri;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public LoginResult register(RegisterRequest request) {
         // 이메일 인증 확인
         if (!emailVerificationService.isVerified(request.getEmail())) {
             throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
@@ -101,15 +102,20 @@ public class AuthService {
         // JWT 토큰 생성
         String token = jwtUtil.generateToken(user);
 
-        return AuthResponse.builder()
+        // 리프레시 토큰 생성 및 저장
+        var refreshToken = refreshTokenService.createRefreshToken(user);
+
+        AuthResponse authResponse = AuthResponse.builder()
                 .token(token)
                 .nickname(user.getNickname())
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .build();
+
+        return new LoginResult(authResponse, refreshToken.getToken());
     }
     
-    public AuthResponse login(LoginRequest request) {
+    public LoginResult login(LoginRequest request) {
         try {
             // 인증 (email로 로그인)
             Authentication authentication = authenticationManager.authenticate(
@@ -124,16 +130,84 @@ public class AuthService {
             // JWT 토큰 생성
             String token = jwtUtil.generateToken(user);
 
-            return AuthResponse.builder()
+            // 리프레시 토큰 생성 및 저장
+            var refreshToken = refreshTokenService.createRefreshToken(user);
+
+            AuthResponse authResponse = AuthResponse.builder()
                     .token(token)
                     .nickname(user.getNickname())
                     .email(user.getEmail())
                     .role(user.getRole().name())
                     .build();
 
+            return new LoginResult(authResponse, refreshToken.getToken());
+
         } catch (BadCredentialsException e) {
             throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
+    }
+
+    /**
+     * 리프레시 토큰으로 새 액세스 토큰 발급
+     * @return AuthResponse와 새 리프레시 토큰 문자열을 포함한 LoginResult
+     */
+    @Transactional
+    public LoginResult refreshToken(String refreshTokenValue) {
+        // 리프레시 토큰 검증
+        var refreshToken = refreshTokenService.validateRefreshToken(refreshTokenValue);
+        User user = refreshToken.getUser();
+
+        // 새 액세스 토큰 생성
+        String newAccessToken = jwtUtil.generateToken(user);
+
+        // 리프레시 토큰 로테이션 (새 리프레시 토큰 발급)
+        var newRefreshToken = refreshTokenService.createRefreshToken(user);
+
+        AuthResponse authResponse = AuthResponse.builder()
+                .token(newAccessToken)
+                .nickname(user.getNickname())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
+
+        return new LoginResult(authResponse, newRefreshToken.getToken());
+    }
+
+    /**
+     * 로그인/리프레시 결과 (액세스 토큰과 리프레시 토큰 포함)
+     */
+    public static class LoginResult {
+        private final AuthResponse authResponse;
+        private final String refreshToken;
+
+        public LoginResult(AuthResponse authResponse, String refreshToken) {
+            this.authResponse = authResponse;
+            this.refreshToken = refreshToken;
+        }
+
+        public AuthResponse getAuthResponse() {
+            return authResponse;
+        }
+
+        public String getRefreshToken() {
+            return refreshToken;
+        }
+    }
+
+    /**
+     * 리프레시 토큰 무효화
+     */
+    @Transactional
+    public void revokeRefreshToken(String refreshTokenValue) {
+        refreshTokenService.revokeRefreshToken(refreshTokenValue);
+    }
+
+    /**
+     * 사용자의 모든 리프레시 토큰 무효화
+     */
+    @Transactional
+    public void revokeAllUserRefreshTokens(Long userId) {
+        refreshTokenService.revokeAllUserRefreshTokens(userId);
     }
 
     /**

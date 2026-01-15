@@ -1,9 +1,14 @@
 import { create } from 'zustand';
 import { notificationService } from '../api/services';
 import { API_CONFIG } from '../api/config';
+import useAuthStore from './authStore';
 
 const useNotificationStore = create((set, get) => {
   let eventSource = null;
+  let reconnectAttempts = 0;
+  let reconnectTimer = null;
+  const MAX_RECONNECT_ATTEMPTS = 3;
+  const INITIAL_RECONNECT_DELAY = 2000; // 2초
 
   return {
     // 상태
@@ -80,12 +85,25 @@ const useNotificationStore = create((set, get) => {
 
     // SSE 연결 시작
     connectSSE: () => {
+      // 인증 상태 확인
+      const authState = useAuthStore.getState();
+      if (!authState.isAuthenticated || !authState.user) {
+        console.log('인증되지 않은 상태에서는 SSE 연결을 시도하지 않습니다.');
+        return;
+      }
+
       const state = get();
       
       // 이미 연결되어 있으면 종료
       if (eventSource) {
         eventSource.close();
         eventSource = null;
+      }
+
+      // 재연결 타이머가 있으면 취소
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
       }
 
       // SSE 엔드포인트 URL 생성
@@ -99,7 +117,8 @@ const useNotificationStore = create((set, get) => {
         // 연결 성공 시
         eventSource.onopen = () => {
           console.log('SSE 연결 성공');
-          set({ isConnected: true });
+          reconnectAttempts = 0; // 성공 시 재시도 횟수 리셋
+          set({ isConnected: true, error: null });
         };
 
         // 알림 수신 시
@@ -128,16 +147,52 @@ const useNotificationStore = create((set, get) => {
           console.error('SSE 연결 오류:', error);
           set({ isConnected: false });
           
-          // 연결이 끊어졌을 때 자동 재연결 시도 (5초 후)
+          // 인증 상태 재확인
+          const currentAuthState = useAuthStore.getState();
+          if (!currentAuthState.isAuthenticated || !currentAuthState.user) {
+            console.log('인증되지 않은 상태 - SSE 재연결 중단');
+            if (eventSource) {
+              eventSource.close();
+              eventSource = null;
+            }
+            reconnectAttempts = 0;
+            return;
+          }
+
+          // 연결이 끊어졌을 때만 재연결 시도
           if (eventSource?.readyState === EventSource.CLOSED) {
-            setTimeout(() => {
+            // 최대 재시도 횟수 확인
+            if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+              console.error('SSE 최대 재연결 시도 횟수 초과 - 재연결 중단');
+              set({ 
+                error: '알림 연결에 실패했습니다. 페이지를 새로고침해주세요.' 
+              });
+              reconnectAttempts = 0;
+              return;
+            }
+
+            reconnectAttempts++;
+            // 지수 백오프: 2초, 4초, 8초
+            const delay = Math.min(
+              INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1),
+              8000
+            );
+
+            reconnectTimer = setTimeout(() => {
+              // 재연결 전에 다시 인증 상태 확인
+              const authState = useAuthStore.getState();
+              if (!authState.isAuthenticated || !authState.user) {
+                console.log('재연결 시도 전 인증 상태 확인 실패 - 재연결 중단');
+                reconnectAttempts = 0;
+                return;
+              }
+
               const currentState = get();
-              // 사용자가 로그아웃하지 않았고 연결이 끊어진 경우에만 재연결
               if (!currentState.isConnected) {
-                console.log('SSE 재연결 시도...');
+                console.log(`SSE 재연결 시도 ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}...`);
                 get().connectSSE();
               }
-            }, 5000);
+            }, delay);
           }
         };
 
@@ -149,12 +204,20 @@ const useNotificationStore = create((set, get) => {
 
     // SSE 연결 종료
     disconnectSSE: () => {
+      // 재연결 타이머 취소
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+
       if (eventSource) {
         eventSource.close();
         eventSource = null;
-        console.log('SSE 연결 종료');
-        set({ isConnected: false });
       }
+      
+      reconnectAttempts = 0; // 재시도 횟수 리셋
+      console.log('SSE 연결 종료');
+      set({ isConnected: false });
     },
   };
 });
