@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -208,6 +209,30 @@ public class NotificationService {
                 log.warn("SSE 연결 종료 중 오류 발생 - userId: {}", userId, e);
             }
         }
+    }
+
+    /**
+     * 30초마다 모든 연결된 클라이언트에게 하트비트 전송
+     * 연결 유지를 위해 주석(: heartbeat) 형태의 메시지를 보냄
+     */
+    @Scheduled(fixedRate = 30000)
+    public void sendHeartbeat() {
+        if (emitters.isEmpty()) {
+            return;
+        }
+
+        log.debug("SSE 하트비트 전송 시작 - 연결 수: {}", emitters.size());
+        
+        emitters.forEach((userId, emitter) -> {
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("heartbeat")
+                        .comment("heartbeat"));
+            } catch (Exception e) {
+                log.warn("SSE 하트비트 전송 실패 - userId: {}, 연결을 제거합니다.", userId);
+                emitters.remove(userId);
+            }
+        });
     }
 }
 

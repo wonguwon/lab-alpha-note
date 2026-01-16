@@ -39,7 +39,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     @Value("${jwt.refresh-expiration:604800000}") // 7 days
     private Long refreshExpiration;
 
-    // 쿠키 Domain 설정 (프로덕션: .alpha-note.co.kr, 개발: null)
+    // 쿠키 Domain 설정 (프로덕션: alpha-note.co.kr, 개발: null)
     @Value("${app.cookie.domain:}")
     private String cookieDomain;
 
