@@ -28,6 +28,7 @@ public class BlogResponse {
     private String thumbnailUrl;
     private Integer viewCount;
     private Integer voteCount;
+    private Integer commentCount;
     private Instant lastActivityAt;
     private Instant createdAt;
     private List<TagResponse> tags; // Service에서 추가
@@ -51,6 +52,7 @@ public class BlogResponse {
                 .thumbnailUrl(blog.getThumbnailUrl())
                 .viewCount(blog.getViewCount())
                 .voteCount(blog.getVoteCount())
+                .commentCount(blog.getComments().size())
                 .lastActivityAt(blog.getLastActivityAt())
                 .createdAt(blog.getCreatedAt())
                 .build();

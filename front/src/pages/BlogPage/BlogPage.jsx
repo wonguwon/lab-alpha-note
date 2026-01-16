@@ -25,6 +25,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   Loading,
+  CommentCount,
   LikeCount,
   BlogInfoRow,
   TagList,
@@ -155,7 +156,10 @@ const BlogPage = () => {
                                 </BlogInfoRow>
                                 <BlogMeta>
                                     <AuthorInfo>by {post.userNickname || 'Unknown'}</AuthorInfo>
-                                    <LikeCount>♡ {post.voteCount || 0}</LikeCount>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                        <CommentCount>💬 {post.commentCount || 0}</CommentCount>
+                                        <LikeCount>♡ {post.voteCount || 0}</LikeCount>
+                                    </div>
                                 </BlogMeta>
                             </BlogCardContent>
                         </BlogCard>

@@ -299,6 +299,15 @@ export const Tag = styled.span`
   align-items: center;
 `;
 
+export const CommentCount = styled.span`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[1]};
+  color: ${props => props.theme.colors.gray[500]};
+  font-weight: ${props => props.theme.fonts.weight.medium};
+  margin-right: ${props => props.theme.spacing[3]};
+`;
+
 export const LikeCount = styled.span`
   display: flex;
   align-items: center;
