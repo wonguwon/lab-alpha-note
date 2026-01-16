@@ -414,6 +414,16 @@ export const blogService = {
   deleteComment: async (commentId) => {
     return await api.delete(API_ENDPOINTS.BLOG.BLOG_COMMENT_DETAIL(commentId));
   },
+
+  // 블로그 추천
+  voteBlog: async (blogId) => {
+    return await api.post(API_ENDPOINTS.BLOG.BLOG_VOTE(blogId));
+  },
+
+  // 블로그 추천 취소
+  unvoteBlog: async (blogId) => {
+    return await api.delete(API_ENDPOINTS.BLOG.BLOG_VOTE(blogId));
+  },
 };
 
 

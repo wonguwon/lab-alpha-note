@@ -60,6 +60,7 @@ const BlogDetailPage = () => {
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [newComment, setNewComment] = useState('');
+  const [voting, setVoting] = useState(false);
   const MAX_COMMENT_LENGTH = 500;
 
   useEffect(() => {
@@ -116,6 +117,46 @@ const BlogDetailPage = () => {
       console.error('댓글 조회 실패:', err);
     } finally {
       setLoadingComments(false);
+    }
+  };
+
+  const handleVote = async () => {
+    if (!isAuthenticated) {
+      alert('좋아요를 누르려면 로그인이 필요합니다.');
+      return;
+    }
+
+    if (voting) return;
+
+    const isVoted = blog.isVotedByCurrentUser;
+    const previousVoteCount = blog.voteCount || 0;
+
+    // Optimistic update
+    setBlog({
+      ...blog,
+      isVotedByCurrentUser: !isVoted,
+      voteCount: isVoted ? previousVoteCount - 1 : previousVoteCount + 1,
+    });
+
+    setVoting(true);
+
+    try {
+      if (isVoted) {
+        await blogService.unvoteBlog(id);
+      } else {
+        await blogService.voteBlog(id);
+      }
+    } catch (err) {
+      console.error('좋아요 처리 실패:', err);
+      // Rollback on error
+      setBlog({
+        ...blog,
+        isVotedByCurrentUser: isVoted,
+        voteCount: previousVoteCount,
+      });
+      alert(err.response?.data?.message || '좋아요 처리에 실패했습니다.');
+    } finally {
+      setVoting(false);
     }
   };
 
@@ -219,7 +260,11 @@ const BlogDetailPage = () => {
                 <FaRegCommentDots />
                 댓글 {blog.commentCount || 0}
             </CommentToggleButton>
-            <VoteButton>
+            <VoteButton 
+                onClick={handleVote} 
+                $voted={blog.isVotedByCurrentUser}
+                disabled={voting}
+            >
                 👍 {blog.voteCount || 0}
             </VoteButton>
             </VoteSection>
