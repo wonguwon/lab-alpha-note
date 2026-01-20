@@ -1,5 +1,7 @@
 package com.alpha_note.core.blog.service;
 
+import com.alpha_note.core.blog.dto.response.BlogTagResponse;
+import com.alpha_note.core.blog.enums.BlogSearchType;
 import com.alpha_note.core.blog.dto.request.CreateBlogRequest;
 import com.alpha_note.core.blog.dto.request.UpdateBlogRequest;
 import com.alpha_note.core.blog.dto.response.BlogDetailResponse;
@@ -11,17 +13,10 @@ import com.alpha_note.core.blog.repository.BlogCommentRepository;
 import com.alpha_note.core.blog.repository.BlogRepository;
 import com.alpha_note.core.blog.repository.BlogTagRepository;
 import com.alpha_note.core.blog.repository.BlogVoteRepository;
+import com.alpha_note.core.common.entity.Tag;
 import com.alpha_note.core.common.exception.CustomException;
 import com.alpha_note.core.common.exception.ErrorCode;
-import com.alpha_note.core.qna.dto.request.CreateQuestionRequest;
-import com.alpha_note.core.qna.dto.response.AnswerResponse;
-import com.alpha_note.core.qna.dto.response.QuestionDetailResponse;
-import com.alpha_note.core.qna.dto.response.QuestionResponse;
-import com.alpha_note.core.qna.dto.response.TagResponse;
-import com.alpha_note.core.qna.entity.*;
-import com.alpha_note.core.qna.enums.SearchType;
-import com.alpha_note.core.qna.repository.TagRepository;
-import com.alpha_note.core.qna.service.ViewCountService;
+import com.alpha_note.core.common.repository.TagRepository;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +39,7 @@ public class BlogService {
     private final BlogTagRepository blogTagRepository;
     private final BlogVoteRepository blogVoteRepository;
     private final BlogCommentRepository blogCommentRepository;
-    private final ViewCountService viewCountService;
+    private final BlogViewCountService viewCountService;
 
     /**
      * 블로그 목록 조회 (페이징)
@@ -176,7 +171,7 @@ public class BlogService {
      * 블로그 검색 (키워드 + 검색 타입)
      */
     @Transactional(readOnly = true)
-    public Page<BlogResponse> searchBlogs(String keyword, SearchType searchType, Pageable pageable, Long currentUserId) {
+    public Page<BlogResponse> searchBlogs(String keyword, BlogSearchType searchType, Pageable pageable, Long currentUserId) {
         Page<Blog> blogs;
 
         switch (searchType) {
@@ -202,7 +197,7 @@ public class BlogService {
      * 피드 블로그 검색 (키워드 + 검색 타입)
      */
     @Transactional(readOnly = true)
-    public Page<BlogResponse> searchFeedBlogs(String keyword, SearchType searchType, Pageable pageable, Long currentUserId) {
+    public Page<BlogResponse> searchFeedBlogs(String keyword, BlogSearchType searchType, Pageable pageable, Long currentUserId) {
         Page<Blog> blogs;
 
         switch (searchType) {
@@ -278,10 +273,10 @@ public class BlogService {
 
         // 태그 목록
         List<BlogTag> blogTags = blogTagRepository.findByBlogId(blog.getId());
-        List<TagResponse> tags = blogTags.stream()
+        List<BlogTagResponse> tags = blogTags.stream()
                 .map(qt -> tagRepository.findByIdAndIsDeletedFalse(qt.getTagId()))
                 .filter(opt -> opt.isPresent())
-                .map(opt -> TagResponse.from(opt.get()))
+                .map(opt -> BlogTagResponse.from(opt.get()))
                 .collect(Collectors.toList());
         response.setTags(tags);
 
@@ -317,10 +312,10 @@ public class BlogService {
 
         // 태그 목록
         List<BlogTag> questionTags = blogTagRepository.findByBlogId(blog.getId());
-        List<TagResponse> tags = questionTags.stream()
+        List<BlogTagResponse> tags = questionTags.stream()
                 .map(qt -> tagRepository.findByIdAndIsDeletedFalse(qt.getTagId()))
                 .filter(opt -> opt.isPresent())
-                .map(opt -> TagResponse.from(opt.get()))
+                .map(opt -> BlogTagResponse.from(opt.get()))
                 .collect(Collectors.toList());
         response.setTags(tags);
 

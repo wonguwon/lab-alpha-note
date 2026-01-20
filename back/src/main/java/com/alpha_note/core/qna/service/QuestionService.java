@@ -1,14 +1,15 @@
 package com.alpha_note.core.qna.service;
 
+import com.alpha_note.core.common.entity.Tag;
 import com.alpha_note.core.common.exception.CustomException;
 import com.alpha_note.core.common.exception.ErrorCode;
+import com.alpha_note.core.common.repository.TagRepository;
 import com.alpha_note.core.qna.dto.request.CreateQuestionRequest;
 import com.alpha_note.core.qna.dto.request.UpdateQuestionRequest;
 import com.alpha_note.core.qna.dto.response.*;
 import com.alpha_note.core.qna.entity.*;
 import com.alpha_note.core.qna.enums.SearchType;
 import com.alpha_note.core.qna.repository.*;
-import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j

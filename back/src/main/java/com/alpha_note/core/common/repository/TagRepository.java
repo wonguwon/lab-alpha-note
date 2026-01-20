@@ -1,6 +1,6 @@
-package com.alpha_note.core.qna.repository;
+package com.alpha_note.core.common.repository;
 
-import com.alpha_note.core.qna.entity.Tag;
+import com.alpha_note.core.common.entity.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

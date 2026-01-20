@@ -1,6 +1,6 @@
 package com.alpha_note.core.qna.dto.response;
 
-import com.alpha_note.core.qna.entity.Tag;
+import com.alpha_note.core.common.entity.Tag;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

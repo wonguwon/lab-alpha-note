@@ -1,7 +1,6 @@
 package com.alpha_note.core.blog.repository;
 
 import com.alpha_note.core.blog.entity.BlogComment;
-import com.alpha_note.core.qna.entity.QuestionComment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

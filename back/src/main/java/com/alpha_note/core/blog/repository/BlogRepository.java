@@ -1,7 +1,6 @@
 package com.alpha_note.core.blog.repository;
 
 import com.alpha_note.core.blog.entity.Blog;
-import com.alpha_note.core.qna.entity.Question;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,7 +1,6 @@
 package com.alpha_note.core.blog.dto.response;
 
 import com.alpha_note.core.blog.entity.Blog;
-import com.alpha_note.core.qna.dto.response.TagResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,7 +31,7 @@ public class BlogDetailResponse {
     private Instant lastActivityAt;
     private Instant createdAt;
     private Instant updatedAt;
-    private List<TagResponse> tags; // Service에서 추가
+    private List<BlogTagResponse> tags; // Service에서 추가
     private Integer commentCount; // Service에서 추가
 
 

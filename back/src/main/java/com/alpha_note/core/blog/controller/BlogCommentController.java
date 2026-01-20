@@ -1,9 +1,9 @@
 package com.alpha_note.core.blog.controller;
 
+import com.alpha_note.core.blog.dto.request.CreateBlogCommentRequest;
+import com.alpha_note.core.blog.dto.response.BlogCommentResponse;
 import com.alpha_note.core.blog.service.BlogCommentService;
 import com.alpha_note.core.common.response.ApiResponse;
-import com.alpha_note.core.qna.dto.request.CreateCommentRequest;
-import com.alpha_note.core.qna.dto.response.CommentResponse;
 import com.alpha_note.core.user.entity.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +29,12 @@ public class BlogCommentController {
      * POST /api/v1/blogs/{blogId}/comments
      */
     @PostMapping("/{blogId}/comments")
-    public ResponseEntity<ApiResponse<CommentResponse>> createBlogComment(
+    public ResponseEntity<ApiResponse<BlogCommentResponse>> createBlogComment(
             @AuthenticationPrincipal User user,
             @PathVariable Long blogId,
-            @Valid @RequestBody CreateCommentRequest request) {
+            @Valid @RequestBody CreateBlogCommentRequest request) {
 
-        CommentResponse response = blogCommentService.createBlogComment(blogId, user.getId(), request);
+        BlogCommentResponse response = blogCommentService.createBlogComment(blogId, user.getId(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("댓글이 성공적으로 작성되었습니다.", response));
     }
@@ -44,10 +44,10 @@ public class BlogCommentController {
      * GET /api/v1/blogs/{blogId}/comments
      */
     @GetMapping("/{blogId}/comments")
-    public ResponseEntity<ApiResponse<List<CommentResponse>>> getBlogComments(
+    public ResponseEntity<ApiResponse<List<BlogCommentResponse>>> getBlogComments(
             @PathVariable Long blogId) {
 
-        List<CommentResponse> response = blogCommentService.getBlogComments(blogId);
+        List<BlogCommentResponse> response = blogCommentService.getBlogComments(blogId);
         return ResponseEntity.ok(ApiResponse.success("댓글 목록 조회 성공", response));
     }
 }

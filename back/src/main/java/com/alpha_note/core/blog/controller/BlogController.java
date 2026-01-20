@@ -1,15 +1,12 @@
 package com.alpha_note.core.blog.controller;
 
+import com.alpha_note.core.blog.enums.BlogSearchType;
 import com.alpha_note.core.blog.dto.request.CreateBlogRequest;
 import com.alpha_note.core.blog.dto.request.UpdateBlogRequest;
 import com.alpha_note.core.blog.dto.response.BlogDetailResponse;
 import com.alpha_note.core.blog.dto.response.BlogResponse;
 import com.alpha_note.core.blog.service.BlogService;
 import com.alpha_note.core.common.response.ApiResponse;
-import com.alpha_note.core.qna.dto.request.CreateQuestionRequest;
-import com.alpha_note.core.qna.dto.response.QuestionDetailResponse;
-import com.alpha_note.core.qna.dto.response.QuestionResponse;
-import com.alpha_note.core.qna.enums.SearchType;
 import com.alpha_note.core.user.entity.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -113,7 +110,7 @@ public class BlogController {
             @AuthenticationPrincipal User user,
             @RequestParam String keyword,
             @RequestParam(required = false) Boolean votedByMe,
-            @RequestParam(defaultValue = "ALL") SearchType searchType,
+            @RequestParam(defaultValue = "TITLE") BlogSearchType searchType,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Long userId = (user != null) ? user.getId() : null;

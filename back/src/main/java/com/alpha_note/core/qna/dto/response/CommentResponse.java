@@ -43,14 +43,4 @@ public class CommentResponse {
                 .updatedAt(comment.getUpdatedAt())
                 .build();
     }
-
-    public static CommentResponse from(BlogComment comment) {
-        return CommentResponse.builder()
-                .id(comment.getId())
-                .userId(comment.getUserId())
-                .content(comment.getContent())
-                .createdAt(comment.getCreatedAt())
-                .updatedAt(comment.getUpdatedAt())
-                .build();
-    }
 }

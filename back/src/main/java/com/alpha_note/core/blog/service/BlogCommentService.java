@@ -1,12 +1,12 @@
 package com.alpha_note.core.blog.service;
 
+import com.alpha_note.core.blog.dto.request.CreateBlogCommentRequest;
+import com.alpha_note.core.blog.dto.response.BlogCommentResponse;
 import com.alpha_note.core.blog.entity.BlogComment;
 import com.alpha_note.core.blog.repository.BlogCommentRepository;
 import com.alpha_note.core.blog.repository.BlogRepository;
 import com.alpha_note.core.common.exception.CustomException;
 import com.alpha_note.core.common.exception.ErrorCode;
-import com.alpha_note.core.qna.dto.request.CreateCommentRequest;
-import com.alpha_note.core.qna.dto.response.CommentResponse;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class BlogCommentService {
      * 블로그 댓글 작성
      */
     @Transactional
-    public CommentResponse createBlogComment(Long blogId, Long userId, CreateCommentRequest request) {
+    public BlogCommentResponse createBlogComment(Long blogId, Long userId, CreateBlogCommentRequest request) {
         // 블로그 존재 확인
         if (!blogRepository.existsById(blogId)) {
             throw new CustomException(ErrorCode.BLOG_NOT_FOUND);
@@ -57,31 +57,31 @@ public class BlogCommentService {
 
         log.info("블로그 댓글 작성 완료 - commentId: {}, blogId: {}, userId: {}", savedComment.getId(), blogId, userId);
 
-        return buildBlogCommentResponse(savedComment);
+        return buildBlogBlogCommentResponse(savedComment);
     }
 
     /**
      * 블로그 댓글 목록 조회
      */
     @Transactional(readOnly = true)
-    public List<CommentResponse> getBlogComments(Long blogId) {
+    public List<BlogCommentResponse> getBlogComments(Long blogId) {
         if (!blogRepository.existsById(blogId)) {
             throw new CustomException(ErrorCode.BLOG_NOT_FOUND);
         }
 
         List<BlogComment> comments = blogCommentRepository.findByBlogIdAndIsDeletedFalseOrderByCreatedAtDesc(blogId);
         return comments.stream()
-                .map(this::buildBlogCommentResponse)
+                .map(this::buildBlogBlogCommentResponse)
                 .collect(Collectors.toList());
     }
 
     // ========== Private Helper 메소드 ==========
 
     /**
-     * BlogComment -> CommentResponse 변환
+     * BlogComment -> BlogCommentResponse 변환
      */
-    private CommentResponse buildBlogCommentResponse(BlogComment comment) {
-        CommentResponse response = CommentResponse.from(comment);
+    private BlogCommentResponse buildBlogBlogCommentResponse(BlogComment comment) {
+        BlogCommentResponse response = BlogCommentResponse.from(comment);
 
         // 작성자 닉네임 및 프로필 이미지
         userRepository.findById(comment.getUserId()).ifPresent(user -> {
