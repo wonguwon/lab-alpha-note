@@ -19,6 +19,7 @@ import com.alpha_note.core.qna.dto.response.QuestionDetailResponse;
 import com.alpha_note.core.qna.dto.response.QuestionResponse;
 import com.alpha_note.core.qna.dto.response.TagResponse;
 import com.alpha_note.core.qna.entity.*;
+import com.alpha_note.core.qna.enums.SearchType;
 import com.alpha_note.core.qna.repository.TagRepository;
 import com.alpha_note.core.qna.service.ViewCountService;
 import com.alpha_note.core.user.repository.UserRepository;
@@ -160,6 +161,35 @@ public class BlogService {
 
         log.info("블로그 수정 완료 - blogId: {}", blogId);
         return getBlogDetail(blogId, userId);
+    }
+
+    /**
+     * 블로그 검색 (키워드 + 검색 타입)
+     */
+    @Transactional(readOnly = true)
+    public Page<BlogResponse> searchBlogs(String keyword, SearchType searchType, Pageable pageable, Long currentUserId) {
+        Page<Blog> blogs;
+
+        switch (searchType) {
+            case TITLE:
+                blogs = blogRepository.searchByTitle(keyword, pageable);
+                break;
+            case CONTENT:
+                blogs = blogRepository.searchByContent(keyword, pageable);
+                break;
+            case AUTHOR:
+                blogs = blogRepository.searchByAuthor(keyword, pageable);
+                break;
+            case TAG:
+                blogs = blogRepository.searchByTag(keyword, pageable);
+                break;
+            case ALL:
+            default:
+                blogs = blogRepository.searchByKeyword(keyword, pageable);
+                break;
+        }
+
+        return blogs.map(b -> buildBlogResponse(b, currentUserId));
     }
 
     // ========== Private Helper 메소드 ==========

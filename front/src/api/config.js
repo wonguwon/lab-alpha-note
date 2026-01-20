@@ -72,6 +72,7 @@ export const API_ENDPOINTS = {
   // Blog 관련
   BLOG: {
     BLOGS: '/blogs',
+    BLOG_SEARCH: '/blogs/search',
     BLOG_DETAIL: (id) => `/blogs/${id}`,
     BLOG_COMMENTS: (blogId) => `/blogs/${blogId}/comments`,
     BLOG_COMMENT_DETAIL: (commentId) => `/blogs/comments/${commentId}`,

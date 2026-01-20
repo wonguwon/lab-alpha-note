@@ -8,6 +8,8 @@ import com.alpha_note.core.blog.service.BlogService;
 import com.alpha_note.core.common.response.ApiResponse;
 import com.alpha_note.core.qna.dto.request.CreateQuestionRequest;
 import com.alpha_note.core.qna.dto.response.QuestionDetailResponse;
+import com.alpha_note.core.qna.dto.response.QuestionResponse;
+import com.alpha_note.core.qna.enums.SearchType;
 import com.alpha_note.core.user.entity.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -95,5 +97,21 @@ public class BlogController {
 
         BlogDetailResponse response = blogService.updateBlog(id, user.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("블로그가 성공적으로 수정되었습니다.", response));
+    }
+
+    /**
+     * 블로그 검색 (키워드 + 검색 타입)
+     * GET /api/v1/blogs/search?keyword=...&searchType=TITLE
+     */
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<Page<BlogResponse>>> searchBlogs(
+            @AuthenticationPrincipal User user,
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "ALL") SearchType searchType,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Long userId = (user != null) ? user.getId() : null;
+        Page<BlogResponse> response = blogService.searchBlogs(keyword, searchType, pageable, userId);
+        return ResponseEntity.ok(ApiResponse.success("블로그 검색 성공", response));
     }
 }

@@ -29,7 +29,11 @@ import {
   LikeCount,
   BlogInfoRow,
   TagList,
-  Tag
+  Tag,
+  SearchBox,
+  SearchTypeSelect,
+  SearchInput,
+  SearchButton,
 } from './BlogPage.styled';
 import { blogService } from '../../api/services';
 
@@ -43,6 +47,8 @@ const BlogPage = () => {
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
+    const [searchKeyword, setSearchKeyword] = useState('');
+    const [searchType, setSearchType] = useState('TAG');
 
 
     useEffect(() => {
@@ -53,13 +59,20 @@ const BlogPage = () => {
         setLoading(true);
         try {
             const params = {
-                page: 0, // 일단 첫 페이지만
+                page: 0,
                 size: 20,
-                sortType: sortType // LATEST, POPULAR, FEED 그대로 전달
+                sortType: sortType
             };
-            
+
             // API 호출
-            const response = await blogService.getBlogs(params);
+            let response;
+            if (searchKeyword.trim()) {
+                params.keyword = searchKeyword;
+                params.searchType = searchType;
+                response = await blogService.searchBlogs(params);
+            } else {
+                response = await blogService.getBlogs(params);
+            }
             
             // 응답 구조에 따라 데이터 설정 (Page 객체 가정)
             if (response && response.content) {
@@ -89,12 +102,26 @@ const BlogPage = () => {
         setSortType(type);
     };
 
+    const handleSearch = () => {
+        setPage(0);
+        loadBlogs();
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
 
 
     return (
         <BlogContainer>
             <BlogHeader>
                 <PageTitle>Blog</PageTitle>
+                {isAuthenticated && (
+                    <CreateButton onClick={handleCreatePost}>글 쓰기</CreateButton>
+                )}
             </BlogHeader>
 
             <FilterSection>
@@ -118,10 +145,26 @@ const BlogPage = () => {
                         피드
                     </FilterTab>
                 </FilterTabs>
-                {isAuthenticated && (
-                    <CreateButton onClick={handleCreatePost}>글 쓰기</CreateButton>
-                )}
 
+                <SearchBox>
+                    <SearchTypeSelect
+                        value={searchType}
+                        onChange={(e) => setSearchType(e.target.value)}
+                    >
+                        <option value="TAG">태그</option>
+                        <option value="TITLE">제목</option>
+                        <option value="CONTENT">내용</option>
+                        <option value="AUTHOR">작성자</option>
+                    </SearchTypeSelect>
+                    <SearchInput
+                        type="text"
+                        placeholder="검색어를 입력하세요..."
+                        value={searchKeyword}
+                        onChange={(e) => setSearchKeyword(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                    />
+                    <SearchButton onClick={handleSearch}>검색</SearchButton>
+                </SearchBox>
             </FilterSection>
 
             {loading ? (

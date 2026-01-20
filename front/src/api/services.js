@@ -375,6 +375,11 @@ export const blogService = {
     return await api.get(API_ENDPOINTS.BLOG.BLOGS, { params });
   },
 
+  // 블로그 검색 - 반환: Page<Blog>
+  searchBlogs: async (params = {}) => {
+    return await api.get(API_ENDPOINTS.BLOG.BLOG_SEARCH, { params });
+  },
+
   // 블로그 생성 - 반환: Blog 객체
   createBlog: async (data) => {
     return await api.post(API_ENDPOINTS.BLOG.BLOGS, data);
