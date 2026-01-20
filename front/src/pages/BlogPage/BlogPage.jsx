@@ -61,16 +61,33 @@ const BlogPage = () => {
             const params = {
                 page: 0,
                 size: 20,
-                sortType: sortType
             };
 
             // API 호출
             let response;
             if (searchKeyword.trim()) {
+                // 검색어가 있는 경우: 검색 API 호출 (/api/v1/blogs/search)
                 params.keyword = searchKeyword;
                 params.searchType = searchType;
+                params.sort = 'createdAt,desc';
+                
+                // 피드 탭에서 검색하는 경우 추천한 글만 검색되도록 처리
+                if (sortType === 'FEED') {
+                    params.votedByMe = true;
+                } else if (sortType === 'POPULAR') {
+                    params.sort = 'voteCount,desc';
+                } 
                 response = await blogService.searchBlogs(params);
             } else {
+                // 목록 조회 (LATEST, POPULAR, FEED) -> /api/v1/blogs 로 통일
+                if (sortType === 'FEED') {
+                    params.votedByMe = true;
+                    params.sort = 'createdAt,desc';
+                } else if (sortType === 'POPULAR') {
+                    params.sort = 'voteCount,desc';
+                } else {
+                    params.sort = 'createdAt,desc';
+                }
                 response = await blogService.getBlogs(params);
             }
             

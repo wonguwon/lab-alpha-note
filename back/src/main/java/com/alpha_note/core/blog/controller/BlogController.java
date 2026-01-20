@@ -35,12 +35,17 @@ public class BlogController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<BlogResponse>>> getBlogs(
             @AuthenticationPrincipal User user,
+            @RequestParam(required = false) Boolean votedByMe,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Long userId = (user != null) ? user.getId() : null;
 
-        Page<BlogResponse> response = blogService.getBlogs(pageable, userId);
-
+        Page<BlogResponse> response;
+        if (votedByMe != null) {
+            response = blogService.getFeedBlogs(pageable, userId);
+        } else {
+            response = blogService.getBlogs(pageable, userId);
+        }
         return ResponseEntity.ok(ApiResponse.success("블로그 목록 조회 성공", response));
     }
 
@@ -107,11 +112,19 @@ public class BlogController {
     public ResponseEntity<ApiResponse<Page<BlogResponse>>> searchBlogs(
             @AuthenticationPrincipal User user,
             @RequestParam String keyword,
+            @RequestParam(required = false) Boolean votedByMe,
             @RequestParam(defaultValue = "ALL") SearchType searchType,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Long userId = (user != null) ? user.getId() : null;
-        Page<BlogResponse> response = blogService.searchBlogs(keyword, searchType, pageable, userId);
+
+        Page<BlogResponse> response;
+        if (votedByMe != null) {
+            response =  blogService.searchFeedBlogs(keyword, searchType, pageable, userId);
+        } else {
+            response = blogService.searchBlogs(keyword, searchType, pageable, userId);
+        }
+
         return ResponseEntity.ok(ApiResponse.success("블로그 검색 성공", response));
     }
 }

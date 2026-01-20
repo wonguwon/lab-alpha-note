@@ -51,7 +51,16 @@ public class BlogService {
      */
     @Transactional(readOnly = true)
     public Page<BlogResponse> getBlogs(Pageable pageable, Long currentUserId) {
-        Page<Blog> blogs = blogRepository.findAllByIsDeletedFalseOrderByCreatedAtDesc(pageable);
+        Page<Blog> blogs = blogRepository.findAllByIsDeletedFalse(pageable);
+        return blogs.map(q -> buildBlogResponse(q, currentUserId));
+    }
+
+    /**
+     * 블로그 목록 조회 (페이징, 피드만)
+     */
+    @Transactional(readOnly = true)
+    public Page<BlogResponse> getFeedBlogs(Pageable pageable, Long currentUserId) {
+        Page<Blog> blogs = blogRepository.findAllWithVotesByUserId(currentUserId, pageable);
         return blogs.map(q -> buildBlogResponse(q, currentUserId));
     }
 
@@ -171,9 +180,6 @@ public class BlogService {
         Page<Blog> blogs;
 
         switch (searchType) {
-            case TITLE:
-                blogs = blogRepository.searchByTitle(keyword, pageable);
-                break;
             case CONTENT:
                 blogs = blogRepository.searchByContent(keyword, pageable);
                 break;
@@ -183,9 +189,35 @@ public class BlogService {
             case TAG:
                 blogs = blogRepository.searchByTag(keyword, pageable);
                 break;
-            case ALL:
+            case TITLE:
             default:
-                blogs = blogRepository.searchByKeyword(keyword, pageable);
+                blogs = blogRepository.searchByTitle(keyword, pageable);
+                break;
+        }
+
+        return blogs.map(b -> buildBlogResponse(b, currentUserId));
+    }
+
+    /**
+     * 피드 블로그 검색 (키워드 + 검색 타입)
+     */
+    @Transactional(readOnly = true)
+    public Page<BlogResponse> searchFeedBlogs(String keyword, SearchType searchType, Pageable pageable, Long currentUserId) {
+        Page<Blog> blogs;
+
+        switch (searchType) {
+            case CONTENT:
+                blogs = blogRepository.searchWithVotesByContent(keyword, currentUserId, pageable);
+                break;
+            case AUTHOR:
+                blogs = blogRepository.searchWithVotesByAuthor(keyword, currentUserId, pageable);
+                break;
+            case TAG:
+                blogs = blogRepository.searchWithVotesByTag(keyword, currentUserId, pageable);
+                break;
+            case TITLE:
+            default:
+                blogs = blogRepository.searchWithVotesByTitle(keyword, currentUserId, pageable);
                 break;
         }
 

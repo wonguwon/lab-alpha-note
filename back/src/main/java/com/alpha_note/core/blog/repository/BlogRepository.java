@@ -18,11 +18,7 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     Optional<Blog> findByIdAndIsDeletedFalse(Long id);
 
     // 전체 질문 페이징 조회 (활성만, 최신순)
-    Page<Blog> findAllByIsDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
-
-    // 제목 + 내용 검색 (JPQL)
-    @Query("SELECT b FROM Blog b WHERE (b.title LIKE %:keyword% OR b.content LIKE %:keyword%) AND b.isDeleted = false")
-    Page<Blog> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+    Page<Blog> findAllByIsDeletedFalse(Pageable pageable);
 
     // 제목만 검색
     @Query("SELECT b FROM Blog b WHERE b.title LIKE %:keyword% AND b.isDeleted = false")
@@ -41,4 +37,27 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
             "WHERE b.isDeleted = false and t.name = :keyword AND t.isDeleted = false")
     Page<Blog> searchByTag(@Param("keyword") String keyword, Pageable pageable);
 
+    // 피드 목록 - 투표한 건만 검색
+    @Query("SELECT b FROM Blog b JOIN BlogVote v ON b.id = v.blogId WHERE b.isDeleted = false and v.userId = :userId")
+    Page<Blog> findAllWithVotesByUserId(Long userId, Pageable pageable);
+
+    // 제목만 검색
+    @Query("SELECT b FROM Blog b JOIN BlogVote v ON b.id = v.blogId " +
+            "WHERE b.isDeleted = false and b.title LIKE %:keyword% AND v.userId = :userId")
+    Page<Blog> searchWithVotesByTitle(@Param("keyword") String keyword, Long userId, Pageable pageable);
+
+    // 내용만 검색
+    @Query("SELECT b FROM Blog b JOIN BlogVote v ON b.id = v.blogId " +
+            "WHERE b.isDeleted = false and b.content LIKE %:keyword% AND b.isDeleted = false AND v.userId = :userId")
+    Page<Blog> searchWithVotesByContent(@Param("keyword") String keyword, Long userId, Pageable pageable);
+
+    // 작성자 닉네임으로 검색
+    @Query("SELECT b FROM Blog b JOIN User u ON b.userId = u.id JOIN BlogVote v ON b.id = v.blogId " +
+            "WHERE b.isDeleted = false AND u.nickname LIKE %:keyword% AND v.userId = :userId")
+    Page<Blog> searchWithVotesByAuthor(@Param("keyword") String keyword, Long userId, Pageable pageable);
+
+    // 태그명으로 검색
+    @Query("SELECT b FROM Blog b JOIN BlogTag bt ON b.id = bt.blogId JOIN Tag t ON bt.tagId = t.id JOIN BlogVote v ON b.id = v.blogId " +
+            "WHERE b.isDeleted = false and t.name = :keyword AND t.isDeleted = false AND v.userId = :userId")
+    Page<Blog> searchWithVotesByTag(@Param("keyword") String keyword, Long userId, Pageable pageable);
 }
