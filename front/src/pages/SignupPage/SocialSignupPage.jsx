@@ -49,7 +49,7 @@ const SocialSignupPage = () => {
   };
 
   const { isOpen: isAlertOpen, showAlert, alertProps } = useAlert();
-  const { login } = useAuthStore();
+  const { login, setUser } = useAuthStore();
 
   useEffect(() => {
     // URL에서 tempToken과 email 추출
@@ -97,14 +97,18 @@ const SocialSignupPage = () => {
     setIsLoading(true);
 
     try {
-      const data = await authService.oauth2Register(
+      await authService.oauth2Register(
         tempToken,
         nickname.value,
         emailSubscribed
       );
 
+      // 사용자 정보 로드 (쿠키가 자동으로 설정됨)
+      const userData = await authService.getUserInfo();
+      setUser(userData);
+      
       // 로그인 처리
-      login(data.token);
+      login();
 
       showAlert('회원가입이 완료되었습니다.', {
         variant: 'success',

@@ -9,6 +9,8 @@ import com.alpha_note.core.qna.dto.response.CommentResponse;
 import com.alpha_note.core.qna.entity.Answer;
 import com.alpha_note.core.qna.entity.AnswerComment;
 import com.alpha_note.core.qna.entity.Question;
+import com.alpha_note.core.notification.enums.NotificationType;
+import com.alpha_note.core.notification.service.NotificationService;
 import com.alpha_note.core.qna.repository.*;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class AnswerService {
     private final AnswerVoteRepository answerVoteRepository;
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     /**
      * 답변 작성
@@ -58,6 +61,18 @@ public class AnswerService {
         // 질문의 답변 수 증가
         question.incrementAnswerCount();
         questionRepository.save(question);
+
+        // 알림 생성 (질문 작성자에게, 질문 작성자가 답변 작성자가 아닌 경우)
+        if (!question.getUserId().equals(userId)) {
+            notificationService.createNotification(
+                    question.getUserId(),
+                    NotificationType.NEW_ANSWER,
+                    NotificationType.NEW_ANSWER.getTitle(),
+                    String.format("질문 '%s'에 새로운 답변이 작성되었습니다.", question.getTitle()),
+                    "QUESTION",
+                    questionId
+            );
+        }
 
         log.info("답변 작성 완료 - answerId: {}, questionId: {}, userId: {}", savedAnswer.getId(), questionId, userId);
 

@@ -6,15 +6,13 @@ const useAuthStore = create(
     (set, get) => ({
       // 상태
       user: null,
-      token: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
 
-      // 로그인 액션 (토큰만 저장)
-      login: (token) => {
+      // 로그인 액션 (쿠키가 자동으로 설정되므로 사용자 정보만 저장)
+      login: () => {
         set({
-          token,
           isAuthenticated: true,
           error: null
         });
@@ -24,7 +22,6 @@ const useAuthStore = create(
       logout: () => {
         set({
           user: null,
-          token: null,
           isAuthenticated: false,
           error: null
         });
@@ -32,7 +29,10 @@ const useAuthStore = create(
 
       // 사용자 정보 업데이트
       setUser: (user) => {
-        set({ user });
+        set({ 
+          user,
+          isAuthenticated: !!user
+        });
       },
 
       // 로딩 상태 설정
@@ -52,14 +52,13 @@ const useAuthStore = create(
 
       // 인증 상태 확인
       checkAuth: () => {
-        const { token } = get();
-        return !!token;
+        const { user, isAuthenticated } = get();
+        return !!user || isAuthenticated;
       },
     }),
     {
       name: 'auth-storage', // localStorage key
       partialize: (state) => ({
-        token: state.token,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),

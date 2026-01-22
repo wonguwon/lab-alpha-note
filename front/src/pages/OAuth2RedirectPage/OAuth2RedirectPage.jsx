@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
+import { authService } from '../../api/services';
 import { Loading } from '../../components/common/Loading';
 import {
   RedirectContainer,
@@ -14,7 +15,7 @@ const OAuth2RedirectPage = () => {
   const [message, setMessage] = useState('로그인 처리 중...');
   const [isError, setIsError] = useState(false);
 
-  const { login, setLoading, setError } = useAuthStore();
+  const { login, setUser, setLoading, setError } = useAuthStore();
 
   useEffect(() => {
     const processOAuth2Login = async () => {
@@ -62,18 +63,27 @@ const OAuth2RedirectPage = () => {
           return;
         }
 
-        // 정식 토큰이 있는 경우 (로그인 완료)
-        if (token) {
-          // 토큰 저장 (사용자 정보는 App.jsx에서 자동 로드)
-          login(token);
+        // 정식 토큰이 있거나 success 파라미터가 있는 경우 (로그인 완료)
+        // OAuth2 로그인은 쿠키가 자동으로 설정되므로 토큰은 무시
+        // 사용자 정보를 가져와서 저장
+        const success = searchParams.get('success');
+        if (token || success === 'true') {
+          try {
+            const userData = await authService.getUserInfo();
+            setUser(userData);
+            login();
 
-          setMessage('로그인 성공! 메인 페이지로 이동합니다...');
+            setMessage('로그인 성공! 메인 페이지로 이동합니다...');
 
-          // 1초 후 홈페이지로 리다이렉트
-          setTimeout(() => {
-            navigate('/');
-          }, 1000);
-          return;
+            // 1초 후 홈페이지로 리다이렉트
+            setTimeout(() => {
+              navigate('/');
+            }, 1000);
+            return;
+          } catch (error) {
+            console.error('사용자 정보 로드 실패:', error);
+            throw error;
+          }
         }
 
         // 토큰이 없는 경우

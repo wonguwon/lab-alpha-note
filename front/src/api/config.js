@@ -82,4 +82,12 @@ export const API_ENDPOINTS = {
   SUPPORT: {
     CONTACT: '/support/contact',
   },
+  // 알림 관련
+  NOTIFICATION: {
+    STREAM: '/notifications/stream',
+    NOTIFICATIONS: '/notifications',
+    UNREAD_COUNT: '/notifications/unread-count',
+    MARK_AS_READ: (id) => `/notifications/${id}/read`,
+    MARK_ALL_AS_READ: '/notifications/read-all',
+  },
 };
