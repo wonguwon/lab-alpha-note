@@ -320,3 +320,71 @@ export const FeatureDescription = styled.p`
   color: ${props => props.theme.colors.gray[600]};
   line-height: ${props => props.theme.fonts.lineHeight.relaxed};
 `;
+
+/* 목표 섹션 */
+export const GoalSection = styled.div`
+  background: ${props => props.theme.colors.white};
+  border-radius: ${props => props.theme.borderRadius.xl};
+  padding: ${props => props.theme.spacing[6]};
+  box-shadow: ${props => props.theme.shadows.sm};
+  margin-bottom: ${props => props.theme.spacing[8]};
+`;
+
+export const GoalUserTitle = styled.h4`
+  font-size: ${props => props.theme.fonts.size.lg};
+  font-weight: ${props => props.theme.fonts.weight.semibold};
+  color: ${props => props.theme.colors.gray[900]};
+  margin: 0 0 ${props => props.theme.spacing[4]} 0;
+`;
+
+export const GoalListHome = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: ${props => props.theme.spacing[4]};
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: 1fr;
+    gap: ${props => props.theme.spacing[3]};
+  }
+`;
+
+export const GoalItemHome = styled.div`
+  position: relative;
+  background: ${props => props.$completed ? props.theme.colors.success[50] : props.theme.colors.white};
+  border: 2px solid ${props => props.$completed ? props.theme.colors.success[300] : props.theme.colors.gray[300]};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  padding: ${props => props.theme.spacing[5]};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    border-color: ${props => props.$completed ? props.theme.colors.success[400] : props.theme.colors.primary[500]};
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+  }
+
+  ${props => props.$completed && `
+    box-shadow: 0 2px 4px -1px rgba(5, 150, 105, 0.1), 0 1px 2px -1px rgba(5, 150, 105, 0.06);
+  `}
+`;
+
+export const GoalCheckboxHome = styled.input`
+  width: 18px;
+  height: 18px;
+  cursor: ${props => props.$disabled ? 'not-allowed' : 'pointer'};
+  flex-shrink: 0;
+`;
+
+export const GoalTextHome = styled.span`
+  text-align: center;
+  font-size: ${props => props.theme.fonts.size.base};
+  color: ${props => props.$completed ? props.theme.colors.success[700] : props.theme.colors.gray[900]};
+  font-weight: ${props => props.$completed ? props.theme.fonts.weight.semibold : props.theme.fonts.weight.medium};
+  text-decoration: none;
+  line-height: 1.5;
+  word-break: break-word;
+`;

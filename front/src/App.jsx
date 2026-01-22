@@ -18,6 +18,7 @@ import HabitCreatePage from './pages/HabitPage/HabitCreatePage';
 import HabitDetailPage from './pages/HabitPage/HabitDetailPage';
 import QnAPage, { AskQuestionPage, QuestionDetailPage, AnswerPage, EditQuestionPage, EditAnswerPage } from './pages/QnAPage';
 import NotificationPage from './pages/NotificationPage';
+import GoalPage from './pages/GoalPage';
 import useAuthStore from './store/authStore';
 import useNotificationStore from './store/notificationStore';
 import { setAuthStoreGetter } from './api/axios';
@@ -96,6 +97,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
+          <Route path="/goals" element={<ProtectedRoute><GoalPage /></ProtectedRoute>} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsPage />} />
