@@ -12,6 +12,7 @@ export const QnAContainer = styled.div`
 export const QnAHeader = styled.div`
   ${flexBetween}
   margin-bottom: ${props => props.theme.spacing[6]};
+  gap: ${props => props.theme.spacing[3]};
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     flex-direction: column;
@@ -20,12 +21,42 @@ export const QnAHeader = styled.div`
   }
 `;
 
-/* 제목 및 통계 영역 */
-export const TitleSection = styled.div`
-  ${flexColumn}
-  gap: ${props => props.theme.spacing[2]};
+export const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[3]};
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    width: 100%;
+  }
 `;
 
+export const ToggleGroup = styled.div`
+  display: flex;
+  background: ${props => props.theme.colors.gray[100]};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  padding: ${props => props.theme.spacing[1]};
+`;
+
+export const ToggleButton = styled.button`
+  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[4]};
+  background: ${props => props.$active ? props.theme.colors.white : 'transparent'};
+  color: ${props => props.$active ? props.theme.colors.primary[600] : props.theme.colors.gray[600]};
+  border: none;
+  border-radius: ${props => props.theme.borderRadius.base};
+  font-weight: ${props => props.$active ? props.theme.fonts.weight.semibold : props.theme.fonts.weight.medium};
+  font-size: ${props => props.theme.fonts.size.sm};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+  white-space: nowrap;
+  box-shadow: ${props => props.$active ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'};
+
+  &:hover {
+    color: ${props => props.theme.colors.primary[600]};
+  }
+`;
+
+/* 제목 및 통계 영역 */
 export const PageTitle = styled.h1`
   font-size: ${props => props.theme.fonts.size['3xl']};
   font-weight: ${props => props.theme.fonts.weight.bold};
@@ -61,20 +92,25 @@ export const AskButton = styled.button`
 
 /* 필터 및 검색 영역 */
 export const FilterSection = styled.div`
-  ${flexColumn}
-  margin-bottom: ${props => props.theme.spacing[4]};
-  padding: ${props => props.theme.spacing[4]};
-  background: ${props => props.theme.colors.gray[50]};
-  border-radius: ${props => props.theme.borderRadius.lg};
-  gap: ${props => props.theme.spacing[3]};
+  ${flexBetween}
+  margin-bottom: ${props => props.theme.spacing[6]};
+  gap: ${props => props.theme.spacing[4]};
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 `;
 
 export const FilterTabs = styled.div`
   display: flex;
   gap: ${props => props.theme.spacing[2]};
+  background: ${props => props.theme.colors.gray[100]};
+  padding: ${props => props.theme.spacing[1]};
+  border-radius: ${props => props.theme.borderRadius.lg};
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    overflow-x: auto;
+    width: 100%;
   }
 `;
 
@@ -82,43 +118,31 @@ export const FilterTab = styled.button`
   padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[4]};
   background: ${props => props.$active ? props.theme.colors.white : 'transparent'};
   color: ${props => props.$active ? props.theme.colors.primary[600] : props.theme.colors.gray[600]};
-  border: 1px solid ${props => props.$active ? props.theme.colors.primary[600] : 'transparent'};
+  border: none;
   border-radius: ${props => props.theme.borderRadius.base};
   font-weight: ${props => props.$active ? props.theme.fonts.weight.semibold : props.theme.fonts.weight.medium};
   font-size: ${props => props.theme.fonts.size.sm};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.base};
   white-space: nowrap;
+  box-shadow: ${props => props.$active ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'};
 
-  &:hover:not(:disabled) {
-    background: ${props => props.theme.colors.white};
-    border-color: ${props => props.theme.colors.gray[300]};
+  &:hover {
+    color: ${props => props.theme.colors.primary[600]};
   }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-export const SearchRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing[3]};
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    flex-direction: column;
-    align-items: stretch;
+    flex: 1;
   }
 `;
 
 export const SearchBox = styled.div`
   display: flex;
   gap: ${props => props.theme.spacing[2]};
-  flex: 1;
+  align-items: center;
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    max-width: 100%;
+    width: 100%;
   }
 `;
 
@@ -127,38 +151,44 @@ export const SearchTypeSelect = styled.select`
   border: 1px solid ${props => props.theme.colors.gray[300]};
   border-radius: ${props => props.theme.borderRadius.base};
   font-size: ${props => props.theme.fonts.size.sm};
+  color: ${props => props.theme.colors.gray[700]};
   background: ${props => props.theme.colors.white};
   cursor: pointer;
-  min-width: 100px;
+  transition: all ${props => props.theme.transitions.base};
 
   &:focus {
     outline: none;
     border-color: ${props => props.theme.colors.primary[500]};
+    box-shadow: 0 0 0 3px ${props => props.theme.colors.primary[100]};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    width: 90px;
   }
 `;
 
 export const SearchInput = styled.input`
-  flex: 1;
-  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
+  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[4]};
   border: 1px solid ${props => props.theme.colors.gray[300]};
   border-radius: ${props => props.theme.borderRadius.base};
   font-size: ${props => props.theme.fonts.size.sm};
-  background: ${props => props.theme.colors.white};
-
-  &:focus {
-    outline: none;
-    border-color: ${props => props.theme.colors.primary[500]};
-  }
+  min-width: 240px;
+  transition: all ${props => props.theme.transitions.base};
 
   &::placeholder {
     color: ${props => props.theme.colors.gray[400]};
   }
-`;
 
-export const SearchResultCount = styled.span`
-  color: ${props => props.theme.colors.gray[600]};
-  font-size: ${props => props.theme.fonts.size.sm};
-  white-space: nowrap;
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.primary[500]};
+    box-shadow: 0 0 0 3px ${props => props.theme.colors.primary[100]};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    min-width: auto;
+    flex: 1;
+  }
 `;
 
 export const SearchButton = styled.button`
@@ -171,9 +201,14 @@ export const SearchButton = styled.button`
   font-size: ${props => props.theme.fonts.size.sm};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.base};
+  white-space: nowrap;
 
   &:hover {
     background: ${props => props.theme.colors.primary[700]};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
   }
 `;
 

@@ -1,5 +1,6 @@
 package com.alpha_note.core.qna.dto.response;
 
+import com.alpha_note.core.blog.entity.BlogComment;
 import com.alpha_note.core.qna.entity.AnswerComment;
 import com.alpha_note.core.qna.entity.QuestionComment;
 import lombok.AllArgsConstructor;

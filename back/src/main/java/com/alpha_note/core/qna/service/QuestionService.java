@@ -1,14 +1,17 @@
 package com.alpha_note.core.qna.service;
 
+import com.alpha_note.core.common.entity.Tag;
 import com.alpha_note.core.common.exception.CustomException;
 import com.alpha_note.core.common.exception.ErrorCode;
+import com.alpha_note.core.common.repository.TagRepository;
 import com.alpha_note.core.qna.dto.request.CreateQuestionRequest;
 import com.alpha_note.core.qna.dto.request.UpdateQuestionRequest;
 import com.alpha_note.core.qna.dto.response.*;
 import com.alpha_note.core.qna.entity.*;
 import com.alpha_note.core.qna.enums.SearchType;
+import com.alpha_note.core.notification.enums.NotificationType;
+import com.alpha_note.core.notification.service.NotificationService;
 import com.alpha_note.core.qna.repository.*;
-import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,6 +37,7 @@ public class QuestionService {
     private final AnswerCommentRepository answerCommentRepository;
     private final AnswerVoteRepository answerVoteRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
     private final ViewCountService viewCountService;
 
     /**
@@ -146,7 +148,7 @@ public class QuestionService {
      */
     @Transactional(readOnly = true)
     public Page<QuestionResponse> getUnansweredQuestions(Pageable pageable, Long currentUserId) {
-        Page<Question> questions = questionRepository.findByIsAnsweredAndIsDeletedFalse(false, pageable);
+        Page<Question> questions = questionRepository.findByIsAnsweredAndIsDeletedFalseOrderByCreatedAtDesc(false, pageable);
         return questions.map(q -> buildQuestionResponse(q, currentUserId));
     }
 
@@ -245,6 +247,16 @@ public class QuestionService {
 
         questionRepository.save(question);
         answerRepository.save(answer);
+
+        // 알림 생성 (답변 작성자에게)
+        notificationService.createNotification(
+                answer.getUserId(),
+                NotificationType.ANSWER_ACCEPTED,
+                NotificationType.ANSWER_ACCEPTED.getTitle(),
+                String.format("질문 '%s'에서 답변이 채택되었습니다.", question.getTitle()),
+                "ANSWER",
+                answerId
+        );
 
         log.info("답변 채택 완료 - questionId: {}, answerId: {}", questionId, answerId);
     }

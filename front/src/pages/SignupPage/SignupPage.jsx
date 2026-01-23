@@ -5,8 +5,10 @@ import { authService } from '../../api/services';
 import { validatePassword, PASSWORD_RULES } from '../../utils/passwordValidator';
 import { Alert } from '../../components/common/Modal';
 import { useAlert } from '../../hooks/useModal';
+import { ButtonSpinner } from '../../components/common/Loading';
 import TermsModal from './TermsModal';
 import PrivacyModal from './PrivacyModal';
+import GoogleIcon from '../../assets/icons/google_login.svg';
 import {
   SignupContainer,
   SignupCard,
@@ -27,6 +29,7 @@ import {
   Checkbox,
   LoginLink
 } from './SignupPage.styled';
+import { Divider, GoogleLoginButton } from '../LoginPage/LoginPage.styled';
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -45,9 +48,23 @@ const SignupPage = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  
+  // 필드별 에러 메시지
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [nicknameError, setNicknameError] = useState('');
+  const [generalError, setGeneralError] = useState('');
+  
   const [passwordValidation, setPasswordValidation] = useState(null);
   const [showPasswordRules, setShowPasswordRules] = useState(false);
+
+  // 모든 에러 초기화 헬퍼 함수
+  const clearAllErrors = () => {
+    setEmailError('');
+    setPasswordError('');
+    setNicknameError('');
+    setGeneralError('');
+  };
 
   // 비밀번호 실시간 검증
   useEffect(() => {
@@ -66,43 +83,51 @@ const SignupPage = () => {
       setIsCodeSent(false);
       setIsEmailVerified(false);
       verificationCode.reset();
-      setErrorMessage('');
+      setEmailError('');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // 모든 에러 초기화
+    clearAllErrors();
+
     // 유효성 검사
+    let hasError = false;
+
     if (!isEmailVerified) {
-      setErrorMessage('이메일 인증을 완료해주세요.');
-      return;
+      setEmailError('이메일 인증을 완료해주세요.');
+      hasError = true;
     }
 
     // 비밀번호 검증
     const passwordCheck = validatePassword(password.value, email.value);
     if (!passwordCheck.isValid) {
-      setErrorMessage('비밀번호가 보안 요구사항을 충족하지 않습니다.');
-      return;
+      setPasswordError('비밀번호가 보안 요구사항을 충족하지 않습니다.');
+      hasError = true;
     }
 
     if (password.value !== confirmPassword.value) {
-      setErrorMessage('비밀번호가 일치하지 않습니다.');
-      return;
+      setPasswordError('비밀번호가 일치하지 않습니다.');
+      hasError = true;
     }
 
     if (!nickname.value.trim()) {
-      setErrorMessage('닉네임을 입력해주세요.');
-      return;
+      setNicknameError('닉네임을 입력해주세요.');
+      hasError = true;
     }
 
     if (nickname.value.length > 20) {
-      setErrorMessage('닉네임은 최대 20자까지 입력 가능합니다.');
+      setNicknameError('닉네임은 최대 20자까지 입력 가능합니다.');
+      hasError = true;
+    }
+
+    if (hasError) {
       return;
     }
 
     setIsLoading(true);
-    setErrorMessage('');
 
     try {
       const registerData = {
@@ -118,7 +143,7 @@ const SignupPage = () => {
         onClose: () => navigate('/login')
       });
     } catch (error) {
-      setErrorMessage(error.message);
+      setGeneralError(error.message || '회원가입에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -126,19 +151,19 @@ const SignupPage = () => {
 
   const handleSendVerificationCode = async () => {
     if (!email.value) {
-      setErrorMessage('이메일을 입력해주세요.');
+      setEmailError('이메일을 입력해주세요.');
       return;
     }
 
     setIsLoading(true);
-    setErrorMessage('');
+    setEmailError('');
 
     try {
       // 이메일 중복 확인 - 반환: { available }
       const checkData = await authService.checkEmailAvailability(email.value);
 
       if (!checkData.available) {
-        setErrorMessage('이미 가입된 이메일입니다.');
+        setEmailError('이미 가입된 이메일입니다.');
         setIsLoading(false);
         return;
       }
@@ -148,7 +173,7 @@ const SignupPage = () => {
       setIsCodeSent(true);
       showAlert('인증 코드가 이메일로 전송되었습니다.');
     } catch (error) {
-      setErrorMessage(error.message);
+      setEmailError(error.message || '이메일 인증 코드 발송에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -156,12 +181,12 @@ const SignupPage = () => {
 
   const handleVerifyCode = async () => {
     if (!verificationCode.value) {
-      setErrorMessage('인증 코드를 입력해주세요.');
+      setEmailError('인증 코드를 입력해주세요.');
       return;
     }
 
     setIsLoading(true);
-    setErrorMessage('');
+    setEmailError('');
 
     try {
       await authService.verifyEmail(email.value, verificationCode.value);
@@ -169,7 +194,7 @@ const SignupPage = () => {
       setVerifiedEmail(email.value);
       showAlert('이메일 인증이 완료되었습니다.', { variant: 'success' });
     } catch (error) {
-      setErrorMessage(error.message);
+      setEmailError(error.message || '이메일 인증에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -181,6 +206,12 @@ const SignupPage = () => {
 
   const handlePrivacyClick = () => {
     setShowPrivacyModal(true);
+  };
+
+  const handleGoogleSignup = () => {
+    // 서버의 OAuth2 인증 엔드포인트로 리다이렉트 (google-signup registration 사용)
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+    window.location.href = `${apiUrl}/oauth2/authorization/google-signup`;
   };
 
   return (
@@ -213,12 +244,21 @@ const SignupPage = () => {
                 onClick={handleSendVerificationCode}
                 disabled={!email.value || isCodeSent || isLoading || isEmailVerified}
               >
-                {isLoading ? '발송 중...' : isCodeSent ? '전송완료' : '인증코드 발송'}
+                {isLoading ? (
+                  <>
+                    발송 중
+                    <ButtonSpinner size="small" />
+                  </>
+                ) : isCodeSent ? (
+                  '전송완료'
+                ) : (
+                  '코드발송'
+                )}
               </VerifyButton>
             </div>
-            {errorMessage && (
+            {emailError && (
               <div style={{ color: '#e74c3c', fontSize: '0.875rem', marginTop: '4px' }}>
-                {errorMessage}
+                {emailError}
               </div>
             )}
           </EmailInputGroup>
@@ -241,7 +281,14 @@ const SignupPage = () => {
                   onClick={handleVerifyCode}
                   disabled={!verificationCode.value || isLoading}
                 >
-                  {isLoading ? '확인 중...' : '확인'}
+                  {isLoading ? (
+                    <>
+                      확인 중
+                      <ButtonSpinner size="small" />
+                    </>
+                  ) : (
+                    '확인'
+                  )}
                 </VerifyButton>
               </div>
             </EmailInputGroup>
@@ -296,6 +343,11 @@ const SignupPage = () => {
                 })}
               </div>
             )}
+            {passwordError && (
+              <div style={{ color: '#e74c3c', fontSize: '0.875rem', marginTop: '8px' }}>
+                {passwordError}
+              </div>
+            )}
           </InputGroup>
 
           <InputGroup>
@@ -330,6 +382,11 @@ const SignupPage = () => {
               {...nickname.bind}
               required
             />
+            {nicknameError && (
+              <div style={{ color: '#e74c3c', fontSize: '0.875rem', marginTop: '8px' }}>
+                {nicknameError}
+              </div>
+            )}
           </InputGroup>
 
           <CheckboxGroup>
@@ -349,10 +406,40 @@ const SignupPage = () => {
             </TermsText>
           </TermsSection>
 
+          {generalError && (
+            <div style={{ 
+              color: '#e74c3c', 
+              fontSize: '0.875rem', 
+              marginTop: '16px',
+              padding: '12px',
+              backgroundColor: '#fee2e2',
+              borderRadius: '6px',
+              border: '1px solid #fecaca'
+            }}>
+              {generalError}
+            </div>
+          )}
+
           <SignupButton type="submit" disabled={!isEmailVerified || isLoading}>
-            {isLoading ? '가입 중...' : '회원가입'}
+            {isLoading ? (
+              <>
+                가입 중
+                <ButtonSpinner size="small" />
+              </>
+            ) : (
+              '회원가입'
+            )}
           </SignupButton>
         </SignupForm>
+
+        <Divider>
+          <span>또는</span>
+        </Divider>
+
+        <GoogleLoginButton onClick={handleGoogleSignup}>
+          <img src={GoogleIcon} alt="Google" width="18" height="18" />
+          Google 계정으로 회원가입
+        </GoogleLoginButton>
 
         <LoginLink>
           <span>이미 계정이 있으신가요?</span>

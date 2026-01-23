@@ -5,8 +5,10 @@ import useAuthStore from '../../store/authStore';
 import {
   QnAContainer,
   QnAHeader,
-  TitleSection,
   PageTitle,
+  HeaderActions,
+  ToggleGroup,
+  ToggleButton,
   AskButton,
   FilterSection,
   FilterTabs,
@@ -42,12 +44,13 @@ import {
 
 const QnAPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [questions, setQuestions] = useState([]);
   const [totalElements, setTotalElements] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [filter, setFilter] = useState('latest');
+  const [viewMode, setViewMode] = useState('all'); // 'my' or 'all'
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchType, setSearchType] = useState('TITLE');
   const [loading, setLoading] = useState(false);
@@ -55,7 +58,7 @@ const QnAPage = () => {
   // 질문 목록 조회
   useEffect(() => {
     loadQuestions();
-  }, [currentPage, filter]);
+  }, [currentPage, filter, viewMode, isAuthenticated, user]);
 
   const loadQuestions = async () => {
     setLoading(true);
@@ -73,9 +76,15 @@ const QnAPage = () => {
         params.sort = getSortParam(filter);
         data = await qnaService.searchQuestions(params);
       } else {
-        // 목록 API 사용 (필터에 따른 정렬)
+        // viewMode에 따라 다른 API 사용
         params.sort = getSortParam(filter);
-        data = await qnaService.getQuestions(params);
+        if (isAuthenticated && viewMode === 'my' && user?.id) {
+          // 내 질문 조회
+          data = await qnaService.getQuestionsByUser(user.id, params);
+        } else {
+          // 모든 질문 조회
+          data = await qnaService.getQuestions(params);
+        }
       }
 
       setQuestions(data.content || []);
@@ -192,10 +201,34 @@ const QnAPage = () => {
     <QnAContainer>
       {/* 헤더 */}
       <QnAHeader>
-        <TitleSection>
-          <PageTitle>Q&A</PageTitle>
-        </TitleSection>
-        <AskButton onClick={handleAskQuestion}>질문하기</AskButton>
+        <PageTitle>Q&A</PageTitle>
+        <HeaderActions>
+          {isAuthenticated && (
+            <ToggleGroup>
+              <ToggleButton
+                $active={viewMode === 'all'}
+                onClick={() => {
+                  setViewMode('all');
+                  setCurrentPage(0);
+                }}
+              >
+                모든 질문
+              </ToggleButton>
+              <ToggleButton
+                $active={viewMode === 'my'}
+                onClick={() => {
+                  setViewMode('my');
+                  setCurrentPage(0);
+                }}
+              >
+                내 질문
+              </ToggleButton>
+            </ToggleGroup>
+          )}
+          {isAuthenticated && (
+            <AskButton onClick={handleAskQuestion}>질문하기</AskButton>
+          )}
+        </HeaderActions>
       </QnAHeader>
 
       {/* 필터 및 검색 */}
@@ -243,16 +276,20 @@ const QnAPage = () => {
       {/* 질문 목록 */}
       {loading ? (
         <EmptyState>
-          <EmptyDescription>로딩 중...</EmptyDescription>
+          <EmptyDescription>질문 목록을 불러오는 중...</EmptyDescription>
         </EmptyState>
       ) : questions.length === 0 ? (
         <EmptyState>
           <EmptyIcon>💬</EmptyIcon>
           <EmptyTitle>아직 질문이 없습니다</EmptyTitle>
           <EmptyDescription>
-            첫 번째 질문을 올려보세요!
+            {isAuthenticated
+              ? '첫 번째 질문을 올려보세요!'
+              : '로그인하고 질문을 올려보세요!'}
           </EmptyDescription>
-          <AskButton onClick={handleAskQuestion}>질문하기</AskButton>
+          {isAuthenticated && (
+            <AskButton onClick={handleAskQuestion}>질문하기</AskButton>
+          )}
         </EmptyState>
       ) : (
         <>

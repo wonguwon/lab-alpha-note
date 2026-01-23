@@ -13,74 +13,179 @@ export const setAuthStoreGetter = (getter) => {
   getAuthStore = getter;
 };
 
-// Request 인터셉터 - 토큰 자동 첨부
+// Request 인터셉터
+// 쿠키가 자동으로 전송되므로 Authorization 헤더를 별도로 설정하지 않음
+// (하위 호환성을 위해 필요 시 헤더 기반 인증도 지원 가능)
 api.interceptors.request.use(
   (config) => {
-    if (getAuthStore) {
-      const token = getAuthStore().token;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
+    // withCredentials 설정 (쿠키 전송을 위해 필요)
+    config.withCredentials = true;
     return config;
   },
   (error) => Promise.reject(error)
 );
 
+// 공개 페이지 목록 (인증 없이 접근 가능한 페이지)
+const PUBLIC_PAGES = ['/login', '/signup', '/', '/qna', '/habits'];
+
+// 리프레시 시도하지 않을 엔드포인트 목록
+const REFRESH_EXCLUDED_ENDPOINTS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/oauth2/register',
+  '/auth/recover',
+  '/auth/me'  // 초기 인증 직후 호출 시 쿠키 전파 타이밍 이슈 방지
+];
+
+// 리프레시 토큰 갱신 중 플래그 (무한 루프 방지)
+let isRefreshing = false;
+let failedQueue = [];
+
+// 에러 객체 생성 헬퍼 함수 (중복 제거)
+const createStandardError = (error, data, status) => {
+  const errorMessage = data?.message || getDefaultErrorMessage(status);
+  const standardError = new Error(errorMessage);
+  standardError.response = {
+    status: error.response.status,
+    statusText: error.response.statusText,
+    headers: error.response.headers,
+    data: {
+      ...data,
+      message: errorMessage,
+      errorCode: data?.errorCode || data?.code,
+      status: status
+    }
+  };
+  return standardError;
+};
+
+// 대기 중인 요청 처리
+const processQueue = (error) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
+    }
+  });
+  failedQueue = [];
+};
+
 // Response 인터셉터 - 에러 처리 및 응답 형식 통일
 api.interceptors.response.use(
   (response) => {
-    const data = response.data;
-
-    // 서버 응답 형식: { status: 'success'|'error', message, data, code }
-    // 또는 구 형식: { success: true|false, message, data, errorCode }
-
-    const isSuccess = data.status === 'success' || data.success === true;
-
-    if (!isSuccess) {
-      // 성공이 아닌 응답을 에러로 변환
-      const error = new Error(data.message || '요청 처리 실패');
-      error.response = {
-        data: {
-          message: data.message,
-          errorCode: data.errorCode,
-          status: response.status,
-          data: data.data
-        }
-      };
-      return Promise.reject(error);
-    }
-
+    // HTTP 200은 항상 성공으로 처리 (표준 HTTP 상태 코드 기반)
     // 성공 시 data만 반환 (컴포넌트에서 바로 사용)
-    return data.data;
+    return response.data.data;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
     if (error.response) {
       const { status, data } = error.response;
 
       // 401 Unauthorized - 인증 오류
       if (status === 401) {
-        const isLoginPage = window.location.pathname === '/login';
-        const isSignupPage = window.location.pathname === '/signup';
+        const currentPath = window.location.pathname;
+        // 패턴 매칭으로 공개 페이지 확인 (/signup/social 등 자동 포함)
+        const isPublicPage = PUBLIC_PAGES.some(page => currentPath === page || currentPath.startsWith(page + '/'));
+        const requestUrl = originalRequest.url || '';
+        const isRefreshEndpoint = requestUrl.includes('/auth/refresh');
 
-        // 로그인/회원가입 페이지가 아닌 경우에만 자동 로그아웃
-        if (!isLoginPage && !isSignupPage && getAuthStore) {
-          getAuthStore().logout();
-          window.location.href = '/login';
+        // 1) refresh 엔드포인트가 401이면 즉시 로그아웃
+        if (isRefreshEndpoint) {
+          // 세션 정리 + 로그인 페이지로 리다이렉트
+          if (getAuthStore) {
+            getAuthStore().logout();
+          }
+          if (!isPublicPage) {
+            window.location.href = '/login';
+          }
+
+          return Promise.reject(createStandardError(error, data, status));
+        }
+
+        // 리프레시 제외 엔드포인트 확인
+        const isExcludedEndpoint = REFRESH_EXCLUDED_ENDPOINTS.some(
+          endpoint => requestUrl.includes(endpoint)
+        );
+
+        if (isExcludedEndpoint) {
+          return Promise.reject(createStandardError(error, data, status));
+        }
+
+        // 2) 원요청은 딱 1번만 refresh 후 재시도
+        if (originalRequest._retry) {
+          // 이미 한 번 retry했는데도 401이면 에러 반환
+          return Promise.reject(createStandardError(error, data, status));
+        }
+
+        // 3) 동시 요청일 때 refresh는 한 번만 (isRefreshing + queue 패턴)
+        if (!isRefreshing) {
+          isRefreshing = true;
+          originalRequest._retry = true; // retry 플래그 설정
+
+          try {
+            // 리프레시 토큰으로 새 액세스 토큰 발급
+            const { authService } = await import('./services');
+            await authService.refreshToken();
+
+            // 대기 중인 요청 처리
+            processQueue(null);
+
+            // 원래 요청 재시도
+            return api(originalRequest);
+          } catch (refreshError) {
+            // 리프레시 실패 시 대기 중인 요청 모두 실패 처리
+            processQueue(refreshError);
+
+            // 리프레시 실패 = refresh_token도 없거나 만료됨
+            if (!isPublicPage && getAuthStore) {
+              console.log('리프레시 토큰 없음 또는 만료 - 자동 로그아웃');
+              getAuthStore().logout();
+              window.location.href = '/login';
+            } else {
+              if (getAuthStore) {
+                getAuthStore().logout();
+              }
+            }
+
+            return Promise.reject(refreshError);
+          } finally {
+            isRefreshing = false;
+          }
+        } else {
+          // 리프레시 중인 경우 대기 큐에 추가
+          // ✅ queue에 들어가는 요청도 _retry 플래그 설정
+          originalRequest._retry = true;
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then(() => {
+              return api(originalRequest);
+            })
+            .catch(err => {
+              return Promise.reject(err);
+            });
         }
       }
 
       // 에러 메시지 표준화
       const errorMessage = data?.message || getDefaultErrorMessage(status);
 
-      // 에러 객체 표준화
+      // 에러 객체 표준화 (원본 데이터 보존)
       const standardError = new Error(errorMessage);
       standardError.response = {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        headers: error.response.headers,
         data: {
+          ...data,  // 원본 data 전체 보존
+          // 명시적으로 필드 확인 (fallback)
           message: errorMessage,
-          errorCode: data?.errorCode,
-          status: status,
-          data: data?.data  // 원본 data 포함 (recoveryToken 등)
+          errorCode: data?.errorCode || data?.code,
+          status: status
         }
       };
 

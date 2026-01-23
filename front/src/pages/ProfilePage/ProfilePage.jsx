@@ -7,6 +7,7 @@ import { getImageUrl } from '../../utils/imageHelper';
 import { validatePassword, PASSWORD_RULES } from '../../utils/passwordValidator';
 import { Alert, Confirm } from '../../components/common/Modal';
 import { useAlert, useConfirm } from '../../hooks/useModal';
+import { ButtonSpinner } from '../../components/common/Loading';
 import {
   ProfileContainer,
   ProfileCard,
@@ -124,9 +125,9 @@ const ProfilePage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 파일 크기 체크 (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMessage('이미지 파일은 5MB 이하만 업로드 가능합니다.');
+    // 파일 크기 체크 (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMessage('이미지 파일은 10MB 이하만 업로드 가능합니다.');
       return;
     }
 
@@ -356,7 +357,14 @@ const ProfilePage = () => {
           {/* 저장 버튼 */}
           <ButtonGroup>
             <SaveButton type="submit" disabled={isLoading}>
-              {isLoading ? '저장 중...' : '변경사항 저장'}
+              {isLoading ? (
+                <>
+                  저장 중
+                  <ButtonSpinner size="small" />
+                </>
+              ) : (
+                '변경사항 저장'
+              )}
             </SaveButton>
           </ButtonGroup>
         </ProfileForm>
@@ -471,7 +479,14 @@ const ProfilePage = () => {
                 setPasswordError('');
               }}>취소</ModalButton>
               <ModalButton $primary onClick={handlePasswordChange} disabled={isLoading}>
-                {isLoading ? '변경 중...' : '변경'}
+                {isLoading ? (
+                  <>
+                    변경 중
+                    <ButtonSpinner size="small" />
+                  </>
+                ) : (
+                  '변경'
+                )}
               </ModalButton>
             </ModalFooter>
           </ModalContent>
@@ -569,7 +584,14 @@ const ProfilePage = () => {
                 disabled={isLoading}
                 style={{ backgroundColor: '#c0392b', color: 'white' }}
               >
-                {isLoading ? '처리 중...' : '탈퇴하기'}
+                {isLoading ? (
+                  <>
+                    처리 중
+                    <ButtonSpinner size="small" />
+                  </>
+                ) : (
+                  '탈퇴하기'
+                )}
               </ModalButton>
             </ModalFooter>
           </ModalContent>

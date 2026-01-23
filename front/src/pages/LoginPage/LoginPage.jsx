@@ -3,8 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import useInput from '../../hooks/useInput';
 import useAuthStore from '../../store/authStore';
 import { authService } from '../../api/services';
+import { getMeWithRetry } from '../../api/authUtils';
 import { Alert, Modal } from '../../components/common/Modal';
 import { useAlert } from '../../hooks/useModal';
+import { ButtonSpinner } from '../../components/common/Loading';
 import GoogleIcon from '../../assets/icons/google_login.svg';
 import {
   LoginContainer,
@@ -31,7 +33,7 @@ const LoginPage = () => {
 
   const { isOpen: isAlertOpen, showAlert, alertProps } = useAlert();
 
-  const { login, setLoading, setError, isLoading } = useAuthStore();
+  const { login, setUser, setLoading, setError, isLoading } = useAuthStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,14 +41,18 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      // API 로그인 호출 - 반환: { token, user }
-      const data = await authService.login({
+      // API 로그인 호출 - 쿠키가 자동으로 설정됨
+      await authService.login({
         email: email.value,
         password: password.value
       });
 
-      // Zustand 스토어에 토큰 저장 (사용자 정보는 App.jsx에서 자동 로드)
-      login(data.token);
+      // 사용자 정보 로드 (retry 로직 포함)
+      const userData = await getMeWithRetry();
+      setUser(userData);
+      
+      // 로그인 상태 설정
+      login();
 
       // 홈페이지로 리다이렉트
       navigate('/');
@@ -82,10 +88,15 @@ const LoginPage = () => {
     setErrorMessage('');
 
     try {
-      const data = await authService.recoverAccount(recoveryData.recoveryToken);
+      await authService.recoverAccount(recoveryData.recoveryToken);
 
-      // 복구 성공 - 정상 토큰으로 로그인
-      login(data.token);
+      // 사용자 정보 로드 (retry 로직 포함)
+      const userData = await getMeWithRetry();
+      setUser(userData);
+      
+      // 로그인 상태 설정
+      login();
+      
       showAlert('계정이 성공적으로 복구되었습니다.', {
         variant: 'success',
         onClose: () => navigate('/')
@@ -153,7 +164,14 @@ const LoginPage = () => {
           )}
 
           <LoginButton type="submit" disabled={isLoading}>
-            {isLoading ? '로그인 중...' : '로그인'}
+            {isLoading ? (
+              <>
+                로그인 중
+                <ButtonSpinner size="small" />
+              </>
+            ) : (
+              '로그인'
+            )}
           </LoginButton>
         </LoginForm>
 
@@ -170,6 +188,10 @@ const LoginPage = () => {
           <span>아직 계정이 없으신가요?</span>
           <Link to="/signup">회원가입</Link>
         </SignupLink>
+        <SignupLink style={{ marginTop: '8px' }}>
+          <span>비밀번호를 잊으셨나요?</span>
+          <Link to="/forgot-password">비밀번호 찾기</Link>
+        </SignupLink>
       </LoginCard>
 
       {/* 계정 복구 모달 */}
@@ -185,7 +207,12 @@ const LoginPage = () => {
             variant: 'secondary'
           },
           {
-            label: isLoading ? '복구 중...' : '예, 복구합니다',
+            label: isLoading ? (
+              <>
+                복구 중
+                <ButtonSpinner size="small" />
+              </>
+            ) : '예, 복구합니다',
             onClick: handleRecover,
             variant: 'primary',
             disabled: isLoading

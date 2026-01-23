@@ -41,14 +41,17 @@ public class CustomOidcUserService extends OidcUserService {
      * OIDC 사용자 정보를 DB와 동기화하고 AppUserPrincipal로 래핑
      */
     private OidcUser processOidcUser(OidcUserRequest userRequest, OidcUser oidcUser) {
-        // Provider 추출 (google)
+        // Provider 추출 (google, google-signup 등)
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        AuthProvider provider = AuthProvider.fromRegistrationId(registrationId);
+        
+        // Registration ID 정규화 (예: "google-signup" → "google")
+        String normalizedRegistrationId = OAuth2RegistrationIdNormalizer.normalize(registrationId);
+        AuthProvider provider = AuthProvider.fromRegistrationId(normalizedRegistrationId);
 
-        // 사용자 정보 동기화 (신규 등록 또는 업데이트)
-        User user = userSynchronizer.synchronizeUser(provider, oidcUser.getAttributes());
+        // 사용자 정보 동기화 (신규/기존 여부 판단)
+        OAuth2UserSynchronizer.UserSyncResult result = userSynchronizer.synchronizeUser(provider, oidcUser.getAttributes());
 
-        // AppUserPrincipal로 래핑하여 반환 (OIDC 생성자 사용)
-        return new AppUserPrincipal(user, oidcUser);
+        // AppUserPrincipal로 래핑하여 반환 (신규 여부 플래그 포함)
+        return new AppUserPrincipal(result.getUser(), oidcUser, result.isNewUser());
     }
 }

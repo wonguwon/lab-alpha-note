@@ -24,13 +24,13 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
     // 질문별 답변 조회 (투표수 내림차순)
     List<Answer> findByQuestionIdAndIsDeletedFalseOrderByVoteCountDesc(Long questionId);
 
-    // 질문별 답변 조회 (채택된 답변 먼저, 그 다음 투표수)
-    @Query("SELECT a FROM Answer a WHERE a.questionId = :questionId AND a.isDeleted = false ORDER BY a.isAccepted DESC, a.voteCount DESC, a.createdAt ASC")
+    // 질문별 답변 조회 (채택된 답변 먼저, 그 다음 최신순)
+    @Query("SELECT a FROM Answer a WHERE a.questionId = :questionId AND a.isDeleted = false ORDER BY a.isAccepted DESC, a.createdAt DESC")
     List<Answer> findByQuestionIdOrderByAcceptedAndVotes(@Param("questionId") Long questionId);
 
-    // 사용자별 답변 조회
-    Page<Answer> findByUserIdAndIsDeletedFalse(Long userId, Pageable pageable);
-    List<Answer> findByUserIdAndIsDeletedFalse(Long userId);
+    // 사용자별 답변 조회 (최신순)
+    Page<Answer> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    List<Answer> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId);
 
     // 채택된 답변 조회
     Optional<Answer> findByQuestionIdAndIsAcceptedTrueAndIsDeletedFalse(Long questionId);

@@ -22,23 +22,40 @@ public class AppUserPrincipal implements OAuth2User, OidcUser {
     private final User user;
     private final OAuth2User oauth2Delegate;
     private final OidcUser oidcDelegate;  // OIDC일 경우만 non-null
+    private final boolean isNewUser;  // 신규 사용자 여부
 
     /**
      * OIDC 로그인용 생성자 (Google 등)
      */
-    public AppUserPrincipal(User user, OidcUser oidcUser) {
+    public AppUserPrincipal(User user, OidcUser oidcUser, boolean isNewUser) {
         this.user = user;
         this.oauth2Delegate = oidcUser;
         this.oidcDelegate = oidcUser;
+        this.isNewUser = isNewUser;
     }
 
     /**
      * 일반 OAuth2 로그인용 생성자 (카카오, GitHub 등)
      */
-    public AppUserPrincipal(User user, OAuth2User oauth2User) {
+    public AppUserPrincipal(User user, OAuth2User oauth2User, boolean isNewUser) {
         this.user = user;
         this.oauth2Delegate = oauth2User;
         this.oidcDelegate = null;
+        this.isNewUser = isNewUser;
+    }
+    
+    /**
+     * OIDC 로그인용 생성자 (하위 호환성, 기존 사용자로 간주)
+     */
+    public AppUserPrincipal(User user, OidcUser oidcUser) {
+        this(user, oidcUser, false);
+    }
+
+    /**
+     * 일반 OAuth2 로그인용 생성자 (하위 호환성, 기존 사용자로 간주)
+     */
+    public AppUserPrincipal(User user, OAuth2User oauth2User) {
+        this(user, oauth2User, false);
     }
 
     // ========== OidcUser 인터페이스 구현 (OIDC 전용) ==========

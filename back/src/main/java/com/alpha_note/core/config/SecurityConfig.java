@@ -25,7 +25,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.alpha_note.core.common.response.ApiResponse;
+import com.alpha_note.core.common.exception.ErrorCode;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.List;
 
@@ -63,13 +67,38 @@ public class SecurityConfig {
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
+            // 인증 실패 시 401 반환 (302 리다이렉트 방지)
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    
+                    // CORS 헤더 유지
+                    String origin = request.getHeader("Origin");
+                    if (origin != null && allowedOrigins.contains(origin)) {
+                        response.setHeader("Access-Control-Allow-Origin", origin);
+                        response.setHeader("Access-Control-Allow-Credentials", "true");
+                    }
+                    
+                    // ApiResponse 형식으로 에러 응답
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    ApiResponse<Void> errorResponse = ApiResponse.error(
+                        ErrorCode.UNAUTHORIZED.getCode(),
+                        ErrorCode.UNAUTHORIZED.getMessage()
+                    );
+                    response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+                })
+            )
             // 요청별 인증 규칙
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/api/v1/auth/register",     // 회원가입
                     "/api/v1/auth/login",        // 로그인
+                    "/api/v1/auth/refresh",      // 리프레시 토큰 갱신
                     "/api/v1/auth/email/**",     // 이메일 인증 (send, verify)
                     "/api/v1/auth/recover",      // 계정 복구 (recoveryToken)
+                    "/api/v1/auth/oauth2/register", // OAuth2 회원가입
+                    "/api/v1/auth/password/**",  // 비밀번호 찾기/재설정
                     "/api/public/**",            // 공개 API
                     "/oauth2/**",                // OAuth2 관련 경로 (Google 로그인)
                     "/login/oauth2/**",          // 콜백
@@ -88,6 +117,18 @@ public class SecurityConfig {
                     "/api/v1/qna/questions/*/comments",
                     "/api/v1/qna/answers/*/comments",
                     "/api/v1/qna/users/*/answers"
+                ).permitAll()
+                // Habit 관련 조회 API는 공개 (GET 요청만)
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.GET,
+                    "/api/v1/habits",
+                    "/api/v1/habits/dashboard",
+                    "/api/v1/habits/*",
+                    "/api/v1/habits/*/stats",
+                    "/api/v1/habits/*/records",
+                    "/api/v1/habits/*/records/date/*",
+                    "/api/v1/habits/*/records/*",
+                    "/api/v1/habits/*/records/calendar"
                 ).permitAll()
                 .anyRequest().authenticated()  // 나머지는 인증 필요 (/api/v1/auth/me 포함)
             )

@@ -1,5 +1,5 @@
 const {
-  VITE_API_URL = 'http://localhost:8001',
+  VITE_API_URL,
   VITE_API_TIMEOUT = '5000',
   VITE_API_VERSION = 'v1'
 } = import.meta.env;
@@ -21,11 +21,14 @@ export const API_ENDPOINTS = {
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
     REGISTER: '/auth/register',
+    OAUTH2_REGISTER: '/auth/oauth2/register',
     RECOVER: '/auth/recover',
     ME: '/auth/me',
     EMAIL_SEND: '/auth/email/send',
     EMAIL_VERIFY: '/auth/email/verify',
     EMAIL_CHECK: '/auth/email/check',
+    PASSWORD_RESET_REQUEST: '/auth/password/reset/request',
+    PASSWORD_RESET_CONFIRM: '/auth/password/reset/confirm',
   },
   // 사용자 관련
   USER: {
@@ -43,6 +46,7 @@ export const API_ENDPOINTS = {
   QNA: {
     QUESTIONS: '/qna/questions',
     QUESTIONS_SEARCH: '/qna/questions/search',
+    QUESTIONS_BY_USER: (userId) => `/qna/questions/user/${userId}`,
     QUESTION_DETAIL: (id) => `/qna/questions/${id}`,
     ANSWERS: (questionId) => `/qna/questions/${questionId}/answers`,
     ANSWER_DETAIL: (answerId) => `/qna/answers/${answerId}`,
@@ -52,5 +56,48 @@ export const API_ENDPOINTS = {
     ANSWER_COMMENT_DETAIL: (commentId) => `/qna/comments/answer/${commentId}`,
     QUESTION_VOTE: (questionId) => `/qna/questions/${questionId}/vote`,
     ANSWER_VOTE: (answerId) => `/qna/answers/${answerId}/vote`,
+  },
+  // Habit 관련
+  HABIT: {
+    HABITS: '/habits',
+    HABIT_DASHBOARD: '/habits/dashboard',
+    HABIT_DETAIL: (id) => `/habits/${id}`,
+    HABIT_STATS: (id) => `/habits/${id}/stats`,
+    HABIT_ARCHIVE: (id) => `/habits/${id}/archive`,
+    HABIT_ACTIVATE: (id) => `/habits/${id}/activate`,
+    HABIT_RECORDS: (habitId) => `/habits/${habitId}/records`,
+    HABIT_RECORD_DETAIL: (habitId, recordId) => `/habits/${habitId}/records/${recordId}`,
+    HABIT_RECORD_BY_DATE: (habitId, date) => `/habits/${habitId}/records/date/${date}`,
+    HABIT_CALENDAR: (habitId) => `/habits/${habitId}/records/calendar`,
+  },
+  // Blog 관련
+  BLOG: {
+    BLOGS: '/blogs',
+    BLOG_SEARCH: '/blogs/search',
+    BLOG_DETAIL: (id) => `/blogs/${id}`,
+    BLOG_COMMENTS: (blogId) => `/blogs/${blogId}/comments`,
+    BLOG_COMMENT_DETAIL: (commentId) => `/blogs/comments/${commentId}`,
+    BLOG_VOTE: (blogId) => `/blogs/${blogId}/vote`,
+  },
+  // Support 관련
+  SUPPORT: {
+    CONTACT: '/support/contact',
+  },
+  // 알림 관련
+  NOTIFICATION: {
+    STREAM: '/notifications/stream',
+    NOTIFICATIONS: '/notifications',
+    UNREAD_COUNT: '/notifications/unread-count',
+    MARK_AS_READ: (id) => `/notifications/${id}/read`,
+    MARK_ALL_AS_READ: '/notifications/read-all',
+  },
+  // Goal 관련
+  GOAL: {
+    GOALS: '/goals',
+    GOAL_DETAIL: (id) => `/goals/${id}`,
+    GOAL_TOGGLE: (id) => `/goals/${id}/toggle`,
+    MY_GOALS: '/goals/me',
+    MY_GOAL_BY_YEAR: (year) => `/goals/me/${year}`,
+    PUBLIC_GOALS: (year) => `/goals/public/${year}`,
   },
 };

@@ -23,6 +23,18 @@ public enum ErrorCode {
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A004", "잘못된 아이디/비밀번호입니다."),
     INVALID_RECOVERY_TOKEN(HttpStatus.UNAUTHORIZED, "A005", "유효하지 않은 복구 토큰입니다."),
     EXPIRED_RECOVERY_TOKEN(HttpStatus.UNAUTHORIZED, "A006", "만료된 복구 토큰입니다."),
+    OAUTH2_SIGNUP_ALREADY_REGISTERED(HttpStatus.CONFLICT, "A007", "이미 가입된 계정입니다."),
+    OAUTH2_LOGIN_NOT_REGISTERED(HttpStatus.UNAUTHORIZED, "A008", "회원가입이 필요합니다."),
+    OAUTH2_AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "A009", "OAuth2 인증에 실패했습니다."),
+    OAUTH2_PROVIDER_MISMATCH(HttpStatus.CONFLICT, "A010", "다른 로그인 방식으로 가입된 계정입니다."),
+    SOCIAL_ACCOUNT_PASSWORD_RESET(HttpStatus.BAD_REQUEST, "A011", "소셜 가입된 계정입니다. 소셜 로그인을 이용해주세요."),
+    INVALID_PASSWORD_RESET_TOKEN(HttpStatus.UNAUTHORIZED, "A012", "유효하지 않은 비밀번호 재설정 토큰입니다."),
+    EXPIRED_PASSWORD_RESET_TOKEN(HttpStatus.UNAUTHORIZED, "A013", "만료된 비밀번호 재설정 토큰입니다."),
+    PASSWORD_RESET_TOKEN_ALREADY_USED(HttpStatus.BAD_REQUEST, "A014", "이미 사용된 비밀번호 재설정 토큰입니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A015", "유효하지 않은 리프레시 토큰입니다."),
+    EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A016", "만료된 리프레시 토큰입니다."),
+    REVOKED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A017", "무효화된 리프레시 토큰입니다."),
+    REFRESH_TOKEN_REUSE_DETECTED(HttpStatus.UNAUTHORIZED, "A018", "리프레시 토큰 재사용이 감지되었습니다. 보안을 위해 모든 세션이 종료되었습니다."),
     
     // 사용자 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),
@@ -46,10 +58,6 @@ public enum ErrorCode {
     EMAIL_SEND_COOLDOWN(HttpStatus.TOO_MANY_REQUESTS, "E005", "이메일은 60초마다 전송할 수 있습니다."),
     EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "E006", "이메일 인증이 완료되지 않았습니다."),
 
-    // 노트 관련 에러 (향후 추가)
-    NOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "노트를 찾을 수 없습니다."),
-    NOTE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N002", "노트에 접근할 권한이 없습니다."),
-
     // QnA 관련 에러
     QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "질문을 찾을 수 없습니다."),
     QUESTION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "Q002", "질문에 접근할 권한이 없습니다."),
@@ -66,7 +74,32 @@ public enum ErrorCode {
     TAG_ALREADY_EXISTS(HttpStatus.CONFLICT, "Q013", "이미 존재하는 태그입니다."),
     MAX_TAGS_EXCEEDED(HttpStatus.BAD_REQUEST, "Q014", "태그는 최대 5개까지 추가할 수 있습니다."),
     ATTACHMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "Q015", "첨부파일을 찾을 수 없습니다."),
-    INVALID_IMAGE_TYPE(HttpStatus.BAD_REQUEST, "Q016", "지원하지 않는 이미지 형식입니다. (PNG, JPEG, WEBP만 가능)");
+    INVALID_IMAGE_TYPE(HttpStatus.BAD_REQUEST, "Q016", "지원하지 않는 이미지 형식입니다. (PNG, JPEG, WEBP만 가능)"),
+
+    // Habit 관련 에러
+    HABIT_NOT_FOUND(HttpStatus.NOT_FOUND, "H001", "습관을 찾을 수 없습니다."),
+    HABIT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "H002", "습관에 접근할 권한이 없습니다."),
+    HABIT_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "H003", "습관 기록을 찾을 수 없습니다."),
+    HABIT_RECORD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "H004", "습관 기록에 접근할 권한이 없습니다."),
+    HABIT_ALREADY_ARCHIVED(HttpStatus.CONFLICT, "H005", "이미 보관된 습관입니다."),
+    HABIT_ALREADY_ACTIVE(HttpStatus.CONFLICT, "H006", "이미 활성 상태인 습관입니다."),
+    HABIT_DELETED(HttpStatus.GONE, "H007", "삭제된 습관입니다."),
+    FUTURE_RECORD_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "H008", "미래 날짜에 기록을 남길 수 없습니다."),
+    RECORD_DATE_BEFORE_START_DATE(HttpStatus.BAD_REQUEST, "H009", "습관 시작일 이전에 기록을 남길 수 없습니다."),
+    HABIT_END_DATE_PASSED(HttpStatus.BAD_REQUEST, "H010", "습관 종료일 이후에 기록을 남길 수 없습니다."),
+
+    // Blog 관련 에러
+    BLOG_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "블로그를 찾을 수 없습니다."),
+    BLOG_ACCESS_DENIED(HttpStatus.FORBIDDEN, "B002", "블로그에 접근할 권한이 없습니다."),
+
+    // 알림 관련 에러
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "알림을 찾을 수 없습니다."),
+    NOTIFICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N002", "알림에 접근할 권한이 없습니다."),
+
+    // 목표 관련 에러
+    YEARLY_GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "G001", "목표를 찾을 수 없습니다."),
+    YEARLY_GOAL_ACCESS_DENIED(HttpStatus.FORBIDDEN, "G002", "목표에 접근할 권한이 없습니다."),
+    INVALID_GOAL_INDEX(HttpStatus.BAD_REQUEST, "G003", "유효하지 않은 목표 인덱스입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

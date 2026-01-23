@@ -18,37 +18,37 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     // 기본 조회
     Optional<Question> findByIdAndIsDeletedFalse(Long id);
 
-    // 사용자별 질문 조회
+    // 사용자별 질문 조회 (Pageable의 sort 사용)
     Page<Question> findByUserIdAndIsDeletedFalse(Long userId, Pageable pageable);
-    List<Question> findByUserIdAndIsDeletedFalse(Long userId);
+    List<Question> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId);
 
-    // 전체 질문 페이징 조회 (활성만)
+    // 전체 질문 페이징 조회 (Pageable의 sort 사용)
     Page<Question> findAllByIsDeletedFalse(Pageable pageable);
 
-    // 답변 여부별 조회
-    Page<Question> findByIsAnsweredAndIsDeletedFalse(Boolean isAnswered, Pageable pageable);
+    // 답변 여부별 조회 (최신순)
+    Page<Question> findByIsAnsweredAndIsDeletedFalseOrderByCreatedAtDesc(Boolean isAnswered, Pageable pageable);
 
-    // 제목 + 내용 검색 (JPQL)
+    // 제목 + 내용 검색 (JPQL, Pageable의 sort 사용)
     @Query("SELECT q FROM Question q WHERE (q.title LIKE %:keyword% OR q.content LIKE %:keyword%) AND q.isDeleted = false")
     Page<Question> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
-    // 제목만 검색
+    // 제목만 검색 (Pageable의 sort 사용)
     @Query("SELECT q FROM Question q WHERE q.title LIKE %:keyword% AND q.isDeleted = false")
     Page<Question> searchByTitle(@Param("keyword") String keyword, Pageable pageable);
 
-    // 내용만 검색
+    // 내용만 검색 (Pageable의 sort 사용)
     @Query("SELECT q FROM Question q WHERE q.content LIKE %:keyword% AND q.isDeleted = false")
     Page<Question> searchByContent(@Param("keyword") String keyword, Pageable pageable);
 
-    // 작성자 닉네임으로 검색
+    // 작성자 닉네임으로 검색 (Pageable의 sort 사용)
     @Query("SELECT q FROM Question q JOIN User u ON q.userId = u.id WHERE u.nickname LIKE %:keyword% AND q.isDeleted = false")
     Page<Question> searchByAuthor(@Param("keyword") String keyword, Pageable pageable);
 
-    // 태그별 질문 조회 (태그 ID로)
+    // 태그별 질문 조회 (태그 ID로, Pageable의 sort 사용)
     @Query("SELECT q FROM Question q JOIN q.questionTags qt WHERE qt.tagId = :tagId AND q.isDeleted = false")
     Page<Question> findByTagId(@Param("tagId") Long tagId, Pageable pageable);
 
-    // 태그별 질문 조회 (태그 이름으로)
+    // 태그별 질문 조회 (태그 이름으로, Pageable의 sort 사용)
     @Query("SELECT q FROM Question q JOIN q.questionTags qt JOIN qt.tag t WHERE t.name = :tagName AND q.isDeleted = false")
     Page<Question> findByTagName(@Param("tagName") String tagName, Pageable pageable);
 

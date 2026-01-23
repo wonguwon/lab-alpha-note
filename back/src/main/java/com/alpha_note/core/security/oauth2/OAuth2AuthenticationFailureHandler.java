@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -26,12 +28,27 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
 
-        // 에러 메시지를 쿼리 파라미터로 포함한 리다이렉트 URL 생성
-        String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("error", exception.getLocalizedMessage())
-                .build().toUriString();
+        String errorCode = "A009"; // 기본값: 일반 OAuth2 에러
+        
+        // OAuth2AuthenticationException인 경우 에러 코드 확인
+        if (exception instanceof OAuth2AuthenticationException) {
+            OAuth2AuthenticationException oauth2Exception = (OAuth2AuthenticationException) exception;
+            OAuth2Error error = oauth2Exception.getError();
+            
+            // Provider 불일치 에러인 경우 A010으로 구분
+            if ("provider_mismatch".equals(error.getErrorCode())) {
+                errorCode = "A010";
+            }
+        }
 
-        log.error("OAuth2 authentication failed: {}", exception.getMessage());
+        String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
+                .queryParam("errorCode", errorCode)
+                .build()
+                .encode()
+                .toUriString();
+
+        log.error("OAuth2 authentication failed: {} (errorCode: {}, exception: {})", 
+                exception.getMessage(), errorCode, exception.getClass().getSimpleName());
 
         // 프론트엔드로 리다이렉트
         getRedirectStrategy().sendRedirect(request, response, targetUrl);

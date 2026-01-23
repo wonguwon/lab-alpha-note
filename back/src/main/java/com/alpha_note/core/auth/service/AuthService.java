@@ -2,6 +2,8 @@ package com.alpha_note.core.auth.service;
 
 import com.alpha_note.core.auth.dto.AuthResponse;
 import com.alpha_note.core.auth.dto.LoginRequest;
+import com.alpha_note.core.auth.dto.PasswordResetConfirmRequest;
+import com.alpha_note.core.auth.dto.PasswordResetRequest;
 import com.alpha_note.core.auth.dto.RegisterRequest;
 import com.alpha_note.core.common.exception.CustomException;
 import com.alpha_note.core.common.exception.ErrorCode;
@@ -19,7 +21,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Date;
 import java.util.Optional;
 
 @Slf4j
@@ -32,9 +36,14 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final EmailVerificationService emailVerificationService;
+    private final EmailService emailService;
+    private final RefreshTokenService refreshTokenService;
+
+    @Value("${app.oauth2.authorized-redirect-uri:http://localhost:3000/oauth2/redirect}")
+    private String oauth2RedirectUri;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public LoginResult register(RegisterRequest request) {
         // 이메일 인증 확인
         if (!emailVerificationService.isVerified(request.getEmail())) {
             throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
@@ -93,15 +102,20 @@ public class AuthService {
         // JWT 토큰 생성
         String token = jwtUtil.generateToken(user);
 
-        return AuthResponse.builder()
+        // 리프레시 토큰 생성 및 저장
+        var refreshToken = refreshTokenService.createRefreshToken(user);
+
+        AuthResponse authResponse = AuthResponse.builder()
                 .token(token)
                 .nickname(user.getNickname())
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .build();
+
+        return new LoginResult(authResponse, refreshToken.getToken());
     }
     
-    public AuthResponse login(LoginRequest request) {
+    public LoginResult login(LoginRequest request) {
         try {
             // 인증 (email로 로그인)
             Authentication authentication = authenticationManager.authenticate(
@@ -116,16 +130,84 @@ public class AuthService {
             // JWT 토큰 생성
             String token = jwtUtil.generateToken(user);
 
-            return AuthResponse.builder()
+            // 리프레시 토큰 생성 및 저장
+            var refreshToken = refreshTokenService.createRefreshToken(user);
+
+            AuthResponse authResponse = AuthResponse.builder()
                     .token(token)
                     .nickname(user.getNickname())
                     .email(user.getEmail())
                     .role(user.getRole().name())
                     .build();
 
+            return new LoginResult(authResponse, refreshToken.getToken());
+
         } catch (BadCredentialsException e) {
             throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
+    }
+
+    /**
+     * 리프레시 토큰으로 새 액세스 토큰 발급
+     * @return AuthResponse와 새 리프레시 토큰 문자열을 포함한 LoginResult
+     */
+    @Transactional
+    public LoginResult refreshToken(String refreshTokenValue) {
+        // 리프레시 토큰 검증
+        var refreshToken = refreshTokenService.validateRefreshToken(refreshTokenValue);
+        User user = refreshToken.getUser();
+
+        // 새 액세스 토큰 생성
+        String newAccessToken = jwtUtil.generateToken(user);
+
+        // 리프레시 토큰 로테이션 (새 리프레시 토큰 발급)
+        var newRefreshToken = refreshTokenService.createRefreshToken(user);
+
+        AuthResponse authResponse = AuthResponse.builder()
+                .token(newAccessToken)
+                .nickname(user.getNickname())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
+
+        return new LoginResult(authResponse, newRefreshToken.getToken());
+    }
+
+    /**
+     * 로그인/리프레시 결과 (액세스 토큰과 리프레시 토큰 포함)
+     */
+    public static class LoginResult {
+        private final AuthResponse authResponse;
+        private final String refreshToken;
+
+        public LoginResult(AuthResponse authResponse, String refreshToken) {
+            this.authResponse = authResponse;
+            this.refreshToken = refreshToken;
+        }
+
+        public AuthResponse getAuthResponse() {
+            return authResponse;
+        }
+
+        public String getRefreshToken() {
+            return refreshToken;
+        }
+    }
+
+    /**
+     * 리프레시 토큰 무효화
+     */
+    @Transactional
+    public void revokeRefreshToken(String refreshTokenValue) {
+        refreshTokenService.revokeRefreshToken(refreshTokenValue);
+    }
+
+    /**
+     * 사용자의 모든 리프레시 토큰 무효화
+     */
+    @Transactional
+    public void revokeAllUserRefreshTokens(Long userId) {
+        refreshTokenService.revokeAllUserRefreshTokens(userId);
     }
 
     /**
@@ -136,6 +218,91 @@ public class AuthService {
      */
     public boolean checkEmailAvailability(String email) {
         return !userRepository.existsByEmail(email);
+    }
+
+    /**
+     * 비밀번호 찾기 요청 (재설정 링크 발송)
+     *
+     * @param request 비밀번호 찾기 요청 (이메일)
+     */
+    @Transactional
+    public void requestPasswordReset(PasswordResetRequest request) {
+        // 이메일로 계정 조회
+        Optional<User> userOpt = userRepository.findByEmailAndIsDeletedFalse(request.getEmail());
+        
+        if (userOpt.isEmpty()) {
+            log.warn("Password reset requested for non-existent email: {}", request.getEmail());
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        log.warn("userOpt: {}", userOpt);
+        User user = userOpt.get();
+        log.warn("user: {}", user);
+
+        // LOCAL 계정인지 확인
+        if (user.getProvider() != AuthProvider.LOCAL) {
+            throw new CustomException(ErrorCode.SOCIAL_ACCOUNT_PASSWORD_RESET);
+        }
+
+        // 비밀번호 재설정 토큰 생성
+        String resetToken = jwtUtil.generatePasswordResetToken(user);
+
+        // 재설정 링크 생성 (OAuth2 redirect URI에서 경로 제거하여 base URL 추출)
+        String baseUrl = oauth2RedirectUri.replace("/oauth2/redirect", "");
+        String resetLink = baseUrl + "/reset-password?token=" + resetToken;
+
+        // 이메일 발송
+        emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
+
+        log.info("Password reset link sent to: {}", user.getEmail());
+    }
+
+    /**
+     * 비밀번호 재설정
+     *
+     * @param request 비밀번호 재설정 요청 (토큰, 새 비밀번호, 비밀번호 확인)
+     */
+    @Transactional
+    public void resetPassword(PasswordResetConfirmRequest request) {
+        // 비밀번호 일치 확인
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+        }
+
+        // 토큰 검증
+        if (!jwtUtil.validatePasswordResetToken(request.getToken())) {
+            if (jwtUtil.isPasswordResetToken(request.getToken())) {
+                throw new CustomException(ErrorCode.EXPIRED_PASSWORD_RESET_TOKEN);
+            }
+            throw new CustomException(ErrorCode.INVALID_PASSWORD_RESET_TOKEN);
+        }
+
+        // userId 추출
+        Long userId = jwtUtil.extractUserId(request.getToken());
+        if (userId == null) {
+            throw new CustomException(ErrorCode.INVALID_PASSWORD_RESET_TOKEN);
+        }
+
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // 토큰이 이미 사용되었는지 확인 (lastPasswordResetAt이 토큰 발급 시간 이후인지)
+        Date tokenIssuedAt = jwtUtil.extractIssuedAt(request.getToken());
+        if (user.getLastPasswordResetAt() != null &&
+                tokenIssuedAt.toInstant().isBefore(user.getLastPasswordResetAt())) {
+            log.warn("Password reset token already used for user: {}", user.getEmail());
+            throw new CustomException(ErrorCode.PASSWORD_RESET_TOKEN_ALREADY_USED);
+        }
+
+        // 비밀번호 검증
+        validatePasswordNotContainsEmail(request.getNewPassword(), user.getEmail());
+
+        // 비밀번호 업데이트 (lastPasswordResetAt도 자동 업데이트됨)
+        user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        log.info("Password reset completed for user: {}", user.getEmail());
     }
 
     /**

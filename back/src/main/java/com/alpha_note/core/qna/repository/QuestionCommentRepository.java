@@ -13,8 +13,8 @@ public interface QuestionCommentRepository extends JpaRepository<QuestionComment
     // 기본 조회
     Optional<QuestionComment> findByIdAndIsDeletedFalse(Long id);
 
-    // 질문별 댓글 조회 (생성일 오름차순)
-    List<QuestionComment> findByQuestionIdAndIsDeletedFalseOrderByCreatedAtAsc(Long questionId);
+    // 질문별 댓글 조회 (생성일 내림차순 - 최신순)
+    List<QuestionComment> findByQuestionIdAndIsDeletedFalseOrderByCreatedAtDesc(Long questionId);
 
     // 사용자별 댓글 조회
     List<QuestionComment> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId);

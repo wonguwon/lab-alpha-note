@@ -64,6 +64,9 @@ public class User implements UserDetails {
     @Column(name = "password_expired_at")
     private Instant passwordExpiredAt;  // 비밀번호 만료일 (null이면 만료 없음)
 
+    @Column(name = "last_password_reset_at")
+    private Instant lastPasswordResetAt;  // 마지막 비밀번호 재설정 시간 (토큰 일회용 처리용)
+
     // 회원 탈퇴 관리 필드 (Soft Delete)
     @Builder.Default
     @Column(name = "is_deleted", nullable = false)
@@ -139,6 +142,7 @@ public class User implements UserDetails {
 
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
+        this.lastPasswordResetAt = Instant.now();
     }
 
     public void updateProfileImage(String profileImageUrl) {

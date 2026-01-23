@@ -3,6 +3,7 @@ package com.alpha_note.core.security.jwt;
 import com.alpha_note.core.user.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import java.util.function.Function;
 /**
  * JWT 토큰 생성 및 검증 유틸리티
  */
+@Slf4j
 @Component
 public class JwtUtil {
 
@@ -28,8 +30,20 @@ public class JwtUtil {
     @Value("${jwt.recovery-expiration:600000}") // 10 minutes
     private Long recoveryExpiration;
 
+    @Value("${jwt.oauth2-temp-expiration:600000}") // 10 minutes
+    private Long oauth2TempExpiration;
+
+    @Value("${jwt.password-reset-expiration:3600000}") // 1 hour
+    private Long passwordResetExpiration;
+
+    @Value("${jwt.refresh-expiration:604800000}") // 7 days
+    private Long refreshExpiration;
+
     private static final String TOKEN_TYPE_ACCESS = "access";
     private static final String TOKEN_TYPE_RECOVERY = "recovery";
+    private static final String TOKEN_TYPE_OAUTH2_TEMP = "oauth2_temp";
+    private static final String TOKEN_TYPE_PASSWORD_RESET = "password_reset";
+    private static final String TOKEN_TYPE_REFRESH = "refresh";
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
@@ -41,6 +55,10 @@ public class JwtUtil {
 
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    public Date extractIssuedAt(String token) {
+        return extractClaim(token, Claims::getIssuedAt);
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -122,13 +140,141 @@ public class JwtUtil {
     public boolean validateRecoveryToken(String token) {
         try {
             return isRecoveryToken(token) && !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            log.debug("Recovery token expired: {}", e.getMessage());
+            return false;
+        } catch (MalformedJwtException | SignatureException e) {
+            log.warn("Invalid recovery token: {}", e.getMessage());
+            return false;
+        } catch (Exception e) {
+            log.error("Unexpected error validating recovery token", e);
+            return false;
+        }
+    }
+
+    // OAuth2 임시 토큰 생성 (회원가입용, 10분 유효)
+    public String generateOAuth2TempToken(String email, String provider, String providerId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", TOKEN_TYPE_OAUTH2_TEMP);
+        claims.put("email", email);
+        claims.put("provider", provider);
+        claims.put("providerId", providerId);
+        return createToken(claims, email, oauth2TempExpiration);
+    }
+
+    // OAuth2 임시 토큰 여부 확인
+    public boolean isOAuth2TempToken(String token) {
+        try {
+            String tokenType = extractTokenType(token);
+            return TOKEN_TYPE_OAUTH2_TEMP.equals(tokenType);
         } catch (Exception e) {
             return false;
         }
     }
 
+    // OAuth2 임시 토큰 유효성 검증
+    public boolean validateOAuth2TempToken(String token) {
+        try {
+            return isOAuth2TempToken(token) && !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            log.debug("OAuth2 temp token expired: {}", e.getMessage());
+            return false;
+        } catch (MalformedJwtException | SignatureException e) {
+            log.warn("Invalid OAuth2 temp token: {}", e.getMessage());
+            return false;
+        } catch (Exception e) {
+            log.error("Unexpected error validating OAuth2 temp token", e);
+            return false;
+        }
+    }
+
+    // OAuth2 임시 토큰에서 이메일 추출
+    public String extractOAuth2Email(String token) {
+        return extractClaim(token, claims -> claims.get("email", String.class));
+    }
+
+    // OAuth2 임시 토큰에서 provider 추출
+    public String extractOAuth2Provider(String token) {
+        return extractClaim(token, claims -> claims.get("provider", String.class));
+    }
+
+    // OAuth2 임시 토큰에서 providerId 추출
+    public String extractOAuth2ProviderId(String token) {
+        return extractClaim(token, claims -> claims.get("providerId", String.class));
+    }
+
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    // 비밀번호 재설정 토큰 생성 (1시간 유효)
+    public String generatePasswordResetToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", TOKEN_TYPE_PASSWORD_RESET);
+        claims.put("userId", user.getId());
+        claims.put("email", user.getEmail());
+        return createToken(claims, user.getUsername(), passwordResetExpiration);
+    }
+
+    // 비밀번호 재설정 토큰 여부 확인
+    public boolean isPasswordResetToken(String token) {
+        try {
+            String tokenType = extractTokenType(token);
+            return TOKEN_TYPE_PASSWORD_RESET.equals(tokenType);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // 비밀번호 재설정 토큰 유효성 검증
+    public boolean validatePasswordResetToken(String token) {
+        try {
+            return isPasswordResetToken(token) && !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            log.debug("Password reset token expired: {}", e.getMessage());
+            return false;
+        } catch (MalformedJwtException | SignatureException e) {
+            log.warn("Invalid password reset token: {}", e.getMessage());
+            return false;
+        } catch (Exception e) {
+            log.error("Unexpected error validating password reset token", e);
+            return false;
+        }
+    }
+
+    // 리프레시 토큰 생성 (7일 유효)
+    public String generateRefreshToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", TOKEN_TYPE_REFRESH);
+        claims.put("userId", user.getId());
+        claims.put("email", user.getEmail());
+        return createToken(claims, user.getUsername(), refreshExpiration);
+    }
+
+    // 리프레시 토큰 여부 확인
+    public boolean isRefreshToken(String token) {
+        try {
+            String tokenType = extractTokenType(token);
+            return TOKEN_TYPE_REFRESH.equals(tokenType);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // 리프레시 토큰 유효성 검증 (만료 여부만 체크)
+    public boolean validateRefreshToken(String token) {
+        try {
+            return isRefreshToken(token) && !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            log.debug("Refresh token expired: {}", e.getMessage());
+            return false;
+        } catch (MalformedJwtException | SignatureException e) {
+            log.warn("Invalid refresh token: {}", e.getMessage());
+            return false;
+        } catch (Exception e) {
+            log.error("Unexpected error validating refresh token", e);
+            return false;
+        }
     }
 }
