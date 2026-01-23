@@ -21,8 +21,3 @@ public enum NotificationType {
     private final String title;
     private final String defaultMessage;
 }
-
-
-
-
-

@@ -116,8 +116,3 @@ export const LoadingState = styled.div`
   color: ${props => props.theme.colors.gray[600]};
   font-size: ${props => props.theme.fonts.size.base};
 `;
-
-
-
-
-

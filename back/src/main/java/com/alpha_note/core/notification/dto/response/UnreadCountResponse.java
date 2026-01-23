@@ -12,8 +12,3 @@ import lombok.NoArgsConstructor;
 public class UnreadCountResponse {
     private Long unreadCount;
 }
-
-
-
-
-

@@ -85,8 +85,3 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.success("모든 알림이 읽음 처리되었습니다.", null));
     }
 }
-
-
-
-
-
