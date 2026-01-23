@@ -271,12 +271,10 @@ public class BlogService {
             response.setIsVotedByCurrentUser(isVoted);
         }
 
-        // 태그 목록
-        List<BlogTag> blogTags = blogTagRepository.findByBlogId(blog.getId());
+        // 태그 목록 (JOIN FETCH로 N+1 방지)
+        List<BlogTag> blogTags = blogTagRepository.findByBlogIdWithTag(blog.getId());
         List<BlogTagResponse> tags = blogTags.stream()
-                .map(qt -> tagRepository.findByIdAndIsDeletedFalse(qt.getTagId()))
-                .filter(opt -> opt.isPresent())
-                .map(opt -> BlogTagResponse.from(opt.get()))
+                .map(bt -> BlogTagResponse.from(bt.getTag()))
                 .collect(Collectors.toList());
         response.setTags(tags);
 
@@ -310,12 +308,10 @@ public class BlogService {
             response.setUserNickname(user.getNickname());
         });
 
-        // 태그 목록
-        List<BlogTag> questionTags = blogTagRepository.findByBlogId(blog.getId());
-        List<BlogTagResponse> tags = questionTags.stream()
-                .map(qt -> tagRepository.findByIdAndIsDeletedFalse(qt.getTagId()))
-                .filter(opt -> opt.isPresent())
-                .map(opt -> BlogTagResponse.from(opt.get()))
+        // 태그 목록 (JOIN FETCH로 N+1 방지)
+        List<BlogTag> blogTags = blogTagRepository.findByBlogIdWithTag(blog.getId());
+        List<BlogTagResponse> tags = blogTags.stream()
+                .map(bt -> BlogTagResponse.from(bt.getTag()))
                 .collect(Collectors.toList());
         response.setTags(tags);
 

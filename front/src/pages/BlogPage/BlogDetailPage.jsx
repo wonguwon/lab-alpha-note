@@ -3,6 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { MdEdit, MdDelete, MdArrowBack } from 'react-icons/md';
 import { FaRegCommentDots } from 'react-icons/fa';
 import { IoPersonCircle, IoSend } from 'react-icons/io5';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { blogService } from '../../api/services';
 import useAuthStore from '../../store/authStore';
 import {
@@ -185,6 +189,17 @@ const BlogDetailPage = () => {
       });
   };
 
+  // Markdown 여부 체크 (기존 HTML과 호환)
+  const isMarkdown = (content) => {
+    if (!content) return false;
+    // HTML 태그가 있으면 HTML로 판단
+    if (content.includes('<p>') || content.includes('<h1>') || content.includes('<div>')) {
+      return false;
+    }
+    // Markdown 특징이 있으면 Markdown으로 판단
+    return content.includes('#') || content.includes('```') || content.includes('**');
+  };
+
   if (loading) {
     return (
       <DetailContainer>
@@ -252,7 +267,36 @@ const BlogDetailPage = () => {
           )}
         </BlogHeader>
 
-        <BlogBody dangerouslySetInnerHTML={{ __html: blog.content }} />
+        <BlogBody>
+          {isMarkdown(blog.content) ? (
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                code({node, inline, className, children, ...props}) {
+                  const match = /language-(\w+)/.exec(className || '');
+                  return !inline && match ? (
+                    <SyntaxHighlighter
+                      style={tomorrow}
+                      language={match[1]}
+                      PreTag="div"
+                      {...props}
+                    >
+                      {String(children).replace(/\n$/, '')}
+                    </SyntaxHighlighter>
+                  ) : (
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
+                  );
+                }
+              }}
+            >
+              {blog.content}
+            </ReactMarkdown>
+          ) : (
+            <div dangerouslySetInnerHTML={{ __html: blog.content }} />
+          )}
+        </BlogBody>
 
         <ActionBar>
             <VoteSection>

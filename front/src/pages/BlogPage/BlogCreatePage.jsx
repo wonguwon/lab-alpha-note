@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TiptapEditor from '../../components/TiptapEditor';
+import MarkdownEditor from '../../components/MarkdownEditor';
+import BlogMetadataModal from '../../components/BlogMetadataModal';
 import { blogService, storageService } from '../../api/services';
 import {
   CreateContainer,
   CreateCard,
   CreateHeader,
   PageTitle,
-  PageDescription,
   FormSection,
   FormGroup,
   Label,
@@ -18,17 +18,11 @@ import {
   CancelButton,
   SubmitButton,
   ErrorMessage,
-  FileInputWrapper,
-  FileInputLabel,
-  HiddenFileInput,
-  UploadPlaceholder,
-  PreviewImage,
-  HelperText,
-  TagInputWrapper,
-  TagInput,
-  TagList,
-  Tag,
-  RemoveTagButton
+  MetadataSection,
+  MetadataSummary,
+  MetadataTag,
+  MetadataImage,
+  MetadataButton
 } from './BlogCreatePage.styled';
 
 const BlogCreatePage = () => {
@@ -40,9 +34,9 @@ const BlogCreatePage = () => {
         image: null,
         imagePreview: null
     });
-    const [tagInput, setTagInput] = useState('');
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleTitleChange = (e) => {
         const value = e.target.value;
@@ -57,52 +51,13 @@ const BlogCreatePage = () => {
         if (errors.content) setErrors({ ...errors, content: '' });
     };
 
-    const handleTagInputKeyPress = (e) => {
-        if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault();
-            addTag();
-        }
-    };
-
-    const addTag = () => {
-        const tag = tagInput.trim();
-        if (!tag) return;
-
-        if (formData.tags.length >= 5) {
-            setErrors({ ...errors, tags: '태그는 최대 5개까지 추가할 수 있습니다.' });
-            return;
-        }
-
-        if (formData.tags.includes(tag)) {
-            setErrors({ ...errors, tags: '이미 추가된 태그입니다.' });
-            return;
-        }
-
-        setFormData({ ...formData, tags: [...formData.tags, tag] });
-        setTagInput('');
-        setErrors({ ...errors, tags: '' });
-    };
-
-    const removeTag = (tagToRemove) => {
+    const handleMetadataSubmit = (metadata) => {
         setFormData({
             ...formData,
-            tags: formData.tags.filter(tag => tag !== tagToRemove)
+            tags: metadata.tags,
+            image: metadata.image,
+            imagePreview: metadata.imagePreview
         });
-    };
-
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setFormData({
-                    ...formData,
-                    image: file,
-                    imagePreview: reader.result
-                });
-            };
-            reader.readAsDataURL(file);
-        }
     };
 
     const validateForm = () => {
@@ -181,18 +136,14 @@ const BlogCreatePage = () => {
         <CreateContainer>
             <CreateCard>
                 <CreateHeader>
-                    <PageTitle>새 글 작성하기</PageTitle>
-                    <PageDescription>
-                        자유롭게 당신의 이야기를 들려주세요.
-                    </PageDescription>
+                    <PageTitle>Blog</PageTitle>
                 </CreateHeader>
 
-                <form onSubmit={handleSubmit}>
-                    <FormSection>
-                        <FormGroup>
-                            <Label>
-                                제목<RequiredMark>*</RequiredMark>
-                            </Label>
+                <FormSection onSubmit={handleSubmit}>
+                    <FormGroup>
+                        <Label>
+                            제목<RequiredMark>*</RequiredMark>
+                        </Label>
                             <Input
                                 type="text"
                                 placeholder="제목을 입력하세요"
@@ -208,57 +159,10 @@ const BlogCreatePage = () => {
                         </FormGroup>
 
                         <FormGroup>
-                            <Label>태그</Label>
-                            <HelperText>주제와 관련된 태그를 입력하세요. (최대 5개)</HelperText>
-                            <TagInputWrapper>
-                                <TagInput
-                                    type="text"
-                                    placeholder="관련 기술이나 주제를 입력하세요. (예: 일상, 개발, 여행)"
-                                    value={tagInput}
-                                    onChange={(e) => setTagInput(e.target.value)}
-                                    onKeyPress={handleTagInputKeyPress}
-                                    onBlur={addTag}
-                                />
-                            </TagInputWrapper>
-                            {formData.tags.length > 0 && (
-                                <TagList>
-                                    {formData.tags.map((tag, index) => (
-                                        <Tag key={index}>
-                                            {tag}
-                                            <RemoveTagButton type="button" onClick={() => removeTag(tag)}>×</RemoveTagButton>
-                                        </Tag>
-                                    ))}
-                                </TagList>
-                            )}
-                            {errors.tags && <ErrorMessage>{errors.tags}</ErrorMessage>}
-                        </FormGroup>
-
-                        <FormGroup>
-                            <Label>대표 이미지</Label>
-                            <FileInputWrapper>
-                                <FileInputLabel $hasImage={!!formData.imagePreview}>
-                                    {formData.imagePreview ? (
-                                        <PreviewImage src={formData.imagePreview} alt="Preview" />
-                                    ) : (
-                                        <UploadPlaceholder>
-                                            <span style={{ fontSize: '24px' }}>📷</span>
-                                            <span>이미지 업로드</span>
-                                        </UploadPlaceholder>
-                                    )}
-                                    <HiddenFileInput 
-                                        type="file" 
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                    />
-                                </FileInputLabel>
-                            </FileInputWrapper>
-                        </FormGroup>
-
-                        <FormGroup>
                             <Label>
                                 내용<RequiredMark>*</RequiredMark>
                             </Label>
-                            <TiptapEditor
+                            <MarkdownEditor
                                 content={formData.content}
                                 onChange={handleContentChange}
                                 placeholder="당신의 이야기를 자유롭게 적어주세요..."
@@ -266,7 +170,22 @@ const BlogCreatePage = () => {
                             />
                             {errors.content && <ErrorMessage>{errors.content}</ErrorMessage>}
                         </FormGroup>
-                    </FormSection>
+
+                        <MetadataSection>
+                            {formData.tags.length === 0 && !formData.imagePreview ? (
+                                <MetadataSummary>메타데이터 미설정</MetadataSummary>
+                            ) : (
+                                <MetadataSummary>
+                                    {formData.tags.map((tag, index) => (
+                                        <MetadataTag key={index}>{tag}</MetadataTag>
+                                    ))}
+                                    {formData.imagePreview && <MetadataImage>📷</MetadataImage>}
+                                </MetadataSummary>
+                            )}
+                            <MetadataButton type="button" onClick={() => setIsModalOpen(true)}>
+                                메타데이터 설정
+                            </MetadataButton>
+                        </MetadataSection>
 
                     <ButtonGroup>
                         <CancelButton type="button" onClick={handleCancel}>
@@ -276,8 +195,17 @@ const BlogCreatePage = () => {
                             {isSubmitting ? '작성 중...' : '글 게시하기'}
                         </SubmitButton>
                     </ButtonGroup>
-                </form>
+                </FormSection>
             </CreateCard>
+
+            <BlogMetadataModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSubmit={handleMetadataSubmit}
+                initialTags={formData.tags}
+                initialImage={formData.image}
+                initialImagePreview={formData.imagePreview}
+            />
         </CreateContainer>
     );
 };

@@ -15,6 +15,10 @@ public interface BlogTagRepository extends JpaRepository<BlogTag, Long> {
     // 블로그별 태그 조회
     List<BlogTag> findByBlogId(Long blogId);
 
+    // 블로그별 태그 조회 (Tag JOIN FETCH - N+1 방지)
+    @Query("SELECT bt FROM BlogTag bt JOIN FETCH bt.tag t WHERE bt.blogId = :blogId AND t.isDeleted = false")
+    List<BlogTag> findByBlogIdWithTag(@Param("blogId") Long blogId);
+
     // 존재 여부
     boolean existsByBlogIdAndTagId(Long blogId, Long tagId);
 

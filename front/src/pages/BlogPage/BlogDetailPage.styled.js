@@ -43,9 +43,8 @@ export const BlogCard = styled.div`
 `;
 
 export const BlogHeader = styled.div`
-  padding: ${props => props.theme.spacing[5]} 0;
-  border-bottom: 1px solid ${props => props.theme.colors.gray[100]};
   padding: 2rem;
+  border-bottom: 1px solid ${props => props.theme.colors.gray[100]};
 
   @media (max-width: ${props => props.theme.breakpoints.md}) {
     padding: 1.5rem;
@@ -168,22 +167,20 @@ export const Tag = styled.span`
 
 export const ActionBar = styled.div`
   ${flexBetween}
-  padding: ${props => props.theme.spacing[4]} 2rem;
-  background: ${props => props.theme.colors.gray[50]};
-  border-top: 1px solid ${props => props.theme.colors.gray[200]};
+  padding: ${props => props.theme.spacing[4]} 0;
+  background: ${props => props.theme.colors.white};
 
   @media (max-width: ${props => props.theme.breakpoints.md}) {
-    padding: ${props => props.theme.spacing[3]} 1.5rem;
-    flex-direction: column-reverse; /* 모바일에서는 액션 버튼이 위로 */
+    padding: ${props => props.theme.spacing[3]} 0;
+    flex-direction: column;
     gap: ${props => props.theme.spacing[3]};
-    align-items: stretch;
   }
 `;
 
 export const VoteSection = styled.div`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing[3]};
+  gap: ${props => props.theme.spacing[2]};
 `;
 
 export const CommentToggleButton = styled.button`
@@ -255,10 +252,18 @@ export const ActionButton = styled.button`
   cursor: pointer;
   transition: all ${props => props.theme.transitions.base};
 
+  svg {
+    flex-shrink: 0;
+  }
+
   &:hover {
     background: ${props => props.$danger ? props.theme.colors.danger[50] : props.theme.colors.gray[50]};
     color: ${props => props.$danger ? props.theme.colors.danger[700] : props.theme.colors.gray[900]};
     border-color: ${props => props.$danger ? props.theme.colors.danger[400] : props.theme.colors.gray[400]};
+  }
+
+  &:active {
+    transform: translateY(1px);
   }
 `;
 

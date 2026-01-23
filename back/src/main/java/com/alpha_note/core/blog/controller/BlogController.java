@@ -61,6 +61,30 @@ public class BlogController {
     }
 
     /**
+     * 블로그 검색 (키워드 + 검색 타입)
+     * GET /api/v1/blogs/search?keyword=...&searchType=TITLE
+     */
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<Page<BlogResponse>>> searchBlogs(
+            @AuthenticationPrincipal User user,
+            @RequestParam String keyword,
+            @RequestParam(required = false) Boolean votedByMe,
+            @RequestParam(defaultValue = "TITLE") BlogSearchType searchType,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Long userId = (user != null) ? user.getId() : null;
+
+        Page<BlogResponse> response;
+        if (votedByMe != null) {
+            response =  blogService.searchFeedBlogs(keyword, searchType, pageable, userId);
+        } else {
+            response = blogService.searchBlogs(keyword, searchType, pageable, userId);
+        }
+
+        return ResponseEntity.ok(ApiResponse.success("블로그 검색 성공", response));
+    }
+
+    /**
      * 블로그 상세 조회
      * GET /api/v1/blogs/{id}
      */
@@ -99,29 +123,5 @@ public class BlogController {
 
         BlogDetailResponse response = blogService.updateBlog(id, user.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("블로그가 성공적으로 수정되었습니다.", response));
-    }
-
-    /**
-     * 블로그 검색 (키워드 + 검색 타입)
-     * GET /api/v1/blogs/search?keyword=...&searchType=TITLE
-     */
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<BlogResponse>>> searchBlogs(
-            @AuthenticationPrincipal User user,
-            @RequestParam String keyword,
-            @RequestParam(required = false) Boolean votedByMe,
-            @RequestParam(defaultValue = "TITLE") BlogSearchType searchType,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-
-        Long userId = (user != null) ? user.getId() : null;
-
-        Page<BlogResponse> response;
-        if (votedByMe != null) {
-            response =  blogService.searchFeedBlogs(keyword, searchType, pageable, userId);
-        } else {
-            response = blogService.searchBlogs(keyword, searchType, pageable, userId);
-        }
-
-        return ResponseEntity.ok(ApiResponse.success("블로그 검색 성공", response));
     }
 }

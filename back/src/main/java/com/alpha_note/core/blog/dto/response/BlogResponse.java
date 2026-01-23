@@ -45,7 +45,7 @@ public class BlogResponse {
 
         return BlogResponse.builder()
                 .id(blog.getId())
-                .userId(blog.getId())
+                .userId(blog.getUserId())
                 .title(blog.getTitle())
                 .contentPreview(preview)
                 .thumbnailUrl(blog.getThumbnailUrl())

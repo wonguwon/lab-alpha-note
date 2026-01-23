@@ -28,35 +28,35 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     Page<Blog> searchByContent(@Param("keyword") String keyword, Pageable pageable);
 
     // 작성자 닉네임으로 검색
-    @Query("SELECT b FROM Blog b JOIN User u ON b.userId = u.id WHERE u.nickname LIKE %:keyword% AND b.isDeleted = false")
+    @Query("SELECT DISTINCT b FROM Blog b JOIN User u ON b.userId = u.id WHERE u.nickname LIKE %:keyword% AND b.isDeleted = false")
     Page<Blog> searchByAuthor(@Param("keyword") String keyword, Pageable pageable);
 
     // 태그명으로 검색
-    @Query("SELECT b FROM Blog b JOIN BlogTag bt ON b.id = bt.blogId JOIN Tag t ON bt.tagId = t.id " +
+    @Query("SELECT DISTINCT b FROM Blog b JOIN BlogTag bt ON b.id = bt.blogId JOIN Tag t ON bt.tagId = t.id " +
             "WHERE b.isDeleted = false and t.name = :keyword AND t.isDeleted = false")
     Page<Blog> searchByTag(@Param("keyword") String keyword, Pageable pageable);
 
     // 피드 목록 - 투표한 건만 검색
-    @Query("SELECT b FROM Blog b JOIN BlogVote v ON b.id = v.blogId WHERE b.isDeleted = false and v.userId = :userId")
+    @Query("SELECT DISTINCT b FROM Blog b JOIN BlogVote v ON b.id = v.blogId WHERE b.isDeleted = false and v.userId = :userId")
     Page<Blog> findAllWithVotesByUserId(Long userId, Pageable pageable);
 
     // 제목만 검색
-    @Query("SELECT b FROM Blog b JOIN BlogVote v ON b.id = v.blogId " +
+    @Query("SELECT DISTINCT b FROM Blog b JOIN BlogVote v ON b.id = v.blogId " +
             "WHERE b.isDeleted = false and b.title LIKE %:keyword% AND v.userId = :userId")
     Page<Blog> searchWithVotesByTitle(@Param("keyword") String keyword, Long userId, Pageable pageable);
 
     // 내용만 검색
-    @Query("SELECT b FROM Blog b JOIN BlogVote v ON b.id = v.blogId " +
+    @Query("SELECT DISTINCT b FROM Blog b JOIN BlogVote v ON b.id = v.blogId " +
             "WHERE b.isDeleted = false and b.content LIKE %:keyword% AND b.isDeleted = false AND v.userId = :userId")
     Page<Blog> searchWithVotesByContent(@Param("keyword") String keyword, Long userId, Pageable pageable);
 
     // 작성자 닉네임으로 검색
-    @Query("SELECT b FROM Blog b JOIN User u ON b.userId = u.id JOIN BlogVote v ON b.id = v.blogId " +
+    @Query("SELECT DISTINCT b FROM Blog b JOIN User u ON b.userId = u.id JOIN BlogVote v ON b.id = v.blogId " +
             "WHERE b.isDeleted = false AND u.nickname LIKE %:keyword% AND v.userId = :userId")
     Page<Blog> searchWithVotesByAuthor(@Param("keyword") String keyword, Long userId, Pageable pageable);
 
     // 태그명으로 검색
-    @Query("SELECT b FROM Blog b JOIN BlogTag bt ON b.id = bt.blogId JOIN Tag t ON bt.tagId = t.id JOIN BlogVote v ON b.id = v.blogId " +
+    @Query("SELECT DISTINCT b FROM Blog b JOIN BlogTag bt ON b.id = bt.blogId JOIN Tag t ON bt.tagId = t.id JOIN BlogVote v ON b.id = v.blogId " +
             "WHERE b.isDeleted = false and t.name = :keyword AND t.isDeleted = false AND v.userId = :userId")
     Page<Blog> searchWithVotesByTag(@Param("keyword") String keyword, Long userId, Pageable pageable);
 }

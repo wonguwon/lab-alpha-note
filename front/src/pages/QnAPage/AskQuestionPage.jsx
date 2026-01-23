@@ -140,7 +140,7 @@ const AskQuestionPage = () => {
     <AskContainer>
       <AskCard>
         <AskHeader>
-          <PageTitle>질문하기</PageTitle>
+          <PageTitle>Q n A</PageTitle>
         </AskHeader>
 
         <FormSection onSubmit={handleSubmit}>
