@@ -1,6 +1,8 @@
 package com.alpha_note.core.blog.repository;
 
 import com.alpha_note.core.blog.entity.Blog;
+import com.alpha_note.core.blog.enums.BlogStatus;
+import com.alpha_note.core.blog.enums.BlogVisibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,8 +18,18 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     // 기본 조회
     Optional<Blog> findByIdAndIsDeletedFalse(Long id);
 
-    // 전체 질문 페이징 조회 (활성만, 최신순)
+    // 전체 블로그 페이징 조회 (활성만, 최신순)
     Page<Blog> findAllByIsDeletedFalse(Pageable pageable);
+
+    // 공개 + 발행 블로그만 조회 (공개 목록용)
+    @Query("SELECT b FROM Blog b WHERE b.isDeleted = false AND b.status = 'PUBLISHED' AND b.visibility = 'PUBLIC'")
+    Page<Blog> findAllPublicPublished(Pageable pageable);
+
+    // 내 블로그 전체 조회
+    Page<Blog> findByUserIdAndIsDeletedFalse(Long userId, Pageable pageable);
+
+    // 내 블로그 상태별 조회
+    Page<Blog> findByUserIdAndStatusAndIsDeletedFalse(Long userId, BlogStatus status, Pageable pageable);
 
     // 제목만 검색
     @Query("SELECT b FROM Blog b WHERE b.title LIKE %:keyword% AND b.isDeleted = false")
@@ -35,6 +47,23 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     @Query("SELECT DISTINCT b FROM Blog b JOIN BlogTag bt ON b.id = bt.blogId JOIN Tag t ON bt.tagId = t.id " +
             "WHERE b.isDeleted = false and t.name = :keyword AND t.isDeleted = false")
     Page<Blog> searchByTag(@Param("keyword") String keyword, Pageable pageable);
+
+    // 공개+발행 블로그 검색 (제목)
+    @Query("SELECT b FROM Blog b WHERE b.title LIKE %:keyword% AND b.isDeleted = false AND b.status = 'PUBLISHED' AND b.visibility = 'PUBLIC'")
+    Page<Blog> searchPublicPublishedByTitle(@Param("keyword") String keyword, Pageable pageable);
+
+    // 공개+발행 블로그 검색 (내용)
+    @Query("SELECT b FROM Blog b WHERE b.content LIKE %:keyword% AND b.isDeleted = false AND b.status = 'PUBLISHED' AND b.visibility = 'PUBLIC'")
+    Page<Blog> searchPublicPublishedByContent(@Param("keyword") String keyword, Pageable pageable);
+
+    // 공개+발행 블로그 검색 (작성자)
+    @Query("SELECT DISTINCT b FROM Blog b JOIN User u ON b.userId = u.id WHERE u.nickname LIKE %:keyword% AND b.isDeleted = false AND b.status = 'PUBLISHED' AND b.visibility = 'PUBLIC'")
+    Page<Blog> searchPublicPublishedByAuthor(@Param("keyword") String keyword, Pageable pageable);
+
+    // 공개+발행 블로그 검색 (태그)
+    @Query("SELECT DISTINCT b FROM Blog b JOIN BlogTag bt ON b.id = bt.blogId JOIN Tag t ON bt.tagId = t.id " +
+            "WHERE b.isDeleted = false AND t.name = :keyword AND t.isDeleted = false AND b.status = 'PUBLISHED' AND b.visibility = 'PUBLIC'")
+    Page<Blog> searchPublicPublishedByTag(@Param("keyword") String keyword, Pageable pageable);
 
     // 피드 목록 - 투표한 건만 검색
     @Query("SELECT DISTINCT b FROM Blog b JOIN BlogVote v ON b.id = v.blogId WHERE b.isDeleted = false and v.userId = :userId")
@@ -59,4 +88,7 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     @Query("SELECT DISTINCT b FROM Blog b JOIN BlogTag bt ON b.id = bt.blogId JOIN Tag t ON bt.tagId = t.id JOIN BlogVote v ON b.id = v.blogId " +
             "WHERE b.isDeleted = false and t.name = :keyword AND t.isDeleted = false AND v.userId = :userId")
     Page<Blog> searchWithVotesByTag(@Param("keyword") String keyword, Long userId, Pageable pageable);
+
+    // 사용자별 상태별 블로그 갯수 조회
+    long countByUserIdAndStatusAndIsDeletedFalse(Long userId, BlogStatus status);
 }

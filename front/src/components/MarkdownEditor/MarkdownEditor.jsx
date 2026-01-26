@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown } from '@codemirror/lang-markdown';
 import { EditorView } from '@codemirror/view';
@@ -16,14 +16,38 @@ import {
   ToolbarDivider,
   EditorContainer,
   PreviewPane,
-  UploadIndicator
+  UploadIndicator,
+  SplitLayout,
+  LeftPane,
+  RightPane,
+  FullscreenWrapper,
+  FullscreenCloseButton,
+  FullscreenButton
 } from './MarkdownEditor.styled';
 
 const MarkdownEditor = ({ content = '', onChange, placeholder = '', error }) => {
   const [activeTab, setActiveTab] = useState('edit');
   const [uploading, setUploading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const editorViewRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // 전체화면 토글
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  // ESC 키로 전체화면 해제
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isFullscreen]);
 
   // 이미지 업로드 핸들러
   const handleImageUpload = async (file) => {
@@ -168,15 +192,13 @@ const MarkdownEditor = ({ content = '', onChange, placeholder = '', error }) => 
     );
   };
 
-  return (
-    <EditorWrapper $error={error}>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={handleFileSelect}
-      />
+  const editorContent = (
+    <EditorWrapper $error={error} $isFullscreen={isFullscreen}>
+      {isFullscreen && (
+        <FullscreenCloseButton onClick={toggleFullscreen} title="전체화면 닫기 (ESC)">
+          ✕
+        </FullscreenCloseButton>
+      )}
       <EditorHeader>
         <TabButton
           $active={activeTab === 'edit'}
@@ -194,8 +216,8 @@ const MarkdownEditor = ({ content = '', onChange, placeholder = '', error }) => 
         </TabButton>
       </EditorHeader>
 
-      {activeTab === 'edit' ? (
-        <>
+      <SplitLayout>
+        <LeftPane $hideOnMobile={activeTab !== 'edit'}>
           <EditorToolbar>
             <ToolbarButton type="button" onClick={handleBold} title="Bold">
               <strong>B</strong>
@@ -254,9 +276,15 @@ const MarkdownEditor = ({ content = '', onChange, placeholder = '', error }) => 
             <ToolbarButton type="button" onClick={handleHr} title="Horizontal Rule">
               ―
             </ToolbarButton>
+
+            <ToolbarDivider />
+
+            <FullscreenButton type="button" onClick={toggleFullscreen} title="전체화면">
+              전체화면
+            </FullscreenButton>
           </EditorToolbar>
 
-          <EditorContainer>
+          <EditorContainer $isFullscreen={isFullscreen}>
             <CodeMirror
               value={content}
               onChange={(value) => onChange(value)}
@@ -273,25 +301,27 @@ const MarkdownEditor = ({ content = '', onChange, placeholder = '', error }) => 
               }}
             />
           </EditorContainer>
-        </>
-      ) : (
-        <PreviewPane>
-          {content ? (
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                code: CodeBlock
-              }}
-            >
-              {content}
-            </ReactMarkdown>
-          ) : (
-            <div style={{ color: '#9ca3af', fontStyle: 'italic' }}>
-              {placeholder || '프리뷰할 내용이 없습니다.'}
-            </div>
-          )}
-        </PreviewPane>
-      )}
+        </LeftPane>
+
+        <RightPane $hideOnMobile={activeTab !== 'preview'}>
+          <PreviewPane $isFullscreen={isFullscreen}>
+            {content ? (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code: CodeBlock
+                }}
+              >
+                {content}
+              </ReactMarkdown>
+            ) : (
+              <div style={{ color: '#9ca3af', fontStyle: 'italic' }}>
+                {placeholder || '프리뷰할 내용이 없습니다.'}
+              </div>
+            )}
+          </PreviewPane>
+        </RightPane>
+      </SplitLayout>
 
       {uploading && (
         <UploadIndicator>
@@ -300,6 +330,16 @@ const MarkdownEditor = ({ content = '', onChange, placeholder = '', error }) => 
       )}
     </EditorWrapper>
   );
+
+  if (isFullscreen) {
+    return (
+      <FullscreenWrapper>
+        {editorContent}
+      </FullscreenWrapper>
+    );
+  }
+
+  return editorContent;
 };
 
 export default MarkdownEditor;

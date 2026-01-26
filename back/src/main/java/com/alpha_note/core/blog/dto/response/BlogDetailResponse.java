@@ -1,6 +1,8 @@
 package com.alpha_note.core.blog.dto.response;
 
 import com.alpha_note.core.blog.entity.Blog;
+import com.alpha_note.core.blog.enums.BlogStatus;
+import com.alpha_note.core.blog.enums.BlogVisibility;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +27,8 @@ public class BlogDetailResponse {
     private String title;
     private String content; // 전체 내용
     private String thumbnailUrl;
+    private BlogStatus status;
+    private BlogVisibility visibility;
     private Integer viewCount;
     private Integer voteCount;
     private Boolean isVotedByCurrentUser; // Service에서 추가
@@ -42,6 +46,8 @@ public class BlogDetailResponse {
                 .title(blog.getTitle())
                 .content(blog.getContent())
                 .thumbnailUrl(blog.getThumbnailUrl())
+                .status(blog.getStatus())
+                .visibility(blog.getVisibility())
                 .viewCount(blog.getViewCount())
                 .voteCount(blog.getVoteCount())
                 .lastActivityAt(blog.getLastActivityAt())

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import MarkdownEditor from '../../components/MarkdownEditor';
 import BlogMetadataModal from '../../components/BlogMetadataModal';
+import DraftListModal from '../../components/DraftListModal';
 import { blogService, storageService } from '../../api/services';
 import {
   CreateContainer,
@@ -17,13 +18,12 @@ import {
   CharCount,
   ButtonGroup,
   CancelButton,
+  DraftButtonWrapper,
+  DraftButton,
+  DraftDivider,
+  DraftCountButton,
   SubmitButton,
-  ErrorMessage,
-  MetadataSection,
-  MetadataSummary,
-  MetadataTag,
-  MetadataImage,
-  MetadataButton
+  ErrorMessage
 } from './BlogCreatePage.styled';
 
 const BlogEditPage = () => {
@@ -36,14 +36,19 @@ const BlogEditPage = () => {
         tags: [],
         thumbnailUrl: null,
         image: null,
-        imagePreview: null
+        imagePreview: null,
+        status: 'PUBLISHED',
+        visibility: 'PUBLIC'
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDraftListOpen, setIsDraftListOpen] = useState(false);
+    const [draftCount, setDraftCount] = useState(0);
 
     useEffect(() => {
         loadBlog();
+        loadDraftCount();
     }, [id]);
 
     const loadBlog = async () => {
@@ -55,7 +60,9 @@ const BlogEditPage = () => {
                 tags: data.tags?.map(tag => typeof tag === 'string' ? tag : tag.name) || [],
                 thumbnailUrl: data.thumbnailUrl,
                 image: null,
-                imagePreview: data.thumbnailUrl
+                imagePreview: data.thumbnailUrl,
+                status: data.status || 'PUBLISHED',
+                visibility: data.visibility || 'PUBLIC'
             });
         } catch (error) {
             console.error('블로그 불러오기 실패:', error);
@@ -63,6 +70,15 @@ const BlogEditPage = () => {
             navigate('/blogs');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadDraftCount = async () => {
+        try {
+            const response = await blogService.getDraftCount();
+            setDraftCount(response || 0);
+        } catch (error) {
+            console.error('임시저장 갯수 조회 실패:', error);
         }
     };
 
@@ -79,13 +95,78 @@ const BlogEditPage = () => {
         if (errors.content) setErrors({ ...errors, content: '' });
     };
 
-    const handleMetadataSubmit = (metadata) => {
-        setFormData({
-            ...formData,
-            tags: metadata.tags,
-            image: metadata.image,
-            imagePreview: metadata.imagePreview
-        });
+    const handleSaveDraft = async () => {
+        if (!validateForm()) return;
+
+        setIsSubmitting(true);
+        try {
+            await blogService.updateBlog(id, {
+                title: formData.title,
+                content: formData.content,
+                tags: formData.tags,
+                thumbnailUrl: formData.thumbnailUrl,
+                status: 'DRAFT',
+                visibility: 'PRIVATE'
+            });
+
+            alert('임시저장되었습니다');
+            navigate(`/blogs/${id}`);
+        } catch (error) {
+            console.error('임시저장 실패:', error);
+            alert(error.response?.data?.message || '임시저장 중 오류가 발생했습니다.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDraftListOpen = () => {
+        setIsDraftListOpen(true);
+    };
+
+    const handleDraftDeleted = () => {
+        loadDraftCount(); // 삭제 후 카운트 갱신
+    };
+
+    const handleMetadataSubmit = async (metadata) => {
+        setIsSubmitting(true);
+
+        try {
+            let finalThumbnailUrl = formData.thumbnailUrl;
+
+            // 새 이미지가 선택된 경우 업로드
+            if (metadata.image) {
+                const file = metadata.image;
+                const fileName = `${Date.now()}_${file.name}`;
+                const { uploadUrl, fileUrl } = await storageService.getPresignedUrl(
+                    fileName,
+                    file.type,
+                    'public/blogs/thumbnails', // 블로그 썸네일 경로
+                    file.size
+                );
+
+                await storageService.uploadToS3(uploadUrl, file, file.type);
+                finalThumbnailUrl = fileUrl;
+            }
+
+            // 수정
+            await blogService.updateBlog(id, {
+                title: formData.title,
+                content: formData.content,
+                tags: metadata.tags,
+                thumbnailUrl: finalThumbnailUrl,
+                status: 'PUBLISHED', // 수정 완료 시 발행 상태로 변경
+                visibility: metadata.visibility
+            });
+
+            alert('게시글이 수정되었습니다');
+            navigate(`/blogs/${id}`);
+        } catch (error) {
+            console.error('블로그 수정 실패:', error);
+            alert(error.response?.data?.message || '게시글 수정 중 오류가 발생했습니다.');
+        } finally {
+            setIsSubmitting(false);
+            setIsModalOpen(false);
+        }
     };
 
     const validateForm = () => {
@@ -103,46 +184,13 @@ const BlogEditPage = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
 
         if (!validateForm()) return;
 
-        setIsSubmitting(true);
-
-        try {
-            let finalThumbnailUrl = formData.thumbnailUrl;
-
-            // 새 이미지가 선택된 경우 업로드
-            if (formData.image) {
-                const file = formData.image;
-                const fileName = `${Date.now()}_${file.name}`;
-                const { uploadUrl, fileUrl } = await storageService.getPresignedUrl(
-                    fileName,
-                    file.type,
-                    'public/blogs/thumbnails', // 블로그 썸네일 경로
-                    file.size
-                );
-
-                await storageService.uploadToS3(uploadUrl, file, file.type);
-                finalThumbnailUrl = fileUrl;
-            }
-
-             await blogService.updateBlog(id, {
-                title: formData.title,
-                content: formData.content,
-                tags: formData.tags,
-                thumbnailUrl: finalThumbnailUrl
-            });
-
-            alert('게시글이 수정되었습니다.');
-            navigate(`/blogs/${id}`);
-        } catch (error) {
-            console.error('블로그 수정 실패:', error);
-            alert(error.response?.data?.message || '게시글 수정 중 오류가 발생했습니다.');
-        } finally {
-            setIsSubmitting(false);
-        }
+        // 메타데이터 팝업 열기
+        setIsModalOpen(true);
     };
 
     const handleCancel = () => {
@@ -207,26 +255,19 @@ const BlogEditPage = () => {
                             {errors.content && <ErrorMessage>{errors.content}</ErrorMessage>}
                         </FormGroup>
 
-                        <MetadataSection>
-                            {formData.tags.length === 0 && !formData.imagePreview ? (
-                                <MetadataSummary>메타데이터 미설정</MetadataSummary>
-                            ) : (
-                                <MetadataSummary>
-                                    {formData.tags.map((tag, index) => (
-                                        <MetadataTag key={index}>{tag}</MetadataTag>
-                                    ))}
-                                    {formData.imagePreview && <MetadataImage>📷</MetadataImage>}
-                                </MetadataSummary>
-                            )}
-                            <MetadataButton type="button" onClick={() => setIsModalOpen(true)}>
-                                메타데이터 설정
-                            </MetadataButton>
-                        </MetadataSection>
-
                     <ButtonGroup>
                         <CancelButton type="button" onClick={handleCancel}>
                             취소
                         </CancelButton>
+                        <DraftButtonWrapper>
+                            <DraftButton type="button" onClick={handleSaveDraft} disabled={isSubmitting}>
+                                임시저장
+                            </DraftButton>
+                            <DraftDivider />
+                            <DraftCountButton type="button" onClick={handleDraftListOpen}>
+                                {draftCount}
+                            </DraftCountButton>
+                        </DraftButtonWrapper>
                         <SubmitButton type="submit" disabled={isSubmitting}>
                             {isSubmitting ? '수정 중...' : '수정 완료'}
                         </SubmitButton>
@@ -241,6 +282,15 @@ const BlogEditPage = () => {
                 initialTags={formData.tags}
                 initialImage={formData.image}
                 initialImagePreview={formData.imagePreview}
+                isPublishing={isSubmitting}
+                submitButtonText="수정 완료"
+                initialVisibility={formData.visibility}
+            />
+
+            <DraftListModal
+                isOpen={isDraftListOpen}
+                onClose={() => setIsDraftListOpen(false)}
+                onDraftDeleted={handleDraftDeleted}
             />
         </CreateContainer>
     );

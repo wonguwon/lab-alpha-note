@@ -439,6 +439,26 @@ export const blogService = {
   unvoteBlog: async (blogId) => {
     return await api.delete(API_ENDPOINTS.BLOG.BLOG_VOTE(blogId));
   },
+
+  // 내 블로그 목록 조회 - 반환: Page<Blog>
+  getMyBlogs: async (params = {}) => {
+    return await api.get(API_ENDPOINTS.BLOG.MY_BLOGS, { params });
+  },
+
+  // 블로그 발행 (임시저장 → 발행) - 반환: Blog 객체
+  publishBlog: async (id) => {
+    return await api.post(API_ENDPOINTS.BLOG.BLOG_PUBLISH(id));
+  },
+
+  // 블로그 공개범위 변경 - 반환: Blog 객체
+  changeVisibility: async (id, visibility) => {
+    return await api.patch(API_ENDPOINTS.BLOG.BLOG_VISIBILITY(id), { visibility });
+  },
+
+  // 임시저장 블로그 갯수 조회 - 반환: number
+  getDraftCount: async () => {
+    return await api.get(API_ENDPOINTS.BLOG.DRAFT_COUNT);
+  },
 };
 
 
