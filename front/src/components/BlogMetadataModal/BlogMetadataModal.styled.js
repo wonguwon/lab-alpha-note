@@ -292,4 +292,33 @@ export const SubmitButton = styled.button`
   &:hover {
     background: ${props => props.theme.colors.primary[700]};
   }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+export const RadioGroup = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing[4]};
+  opacity: ${props => props.disabled ? 0.5 : 1};
+  pointer-events: ${props => props.disabled ? 'none' : 'auto'};
+`;
+
+export const RadioLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[2]};
+  font-size: ${props => props.theme.fonts.size.sm};
+  color: ${props => props.theme.colors.gray[700]};
+  cursor: pointer;
+  user-select: none;
+`;
+
+export const RadioInput = styled.input`
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: ${props => props.theme.colors.primary[600]};
 `;

@@ -15,6 +15,16 @@ export const FooterContent = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 ${props => props.theme.spacing[6]};
+
+  /* 중간 화면 (1440px 이상) */
+  @media (min-width: 1440px) {
+    max-width: 1376px;
+  }
+
+  /* 큰 화면 (1920px 이상) */
+  @media (min-width: 1920px) {
+    max-width: 1728px;
+  }
 `;
 
 /* 푸터 상단 영역 - 네비게이션 */

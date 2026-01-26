@@ -2,6 +2,8 @@ package com.alpha_note.core.blog.service;
 
 import com.alpha_note.core.blog.dto.response.BlogTagResponse;
 import com.alpha_note.core.blog.enums.BlogSearchType;
+import com.alpha_note.core.blog.enums.BlogStatus;
+import com.alpha_note.core.blog.enums.BlogVisibility;
 import com.alpha_note.core.blog.dto.request.CreateBlogRequest;
 import com.alpha_note.core.blog.dto.request.UpdateBlogRequest;
 import com.alpha_note.core.blog.dto.response.BlogDetailResponse;
@@ -42,11 +44,11 @@ public class BlogService {
     private final BlogViewCountService viewCountService;
 
     /**
-     * 블로그 목록 조회 (페이징)
+     * 블로그 목록 조회 (페이징) - 공개 + 발행 블로그만 조회
      */
     @Transactional(readOnly = true)
     public Page<BlogResponse> getBlogs(Pageable pageable, Long currentUserId) {
-        Page<Blog> blogs = blogRepository.findAllByIsDeletedFalse(pageable);
+        Page<Blog> blogs = blogRepository.findAllPublicPublished(pageable);
         return blogs.map(q -> buildBlogResponse(q, currentUserId));
     }
 
@@ -69,12 +71,14 @@ public class BlogService {
             throw new CustomException(ErrorCode.USER_NOT_FOUND);
         }
 
-        // 질문 생성
+        // 블로그 생성
         Blog blog = Blog.builder()
                 .userId(userId)
                 .title(request.getTitle())
                 .content(request.getContent())
                 .thumbnailUrl(request.getThumbnailUrl())
+                .status(request.getStatus() != null ? request.getStatus() : BlogStatus.PUBLISHED)
+                .visibility(request.getVisibility() != null ? request.getVisibility() : BlogVisibility.PUBLIC)
                 .build();
 
         Blog savedBlog = blogRepository.save(blog);
@@ -98,6 +102,9 @@ public class BlogService {
     public BlogDetailResponse getBlogDetail(Long blogId, Long currentUserId) {
         Blog blog = blogRepository.findByIdAndIsDeletedFalse(blogId)
                 .orElseThrow(() -> new CustomException(ErrorCode.BLOG_NOT_FOUND));
+
+        // 접근 권한 검증: 본인 블로그가 아니면 공개+발행 상태만 접근 가능
+        validateBlogAccess(blog, currentUserId);
 
         // 조회수 증가 (로그인 사용자만, 중복 방지)
         if (currentUserId != null && !viewCountService.hasViewed(blogId, currentUserId)) {
@@ -146,8 +153,9 @@ public class BlogService {
             throw new CustomException(ErrorCode.BLOG_ACCESS_DENIED);
         }
 
-        // 블로그 업데이트
-        blog.update(request.getTitle(), request.getContent(), request.getThumbnailUrl());
+        // 블로그 업데이트 (상태, 공개 범위 포함)
+        blog.update(request.getTitle(), request.getContent(), request.getThumbnailUrl(),
+                request.getStatus(), request.getVisibility());
         blogRepository.save(blog);
 
         // 태그 업데이트
@@ -168,7 +176,7 @@ public class BlogService {
     }
 
     /**
-     * 블로그 검색 (키워드 + 검색 타입)
+     * 블로그 검색 (키워드 + 검색 타입) - 공개 + 발행 블로그만 검색
      */
     @Transactional(readOnly = true)
     public Page<BlogResponse> searchBlogs(String keyword, BlogSearchType searchType, Pageable pageable, Long currentUserId) {
@@ -176,17 +184,17 @@ public class BlogService {
 
         switch (searchType) {
             case CONTENT:
-                blogs = blogRepository.searchByContent(keyword, pageable);
+                blogs = blogRepository.searchPublicPublishedByContent(keyword, pageable);
                 break;
             case AUTHOR:
-                blogs = blogRepository.searchByAuthor(keyword, pageable);
+                blogs = blogRepository.searchPublicPublishedByAuthor(keyword, pageable);
                 break;
             case TAG:
-                blogs = blogRepository.searchByTag(keyword, pageable);
+                blogs = blogRepository.searchPublicPublishedByTag(keyword, pageable);
                 break;
             case TITLE:
             default:
-                blogs = blogRepository.searchByTitle(keyword, pageable);
+                blogs = blogRepository.searchPublicPublishedByTitle(keyword, pageable);
                 break;
         }
 
@@ -219,7 +227,86 @@ public class BlogService {
         return blogs.map(b -> buildBlogResponse(b, currentUserId));
     }
 
+    /**
+     * 내 블로그 목록 조회 (상태 필터 가능)
+     */
+    @Transactional(readOnly = true)
+    public Page<BlogResponse> getMyBlogs(Long userId, BlogStatus status, Pageable pageable) {
+        Page<Blog> blogs;
+        if (status != null) {
+            blogs = blogRepository.findByUserIdAndStatusAndIsDeletedFalse(userId, status, pageable);
+        } else {
+            blogs = blogRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
+        }
+        return blogs.map(b -> buildBlogResponse(b, userId));
+    }
+
+    /**
+     * 블로그 발행
+     */
+    @Transactional
+    public BlogDetailResponse publishBlog(Long blogId, Long userId) {
+        Blog blog = blogRepository.findByIdAndIsDeletedFalse(blogId)
+                .orElseThrow(() -> new CustomException(ErrorCode.BLOG_NOT_FOUND));
+
+        // 작성자 확인
+        if (!blog.isOwnedBy(userId)) {
+            throw new CustomException(ErrorCode.BLOG_ACCESS_DENIED);
+        }
+
+        blog.publish();
+        blogRepository.save(blog);
+
+        log.info("블로그 발행 완료 - blogId: {}, userId: {}", blogId, userId);
+        return buildBlogDetailResponse(blog, userId);
+    }
+
+    /**
+     * 임시저장 블로그 갯수 조회
+     */
+    @Transactional(readOnly = true)
+    public long countMyDraftBlogs(Long userId) {
+        return blogRepository.countByUserIdAndStatusAndIsDeletedFalse(userId, BlogStatus.DRAFT);
+    }
+
+    /**
+     * 공개 범위 변경
+     */
+    @Transactional
+    public BlogDetailResponse changeVisibility(Long blogId, Long userId, BlogVisibility visibility) {
+        Blog blog = blogRepository.findByIdAndIsDeletedFalse(blogId)
+                .orElseThrow(() -> new CustomException(ErrorCode.BLOG_NOT_FOUND));
+
+        // 작성자 확인
+        if (!blog.isOwnedBy(userId)) {
+            throw new CustomException(ErrorCode.BLOG_ACCESS_DENIED);
+        }
+
+        blog.changeVisibility(visibility);
+        blogRepository.save(blog);
+
+        log.info("블로그 공개 범위 변경 완료 - blogId: {}, visibility: {}", blogId, visibility);
+        return buildBlogDetailResponse(blog, userId);
+    }
+
     // ========== Private Helper 메소드 ==========
+
+    /**
+     * 블로그 접근 권한 검증
+     * - 본인 블로그: 항상 접근 가능
+     * - 타인 블로그: PUBLISHED + PUBLIC만 접근 가능
+     */
+    private void validateBlogAccess(Blog blog, Long currentUserId) {
+        // 본인 블로그는 항상 접근 가능
+        if (currentUserId != null && blog.isOwnedBy(currentUserId)) {
+            return;
+        }
+
+        // 타인 블로그는 공개+발행 상태만 접근 가능
+        if (!blog.isPublished() || !blog.isPublic()) {
+            throw new CustomException(ErrorCode.BLOG_ACCESS_DENIED);
+        }
+    }
 
     /**
      * 태그 연결
@@ -243,6 +330,7 @@ public class BlogService {
                 BlogTag blogTag = BlogTag.builder()
                         .blogId(blogId)
                         .tagId(tag.getId())
+                        .tag(tag)
                         .build();
                 blogTagRepository.save(blogTag);
 

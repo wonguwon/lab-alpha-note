@@ -19,13 +19,6 @@ export const BlogHeader = styled.div`
   }
 `;
 
-export const PageTitle = styled.h1`
-  font-size: ${props => props.theme.fonts.size['3xl']};
-  font-weight: ${props => props.theme.fonts.weight.bold};
-  color: ${props => props.theme.colors.gray[900]};
-  margin: 0;
-`;
-
 export const HeaderActions = styled.div`
   display: flex;
   align-items: center;
@@ -33,7 +26,49 @@ export const HeaderActions = styled.div`
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     width: 100%;
+    flex-direction: column;
   }
+`;
+
+export const ViewToggle = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing[2]};
+  background: ${props => props.theme.colors.gray[100]};
+  padding: ${props => props.theme.spacing[1]};
+  border-radius: ${props => props.theme.borderRadius.lg};
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    width: 100%;
+  }
+`;
+
+export const ViewToggleButton = styled.button`
+  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[4]};
+  background: ${props => props.$active ? props.theme.colors.white : 'transparent'};
+  color: ${props => props.$active ? props.theme.colors.primary[600] : props.theme.colors.gray[600]};
+  border: none;
+  border-radius: ${props => props.theme.borderRadius.base};
+  font-weight: ${props => props.$active ? props.theme.fonts.weight.semibold : props.theme.fonts.weight.medium};
+  font-size: ${props => props.theme.fonts.size.sm};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+  white-space: nowrap;
+  box-shadow: ${props => props.$active ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'};
+
+  &:hover {
+    color: ${props => props.theme.colors.primary[600]};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    flex: 1;
+  }
+`;
+
+export const PageTitle = styled.h1`
+  font-size: ${props => props.theme.fonts.size['3xl']};
+  font-weight: ${props => props.theme.fonts.weight.bold};
+  color: ${props => props.theme.colors.gray[900]};
+  margin: 0;
 `;
 
 export const CreateButton = styled.button`
@@ -175,6 +210,16 @@ export const BlogList = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: ${props => props.theme.spacing[6]};
+
+  /* 중간 화면 (1440px 이상) - 4개 */
+  @media (min-width: 1440px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* 큰 화면 (1920px 이상) - 5개 */
+  @media (min-width: 1920px) {
+    grid-template-columns: repeat(5, 1fr);
+  }
 
   @media (max-width: ${props => props.theme.breakpoints.lg}) {
     grid-template-columns: repeat(2, 1fr);
@@ -351,4 +396,63 @@ export const Loading = styled.div`
   padding: ${props => props.theme.spacing[10]};
   color: ${props => props.theme.colors.gray[500]};
   font-size: ${props => props.theme.fonts.size.lg};
+`;
+
+// 내 글 탭 하위 필터
+export const StatusFilterTabs = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing[2]};
+  margin-bottom: ${props => props.theme.spacing[4]};
+  padding: ${props => props.theme.spacing[2]};
+  background: ${props => props.theme.colors.gray[50]};
+  border-radius: ${props => props.theme.borderRadius.base};
+`;
+
+export const StatusFilterTab = styled.button`
+  padding: ${props => props.theme.spacing[1]} ${props => props.theme.spacing[3]};
+  background: ${props => props.$active ? props.theme.colors.primary[600] : 'transparent'};
+  color: ${props => props.$active ? props.theme.colors.white : props.theme.colors.gray[600]};
+  border: none;
+  border-radius: ${props => props.theme.borderRadius.base};
+  font-size: ${props => props.theme.fonts.size.sm};
+  font-weight: ${props => props.$active ? props.theme.fonts.weight.semibold : props.theme.fonts.weight.medium};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+  white-space: nowrap;
+
+  &:hover {
+    background: ${props => props.$active ? props.theme.colors.primary[700] : props.theme.colors.gray[100]};
+  }
+`;
+
+// 배지 스타일
+export const StatusBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: ${props => props.theme.spacing[1]} ${props => props.theme.spacing[2]};
+  background: ${props => props.$type === 'draft' ? props.theme.colors.gray[200] : props.theme.colors.blue[100]};
+  color: ${props => props.$type === 'draft' ? props.theme.colors.gray[700] : props.theme.colors.blue[700]};
+  border-radius: ${props => props.theme.borderRadius.base};
+  font-size: ${props => props.theme.fonts.size.xs};
+  font-weight: ${props => props.theme.fonts.weight.semibold};
+  margin-right: ${props => props.theme.spacing[2]};
+`;
+
+export const VisibilityBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[1]};
+  padding: ${props => props.theme.spacing[1]} ${props => props.theme.spacing[2]};
+  background: ${props => props.theme.colors.warning[300]};
+  color: ${props => props.theme.colors.gray[800]};
+  border-radius: ${props => props.theme.borderRadius.base};
+  font-size: ${props => props.theme.fonts.size.xs};
+  font-weight: ${props => props.theme.fonts.weight.medium};
+`;
+
+export const BadgeContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[2]};
+  margin-bottom: ${props => props.theme.spacing[2]};
 `;

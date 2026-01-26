@@ -25,7 +25,10 @@ import {
   ErrorMessage,
   ModalFooter,
   CancelButton,
-  SubmitButton
+  SubmitButton,
+  RadioGroup,
+  RadioLabel,
+  RadioInput
 } from './BlogMetadataModal.styled';
 
 const BlogMetadataModal = ({
@@ -34,12 +37,16 @@ const BlogMetadataModal = ({
   onSubmit,
   initialTags = [],
   initialImage = null,
-  initialImagePreview = null
+  initialImagePreview = null,
+  isPublishing = false,
+  submitButtonText = '확인',
+  initialVisibility = 'PUBLIC'
 }) => {
   const [tags, setTags] = useState(initialTags);
   const [tagInput, setTagInput] = useState('');
   const [image, setImage] = useState(initialImage);
   const [imagePreview, setImagePreview] = useState(initialImagePreview);
+  const [visibility, setVisibility] = useState(initialVisibility);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -47,9 +54,10 @@ const BlogMetadataModal = ({
       setTags(initialTags);
       setImage(initialImage);
       setImagePreview(initialImagePreview);
+      setVisibility(initialVisibility);
       setErrors({});
     }
-  }, [isOpen, initialTags, initialImage, initialImagePreview]);
+  }, [isOpen, initialTags, initialImage, initialImagePreview, initialVisibility]);
 
   // ESC 키로 닫기
   useEffect(() => {
@@ -130,7 +138,7 @@ const BlogMetadataModal = ({
   };
 
   const handleSubmit = () => {
-    onSubmit({ tags, image, imagePreview });
+    onSubmit({ tags, image, imagePreview, visibility });
     handleClose();
   };
 
@@ -140,13 +148,39 @@ const BlogMetadataModal = ({
     <ModalOverlay onClick={handleOverlayClick}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
         <ModalHeader>
-          <ModalTitle>메타데이터 설정</ModalTitle>
+          <ModalTitle>게시정보 설정</ModalTitle>
           <CloseButton onClick={handleClose}>
             <MdClose />
           </CloseButton>
         </ModalHeader>
 
         <ModalBody>
+          <FormGroup>
+            <Label>공개 범위</Label>
+            <RadioGroup>
+              <RadioLabel>
+                <RadioInput
+                  type="radio"
+                  name="visibility"
+                  value="PUBLIC"
+                  checked={visibility === 'PUBLIC'}
+                  onChange={() => setVisibility('PUBLIC')}
+                />
+                공개
+              </RadioLabel>
+              <RadioLabel>
+                <RadioInput
+                  type="radio"
+                  name="visibility"
+                  value="PRIVATE"
+                  checked={visibility === 'PRIVATE'}
+                  onChange={() => setVisibility('PRIVATE')}
+                />
+                비공개
+              </RadioLabel>
+            </RadioGroup>
+          </FormGroup>
+
           <FormGroup>
             <Label>태그</Label>
             <HelperText>주제와 관련된 태그를 입력하세요. (최대 5개)</HelperText>
@@ -205,11 +239,11 @@ const BlogMetadataModal = ({
         </ModalBody>
 
         <ModalFooter>
-          <CancelButton type="button" onClick={handleClose}>
+          <CancelButton type="button" onClick={handleClose} disabled={isPublishing}>
             취소
           </CancelButton>
-          <SubmitButton type="button" onClick={handleSubmit}>
-            확인
+          <SubmitButton type="button" onClick={handleSubmit} disabled={isPublishing}>
+            {isPublishing ? '게시 중...' : submitButtonText}
           </SubmitButton>
         </ModalFooter>
       </ModalContent>
