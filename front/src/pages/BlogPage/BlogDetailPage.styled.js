@@ -143,6 +143,14 @@ export const BlogBody = styled.div`
     font-style: italic;
   }
 
+  /* 줄바꿈 스타일 (remarkBreaks 플러그인용) */
+  br {
+    line-height: 0;
+    content: "";
+    display: block;
+    margin: 0;
+  }
+
   @media (max-width: ${props => props.theme.breakpoints.md}) {
     padding: 1.5rem;
   }

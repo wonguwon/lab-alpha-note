@@ -4,6 +4,7 @@ import { markdown } from '@codemirror/lang-markdown';
 import { EditorView } from '@codemirror/view';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { storageService } from '../../api/services';
@@ -194,6 +195,13 @@ const MarkdownEditor = ({ content = '', onChange, placeholder = '', error }) => 
 
   const editorContent = (
     <EditorWrapper $error={error} $isFullscreen={isFullscreen}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
       {isFullscreen && (
         <FullscreenCloseButton onClick={toggleFullscreen} title="전체화면 닫기 (ESC)">
           ✕
@@ -307,7 +315,7 @@ const MarkdownEditor = ({ content = '', onChange, placeholder = '', error }) => 
           <PreviewPane $isFullscreen={isFullscreen}>
             {content ? (
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
                   code: CodeBlock
                 }}

@@ -5,6 +5,7 @@ import { FaRegCommentDots } from 'react-icons/fa';
 import { IoPersonCircle, IoSend } from 'react-icons/io5';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { blogService } from '../../api/services';
@@ -197,7 +198,13 @@ const BlogDetailPage = () => {
       return false;
     }
     // Markdown 특징이 있으면 Markdown으로 판단
-    return content.includes('#') || content.includes('```') || content.includes('**');
+    return content.includes('#') ||
+           content.includes('```') ||
+           content.includes('**') ||
+           content.includes('![') ||  // 이미지
+           content.includes('[](') || // 링크
+           content.includes('- ') ||  // 리스트
+           content.includes('* ');    // 리스트
   };
 
   if (loading) {
@@ -270,7 +277,7 @@ const BlogDetailPage = () => {
         <BlogBody>
           {isMarkdown(blog.content) ? (
             <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
+              remarkPlugins={[remarkGfm, remarkBreaks]}
               components={{
                 code({node, inline, className, children, ...props}) {
                   const match = /language-(\w+)/.exec(className || '');

@@ -51,6 +51,7 @@ const BlogPage = () => {
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [searchType, setSearchType] = useState('TAG');
 
@@ -94,15 +95,47 @@ const BlogPage = () => {
     };
 
 
+    // viewMode나 sortType 변경 시 초기화
     useEffect(() => {
-        loadBlogs();
+        setPage(0);
+        setBlogs([]);
+        setHasMore(true);
+        loadBlogs(0, true);
     }, [viewMode, sortType]);
 
-    const loadBlogs = async () => {
+    // page 변경 시 추가 로드
+    useEffect(() => {
+        if (page > 0) {
+            loadBlogs(page, false);
+        }
+    }, [page]);
+
+    // 무한 스크롤 이벤트
+    useEffect(() => {
+        const handleScroll = () => {
+            if (loading || !hasMore) return;
+
+            const scrollHeight = document.documentElement.scrollHeight;
+            const scrollTop = document.documentElement.scrollTop;
+            const clientHeight = document.documentElement.clientHeight;
+
+            // 스크롤이 끝에서 200px 전에 도달하면 다음 페이지 로드
+            if (scrollTop + clientHeight >= scrollHeight - 200) {
+                setPage(prev => prev + 1);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [loading, hasMore]);
+
+    const loadBlogs = async (pageNum, isInitial = false) => {
+        if (loading) return;
+
         setLoading(true);
         try {
             const params = {
-                page: 0,
+                page: pageNum,
                 size: 20,
             };
 
@@ -146,10 +179,21 @@ const BlogPage = () => {
 
             // 응답 구조에 따라 데이터 설정 (Page 객체 가정)
             if (response && response.content) {
-                setBlogs(response.content);
+                if (isInitial) {
+                    // 초기 로드: 데이터 교체
+                    setBlogs(response.content);
+                } else {
+                    // 추가 로드: 데이터 추가
+                    setBlogs(prev => [...prev, ...response.content]);
+                }
                 setTotalPages(response.totalPages);
+                setHasMore(!response.last); // 마지막 페이지 체크
             } else if (Array.isArray(response)) {
-                 setBlogs(response);
+                if (isInitial) {
+                    setBlogs(response);
+                } else {
+                    setBlogs(prev => [...prev, ...response]);
+                }
             }
 
         } catch (error) {
@@ -178,7 +222,9 @@ const BlogPage = () => {
 
     const handleSearch = () => {
         setPage(0);
-        loadBlogs();
+        setBlogs([]);
+        setHasMore(true);
+        loadBlogs(0, true);
     };
 
     const handleKeyPress = (e) => {
@@ -253,7 +299,7 @@ const BlogPage = () => {
                 </SearchBox>
             </FilterSection>
 
-            {loading ? (
+            {loading && blogs.length === 0 ? (
                 <Loading>블로그 글을 불러오는 중...</Loading>
             ) : blogs.length === 0 ? (
                 <EmptyState>
@@ -267,6 +313,7 @@ const BlogPage = () => {
                     )}
                 </EmptyState>
             ) : (
+                <>
                 <BlogList>
                     {blogs.map(post => (
                         <BlogCard
@@ -303,6 +350,8 @@ const BlogPage = () => {
                         </BlogCard>
                     ))}
                 </BlogList>
+                {loading && <Loading>더 많은 글을 불러오는 중...</Loading>}
+                </>
             )}
         </BlogContainer>
     );

@@ -268,6 +268,14 @@ export const PreviewPane = styled.div`
     display: block;
   }
 
+  /* 줄바꿈 스타일 (remarkBreaks 플러그인용) */
+  br {
+    line-height: 0;
+    content: "";
+    display: block;
+    margin: 0;
+  }
+
   /* 볼드 스타일 */
   strong {
     font-weight: bold;
@@ -350,6 +358,8 @@ export const LeftPane = styled.div`
   @media (min-width: 1024px) {
     display: block !important;
     border-right: 1px solid ${props => props.theme.colors.gray[300]};
+    min-width: 0;
+    overflow: hidden;
   }
 `;
 
@@ -358,6 +368,8 @@ export const RightPane = styled.div`
 
   @media (min-width: 1024px) {
     display: block !important;
+    min-width: 0;
+    overflow: hidden;
   }
 `;
 
