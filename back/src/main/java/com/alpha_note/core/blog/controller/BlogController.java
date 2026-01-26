@@ -1,6 +1,8 @@
 package com.alpha_note.core.blog.controller;
 
 import com.alpha_note.core.blog.enums.BlogSearchType;
+import com.alpha_note.core.blog.enums.BlogStatus;
+import com.alpha_note.core.blog.dto.request.ChangeVisibilityRequest;
 import com.alpha_note.core.blog.dto.request.CreateBlogRequest;
 import com.alpha_note.core.blog.dto.request.UpdateBlogRequest;
 import com.alpha_note.core.blog.dto.response.BlogDetailResponse;
@@ -61,6 +63,59 @@ public class BlogController {
     }
 
     /**
+<<<<<<< HEAD
+=======
+     * 내 블로그 목록 조회 (상태 필터 가능)
+     * GET /api/v1/blogs/me?status=DRAFT
+     */
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<Page<BlogResponse>>> getMyBlogs(
+            @AuthenticationPrincipal User user,
+            @RequestParam(required = false) BlogStatus status,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Page<BlogResponse> response = blogService.getMyBlogs(user.getId(), status, pageable);
+        return ResponseEntity.ok(ApiResponse.success("내 블로그 목록 조회 성공", response));
+    }
+
+    /**
+     * 내 임시저장 블로그 갯수 조회
+     * GET /api/v1/blogs/me/draft-count
+     */
+    @GetMapping("/me/draft-count")
+    public ResponseEntity<ApiResponse<Long>> getMyDraftCount(
+            @AuthenticationPrincipal User user) {
+
+        long count = blogService.countMyDraftBlogs(user.getId());
+        return ResponseEntity.ok(ApiResponse.success("임시저장 블로그 갯수 조회 성공", count));
+    }
+
+    /**
+     * 블로그 검색 (키워드 + 검색 타입)
+     * GET /api/v1/blogs/search?keyword=...&searchType=TITLE
+     */
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<Page<BlogResponse>>> searchBlogs(
+            @AuthenticationPrincipal User user,
+            @RequestParam String keyword,
+            @RequestParam(required = false) Boolean votedByMe,
+            @RequestParam(defaultValue = "TITLE") BlogSearchType searchType,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Long userId = (user != null) ? user.getId() : null;
+
+        Page<BlogResponse> response;
+        if (votedByMe != null) {
+            response =  blogService.searchFeedBlogs(keyword, searchType, pageable, userId);
+        } else {
+            response = blogService.searchBlogs(keyword, searchType, pageable, userId);
+        }
+
+        return ResponseEntity.ok(ApiResponse.success("블로그 검색 성공", response));
+    }
+
+    /**
+>>>>>>> 3563658 (feat: Blog v2 - 임시저장 및 공개/비공개 설정 기능 구현)
      * 블로그 상세 조회
      * GET /api/v1/blogs/{id}
      */
@@ -102,6 +157,7 @@ public class BlogController {
     }
 
     /**
+<<<<<<< HEAD
      * 블로그 검색 (키워드 + 검색 타입)
      * GET /api/v1/blogs/search?keyword=...&searchType=TITLE
      */
@@ -123,5 +179,31 @@ public class BlogController {
         }
 
         return ResponseEntity.ok(ApiResponse.success("블로그 검색 성공", response));
+=======
+     * 블로그 발행 (임시저장 -> 발행)
+     * POST /api/v1/blogs/{id}/publish
+     */
+    @PostMapping("/{id}/publish")
+    public ResponseEntity<ApiResponse<BlogDetailResponse>> publishBlog(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id) {
+
+        BlogDetailResponse response = blogService.publishBlog(id, user.getId());
+        return ResponseEntity.ok(ApiResponse.success("블로그가 성공적으로 발행되었습니다.", response));
+    }
+
+    /**
+     * 공개 범위 변경
+     * PATCH /api/v1/blogs/{id}/visibility
+     */
+    @PatchMapping("/{id}/visibility")
+    public ResponseEntity<ApiResponse<BlogDetailResponse>> changeVisibility(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id,
+            @Valid @RequestBody ChangeVisibilityRequest request) {
+
+        BlogDetailResponse response = blogService.changeVisibility(id, user.getId(), request.getVisibility());
+        return ResponseEntity.ok(ApiResponse.success("블로그 공개 범위가 변경되었습니다.", response));
+>>>>>>> 3563658 (feat: Blog v2 - 임시저장 및 공개/비공개 설정 기능 구현)
     }
 }

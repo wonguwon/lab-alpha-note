@@ -1,5 +1,7 @@
 package com.alpha_note.core.blog.entity;
 
+import com.alpha_note.core.blog.enums.BlogStatus;
+import com.alpha_note.core.blog.enums.BlogVisibility;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -21,6 +23,7 @@ import java.util.List;
         @Index(name = "idx_is_deleted", columnList = "is_deleted"),
         @Index(name = "idx_created_at", columnList = "created_at"),
         @Index(name = "idx_vote_count", columnList = "vote_count"),
+        @Index(name = "idx_status_visibility", columnList = "status, visibility"),
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -43,6 +46,16 @@ public class Blog {
 
     @Column(name = "thumbnail_url", length = 1000)
     private String thumbnailUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    @Builder.Default
+    private BlogStatus status = BlogStatus.PUBLISHED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "visibility", nullable = false, length = 20)
+    @Builder.Default
+    private BlogVisibility visibility = BlogVisibility.PUBLIC;
 
     @Column(name = "view_count", nullable = false)
     @Builder.Default
@@ -123,6 +136,52 @@ public class Blog {
         this.content = content;
         this.thumbnailUrl = thumbnailUrl;
         this.updateLastActivity();
+    }
+
+    /**
+     * 블로그 수정 (상태, 공개 범위 포함)
+     */
+    public void update(String title, String content, String thumbnailUrl, BlogStatus status, BlogVisibility visibility) {
+        this.title = title;
+        this.content = content;
+        this.thumbnailUrl = thumbnailUrl;
+        if (status != null) {
+            this.status = status;
+        }
+        if (visibility != null) {
+            this.visibility = visibility;
+        }
+        this.updateLastActivity();
+    }
+
+    /**
+     * 블로그 발행
+     */
+    public void publish() {
+        this.status = BlogStatus.PUBLISHED;
+        this.updateLastActivity();
+    }
+
+    /**
+     * 공개 범위 변경
+     */
+    public void changeVisibility(BlogVisibility visibility) {
+        this.visibility = visibility;
+        this.updateLastActivity();
+    }
+
+    /**
+     * 발행 상태 확인
+     */
+    public boolean isPublished() {
+        return this.status == BlogStatus.PUBLISHED;
+    }
+
+    /**
+     * 공개 상태 확인
+     */
+    public boolean isPublic() {
+        return this.visibility == BlogVisibility.PUBLIC;
     }
 
     /**

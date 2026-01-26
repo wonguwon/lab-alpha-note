@@ -78,6 +78,10 @@ export const API_ENDPOINTS = {
     BLOG_COMMENTS: (blogId) => `/blogs/${blogId}/comments`,
     BLOG_COMMENT_DETAIL: (commentId) => `/blogs/comments/${commentId}`,
     BLOG_VOTE: (blogId) => `/blogs/${blogId}/vote`,
+    MY_BLOGS: '/blogs/me',
+    BLOG_PUBLISH: (id) => `/blogs/${id}/publish`,
+    BLOG_VISIBILITY: (id) => `/blogs/${id}/visibility`,
+    DRAFT_COUNT: '/blogs/me/draft-count',
   },
   // Support 관련
   SUPPORT: {

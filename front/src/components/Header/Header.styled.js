@@ -6,9 +6,19 @@ export const HeaderContainer = styled.div`
   ${flexBetween}
   height: 60px;
   padding: 0 ${props => props.theme.spacing[4]};
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+
+  /* 중간 화면 (1440px 이상) */
+  @media (min-width: 1440px) {
+    max-width: 1376px;
+  }
+
+  /* 큰 화면 (1920px 이상) */
+  @media (min-width: 1920px) {
+    max-width: 1728px;
+  }
 `;
 
 /* 로고 영역 */
