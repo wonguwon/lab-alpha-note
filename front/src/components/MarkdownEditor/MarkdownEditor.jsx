@@ -23,6 +23,7 @@ const MarkdownEditor = ({ content = '', onChange, placeholder = '', error }) => 
   const [activeTab, setActiveTab] = useState('edit');
   const [uploading, setUploading] = useState(false);
   const editorViewRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // 이미지 업로드 핸들러
   const handleImageUpload = async (file) => {
@@ -104,8 +105,18 @@ const MarkdownEditor = ({ content = '', onChange, placeholder = '', error }) => 
   };
 
   const handleImageButton = () => {
-    const url = window.prompt('이미지 URL을 입력하세요:');
-    if (url) insertMarkdown('![', `](${url})`);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      handleImageUpload(file);
+    } else if (file) {
+      alert('이미지 파일만 업로드 가능합니다.');
+    }
+    // input 초기화 (같은 파일 재선택 가능하도록)
+    e.target.value = '';
   };
 
   // CodeMirror 확장 - 이미지 붙여넣기/드래그앤드롭
@@ -159,6 +170,13 @@ const MarkdownEditor = ({ content = '', onChange, placeholder = '', error }) => 
 
   return (
     <EditorWrapper $error={error}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
       <EditorHeader>
         <TabButton
           $active={activeTab === 'edit'}
