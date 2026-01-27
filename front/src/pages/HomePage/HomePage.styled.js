@@ -11,25 +11,30 @@ export const HomeContainer = styled.div`
 export const HeroSection = styled.section`
   ${flexCenter}
   ${flexColumn}
-  min-height: 60vh;
-  background: linear-gradient(135deg, 
-    ${props => props.theme.colors.primary[50]} 0%, 
+  min-height: 35vh;
+  background: linear-gradient(135deg,
+    ${props => props.theme.colors.primary[50]} 0%,
     ${props => props.theme.colors.primary[100]} 100%
   );
   text-align: center;
-  padding: ${props => props.theme.spacing[16]} 0;
+  padding: ${props => props.theme.spacing[12]} 0;
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    min-height: 40vh;
+    padding: ${props => props.theme.spacing[8]} 0;
+  }
 `;
 
 /* 히어로 제목 */
 export const HeroTitle = styled.h1`
-  font-size: ${props => props.theme.fonts.size['5xl']};
+  font-size: ${props => props.theme.fonts.size['4xl']};
   font-weight: ${props => props.theme.fonts.weight.bold};
   color: ${props => props.theme.colors.gray[900]};
-  margin-bottom: ${props => props.theme.spacing[6]};
+  margin-bottom: ${props => props.theme.spacing[4]};
   line-height: ${props => props.theme.fonts.lineHeight.tight};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.md}) {
-    font-size: ${props => props.theme.fonts.size['3xl']};
+    font-size: ${props => props.theme.fonts.size['2xl']};
   }
 `;
 
@@ -113,7 +118,7 @@ export const SectionTitle = styled.h2`
 export const PreviewGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: ${props => props.theme.spacing[8]};
+  gap: ${props => props.theme.spacing[6]};
   margin-bottom: ${props => props.theme.spacing[12]};
 
   @media (max-width: ${props => props.theme.breakpoints.md}) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdClose } from 'react-icons/md';
-import { blogService } from '../../api/services';
+import { growthLogService } from '../../api/services';
 import {
   ModalOverlay,
   ModalContent,
@@ -35,7 +35,7 @@ const DraftListModal = ({ isOpen, onClose, onDraftDeleted }) => {
   const loadDrafts = async () => {
     setLoading(true);
     try {
-      const response = await blogService.getMyBlogs({
+      const response = await growthLogService.getMyGrowthLogs({
         status: 'DRAFT',
         sort: 'createdAt,desc',
         size: 50
@@ -55,7 +55,7 @@ const DraftListModal = ({ isOpen, onClose, onDraftDeleted }) => {
   };
 
   const handleDraftClick = (draftId) => {
-    navigate(`/blogs/${draftId}/edit`);
+    navigate(`/growth-logs/${draftId}/edit`);
     onClose();
   };
 
@@ -67,7 +67,7 @@ const DraftListModal = ({ isOpen, onClose, onDraftDeleted }) => {
     }
 
     try {
-      await blogService.deleteBlog(draftId);
+      await growthLogService.deleteGrowthLog(draftId);
       setDrafts(drafts.filter(draft => draft.id !== draftId));
 
       if (onDraftDeleted) {

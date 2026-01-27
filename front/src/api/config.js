@@ -71,18 +71,18 @@ export const API_ENDPOINTS = {
     HABIT_RECORD_BY_DATE: (habitId, date) => `/habits/${habitId}/records/date/${date}`,
     HABIT_CALENDAR: (habitId) => `/habits/${habitId}/records/calendar`,
   },
-  // Blog 관련
-  BLOG: {
-    BLOGS: '/blogs',
-    BLOG_SEARCH: '/blogs/search',
-    BLOG_DETAIL: (id) => `/blogs/${id}`,
-    BLOG_COMMENTS: (blogId) => `/blogs/${blogId}/comments`,
-    BLOG_COMMENT_DETAIL: (commentId) => `/blogs/comments/${commentId}`,
-    BLOG_VOTE: (blogId) => `/blogs/${blogId}/vote`,
-    MY_BLOGS: '/blogs/me',
-    BLOG_PUBLISH: (id) => `/blogs/${id}/publish`,
-    BLOG_VISIBILITY: (id) => `/blogs/${id}/visibility`,
-    DRAFT_COUNT: '/blogs/me/draft-count',
+  // GrowthLog 관련
+  GROWTH_LOG: {
+    GROWTH_LOGS: '/growth-logs',
+    GROWTH_LOG_SEARCH: '/growth-logs/search',
+    GROWTH_LOG_DETAIL: (id) => `/growth-logs/${id}`,
+    GROWTH_LOG_COMMENTS: (growthLogId) => `/growth-logs/${growthLogId}/comments`,
+    GROWTH_LOG_COMMENT_DETAIL: (commentId) => `/growth-logs/comments/${commentId}`,
+    GROWTH_LOG_VOTE: (growthLogId) => `/growth-logs/${growthLogId}/vote`,
+    MY_GROWTH_LOGS: '/growth-logs/me',
+    GROWTH_LOG_PUBLISH: (id) => `/growth-logs/${id}/publish`,
+    GROWTH_LOG_VISIBILITY: (id) => `/growth-logs/${id}/visibility`,
+    DRAFT_COUNT: '/growth-logs/me/draft-count',
   },
   // Support 관련
   SUPPORT: {

@@ -1,4 +1,4 @@
-package com.alpha_note.core.common.entity;
+package com.alpha_note.core.growthlog.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,38 +7,31 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
-/**
- * 태그 엔티티
- * - 태그를 붙여 분류 및 검색 용이하게 함
- * - 공통으로 분리
- *   - 대상: 질문(Question), 성장기록(GrowthLog)
- * - N:M 관계 (Target <-> Tag)
- */
 @Entity
-@Table(name = "tags", indexes = {
-        @Index(name = "idx_name", columnList = "name"),
+@Table(name = "growth_log_comments", indexes = {
+        @Index(name = "idx_growth_log_id", columnList = "growth_log_id"),
+        @Index(name = "idx_user_id", columnList = "user_id"),
         @Index(name = "idx_is_deleted", columnList = "is_deleted"),
-        @Index(name = "idx_use_count", columnList = "use_count")
+        @Index(name = "idx_created_at", columnList = "created_at")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Tag {
+public class GrowthLogComment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", unique = true, nullable = false, length = 50)
-    private String name;
+    @Column(name = "growth_log_id", nullable = false)
+    private Long growthLogId;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    @Column(name = "use_count", nullable = false)
-    @Builder.Default
-    private Integer useCount = 0;
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
+    private String content;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -55,22 +48,19 @@ public class Tag {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
+    // ========== 관계 매핑 ==========
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "growth_log_id", insertable = false, updatable = false)
+    private GrowthLog growthLog;
+
     // ========== 비즈니스 메소드 ==========
 
     /**
-     * 사용 횟수 증가
+     * 댓글 수정
      */
-    public void incrementUseCount() {
-        this.useCount++;
-    }
-
-    /**
-     * 사용 횟수 감소
-     */
-    public void decrementUseCount() {
-        if (this.useCount > 0) {
-            this.useCount--;
-        }
+    public void updateContent(String content) {
+        this.content = content;
     }
 
     /**
@@ -90,9 +80,9 @@ public class Tag {
     }
 
     /**
-     * 태그 설명 업데이트
+     * 작성자 확인
      */
-    public void updateDescription(String description) {
-        this.description = description;
+    public boolean isOwnedBy(Long userId) {
+        return this.userId.equals(userId);
     }
 }

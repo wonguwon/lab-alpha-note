@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './pages/HomePage';
@@ -23,10 +23,10 @@ import useAuthStore from './store/authStore';
 import useNotificationStore from './store/notificationStore';
 import { setAuthStoreGetter } from './api/axios';
 import { authService } from './api/services';
-import BlogPage from './pages/BlogPage/BlogPage';
-import BlogCreatePage from './pages/BlogPage/BlogCreatePage';
-import BlogDetailPage from './pages/BlogPage/BlogDetailPage';
-import BlogEditPage from './pages/BlogPage/BlogEditPage';
+import GrowthLogPage from './pages/GrowthLogPage/GrowthLogPage';
+import GrowthLogCreatePage from './pages/GrowthLogPage/GrowthLogCreatePage';
+import GrowthLogDetailPage from './pages/GrowthLogPage/GrowthLogDetailPage';
+import GrowthLogEditPage from './pages/GrowthLogPage/GrowthLogEditPage';
 
 function App() {
   const { user, setUser, logout, isAuthenticated } = useAuthStore();
@@ -87,10 +87,11 @@ function App() {
           <Route path="/qna/:id/edit" element={<ProtectedRoute><EditQuestionPage /></ProtectedRoute>} />
           <Route path="/qna/:id/answer" element={<ProtectedRoute><AnswerPage /></ProtectedRoute>} />
           <Route path="/qna/:id/answer/:answerId/edit" element={<ProtectedRoute><EditAnswerPage /></ProtectedRoute>} />
-          <Route path="/blogs" element={<BlogPage />} />
-          <Route path="/blogs/create" element={<ProtectedRoute><BlogCreatePage /></ProtectedRoute>} />
-          <Route path="/blogs/:id" element={<BlogDetailPage />} />
-          <Route path="/blogs/:id/edit" element={<ProtectedRoute><BlogEditPage /></ProtectedRoute>} />
+          <Route path="/growth-logs" element={<GrowthLogPage />} />
+          <Route path="/growth-logs/create" element={<ProtectedRoute><GrowthLogCreatePage /></ProtectedRoute>} />
+          <Route path="/growth-logs/:id" element={<GrowthLogDetailPage />} />
+          <Route path="/growth-logs/:id/edit" element={<ProtectedRoute><GrowthLogEditPage /></ProtectedRoute>} />
+
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signup/social" element={<SocialSignupPage />} />

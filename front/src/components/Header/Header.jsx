@@ -98,10 +98,10 @@ const Header = () => {
             </NavLink>
             <NavLink
               as={Link}
-              to="/blogs"
-              className={location.pathname.startsWith('/blogs') ? 'active' : ''}
+              to="/growth-logs"
+              className={location.pathname.startsWith('/growth-logs') ? 'active' : ''}
             >
-              Blog
+              Growth
             </NavLink>
             <NavLink
               as={Link}

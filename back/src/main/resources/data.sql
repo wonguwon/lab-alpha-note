@@ -1,7 +1,7 @@
--- 블로그 더미 데이터 (20개)
+-- 성장기록 더미 데이터 (20개)
 -- userId는 1로 가정 (실제 존재하는 사용자 ID로 변경 필요)
 
-INSERT INTO blogs (user_id, title, content, thumbnail_url, status, visibility, view_count, vote_count, last_activity_at, created_at, updated_at, is_deleted)
+INSERT INTO growth_logs (user_id, title, content, thumbnail_url, status, visibility, view_count, vote_count, last_activity_at, created_at, updated_at, is_deleted)
 VALUES
 (1, 'Spring Boot 프로젝트 시작하기', '# Spring Boot 프로젝트 시작하기\n\nSpring Boot는 스프링 기반 애플리케이션을 빠르고 쉽게 만들 수 있도록 도와주는 프레임워크입니다.\n\n## 주요 특징\n- 자동 설정\n- 내장 서버\n- 간편한 의존성 관리\n\n시작하기에 아주 좋은 프레임워크입니다.', 'https://example.com/thumbnails/spring-boot.jpg', 'PUBLISHED', 'PUBLIC', 152, 23, NOW(), NOW(), NOW(), false),
 

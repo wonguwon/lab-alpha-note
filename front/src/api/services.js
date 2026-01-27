@@ -385,86 +385,86 @@ export const habitService = {
 };
 
 
-// Blog 관련 API 서비스
-export const blogService = {
-  // 블로그 목록 조회 - 반환: Page<Blog>
-  getBlogs: async (params = {}) => {
-    return await api.get(API_ENDPOINTS.BLOG.BLOGS, { params });
+// GrowthLog 관련 API 서비스
+export const growthLogService = {
+  // 성장기록 목록 조회 - 반환: Page<Growth>
+  getGrowthLogs: async (params = {}) => {
+    return await api.get(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOGS, { params });
   },
 
-  // 블로그 검색 - 반환: Page<Blog>
-  searchBlogs: async (params = {}) => {
-    return await api.get(API_ENDPOINTS.BLOG.BLOG_SEARCH, { params });
+  // 성장기록 검색 - 반환: Page<Growth>
+  searchGrowthLogs: async (params = {}) => {
+    return await api.get(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_SEARCH, { params });
   },
 
-  // 블로그 생성 - 반환: Blog 객체
-  createBlog: async (data) => {
-    return await api.post(API_ENDPOINTS.BLOG.BLOGS, data);
+  // 성장기록 생성 - 반환: Growth 객체
+  createGrowthLog: async (data) => {
+    return await api.post(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOGS, data);
   },
 
-  // 블로그 상세 조회 - 반환: Blog 객체
-  getBlog: async (id) => {
-    return await api.get(API_ENDPOINTS.BLOG.BLOG_DETAIL(id));
+  // 성장기록 상세 조회 - 반환: Growth 객체
+  getGrowthLog: async (id) => {
+    return await api.get(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_DETAIL(id));
   },
 
-  // 블로그 수정 - 반환: Blog 객체
-  updateBlog: async (id, data) => {
-    return await api.put(API_ENDPOINTS.BLOG.BLOG_DETAIL(id), data);
+  // 성장기록 수정 - 반환: Growth 객체
+  updateGrowthLog: async (id, data) => {
+    return await api.put(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_DETAIL(id), data);
   },
 
-  // 블로그 삭제 - 반환: null
-  deleteBlog: async (id) => {
-    return await api.delete(API_ENDPOINTS.BLOG.BLOG_DETAIL(id));
+  // 성장기록 삭제 - 반환: null
+  deleteGrowthLog: async (id) => {
+    return await api.delete(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_DETAIL(id));
   },
 
-  // 블로그 댓글 목록 조회
-  getComments: async (blogId) => {
-    return await api.get(API_ENDPOINTS.BLOG.BLOG_COMMENTS(blogId));
+  // 성장기록 댓글 목록 조회
+  getComments: async (growthLogId) => {
+    return await api.get(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_COMMENTS(growthLogId));
   },
 
-  // 블로그 댓글 작성
-  createComment: async (blogId, data) => {
-    return await api.post(API_ENDPOINTS.BLOG.BLOG_COMMENTS(blogId), data);
+  // 성장기록 댓글 작성
+  createComment: async (growthLogId, data) => {
+    return await api.post(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_COMMENTS(growthLogId), data);
   },
 
-  // 블로그 댓글 수정
+  // 성장기록 댓글 수정
   updateComment: async (commentId, data) => {
-    return await api.put(API_ENDPOINTS.BLOG.BLOG_COMMENT_DETAIL(commentId), data);
+    return await api.put(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_COMMENT_DETAIL(commentId), data);
   },
 
-  // 블로그 댓글 삭제
+  // 성장기록 댓글 삭제
   deleteComment: async (commentId) => {
-    return await api.delete(API_ENDPOINTS.BLOG.BLOG_COMMENT_DETAIL(commentId));
+    return await api.delete(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_COMMENT_DETAIL(commentId));
   },
 
-  // 블로그 추천
-  voteBlog: async (blogId) => {
-    return await api.post(API_ENDPOINTS.BLOG.BLOG_VOTE(blogId));
+  // 성장기록 추천
+  voteGrowthLog: async (growthLogId) => {
+    return await api.post(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_VOTE(growthLogId));
   },
 
-  // 블로그 추천 취소
-  unvoteBlog: async (blogId) => {
-    return await api.delete(API_ENDPOINTS.BLOG.BLOG_VOTE(blogId));
+  // 성장기록 추천 취소
+  unvoteGrowthLog: async (growthLogId) => {
+    return await api.delete(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_VOTE(growthLogId));
   },
 
-  // 내 블로그 목록 조회 - 반환: Page<Blog>
-  getMyBlogs: async (params = {}) => {
-    return await api.get(API_ENDPOINTS.BLOG.MY_BLOGS, { params });
+  // 내 성장기록 목록 조회 - 반환: Page<Growth>
+  getMyGrowthLogs: async (params = {}) => {
+    return await api.get(API_ENDPOINTS.GROWTH_LOG.MY_GROWTH_LOGS, { params });
   },
 
-  // 블로그 발행 (임시저장 → 발행) - 반환: Blog 객체
-  publishBlog: async (id) => {
-    return await api.post(API_ENDPOINTS.BLOG.BLOG_PUBLISH(id));
+  // 성장기록 발행 (임시저장 → 발행) - 반환: Growth 객체
+  publishGrowthLog: async (id) => {
+    return await api.post(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_PUBLISH(id));
   },
 
-  // 블로그 공개범위 변경 - 반환: Blog 객체
+  // 성장기록 공개범위 변경 - 반환: Growth 객체
   changeVisibility: async (id, visibility) => {
-    return await api.patch(API_ENDPOINTS.BLOG.BLOG_VISIBILITY(id), { visibility });
+    return await api.patch(API_ENDPOINTS.GROWTH_LOG.GROWTH_LOG_VISIBILITY(id), { visibility });
   },
 
-  // 임시저장 블로그 갯수 조회 - 반환: number
+  // 임시저장 성장기록 갯수 조회 - 반환: number
   getDraftCount: async () => {
-    return await api.get(API_ENDPOINTS.BLOG.DRAFT_COUNT);
+    return await api.get(API_ENDPOINTS.GROWTH_LOG.DRAFT_COUNT);
   },
 };
 

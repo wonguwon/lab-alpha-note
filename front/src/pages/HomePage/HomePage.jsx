@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
-import { qnaService, habitService, goalService } from '../../api/services';
+import { qnaService, habitService, goalService, growthLogService } from '../../api/services';
 import {
   HomeContainer,
   HeroSection,
@@ -38,12 +38,28 @@ import {
   GoalItemHome,
   GoalTextHome
 } from './HomePage.styled';
+import {
+  GrowthLogList,
+  GrowthLogCard,
+  GrowthLogCardImage,
+  GrowthLogCardContent,
+  GrowthLogTag,
+  GrowthLogTitle,
+  GrowthLogExcerpt,
+  GrowthLogMeta,
+  AuthorInfo,
+  GrowthLogInfoRow,
+  GrowthLogDate,
+  CommentCount,
+  LikeCount
+} from '../GrowthLogPage/GrowthLogPage.styled';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
   const [recentQuestions, setRecentQuestions] = useState([]);
   const [recentHabits, setRecentHabits] = useState([]);
+  const [popularGrowthLogs, setPopularGrowthLogs] = useState([]);
   const [myYearlyGoal, setMyYearlyGoal] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -72,8 +88,21 @@ const HomePage = () => {
           expired: false
         });
 
+        // 인기 성장기록 10개 가져오기 (최근 1개월 내, 조회수 기준)
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        const fromDate = oneMonthAgo.toISOString().split('T')[0];
+
+        const growthLogsData = await growthLogService.getGrowthLogs({
+          page: 0,
+          size: 10,
+          sort: 'viewCount,desc',
+          fromDate: fromDate
+        });
+
         setRecentQuestions(questionsData.content || []);
         setRecentHabits(habitsData.habits || []);
+        setPopularGrowthLogs(growthLogsData.content || []);
 
         // 로그인한 경우 올해 목표 가져오기
         if (isAuthenticated) {
@@ -113,6 +142,29 @@ const HomePage = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const stripMarkdown = (markdown) => {
+    if (!markdown) return '';
+
+    return markdown
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/_([^_]+)_/g, '$1')
+      .replace(/~~([^~]+)~~/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/^>\s+/gm, '')
+      .replace(/^[-*+]\s+/gm, '')
+      .replace(/^\d+\.\s+/gm, '')
+      .replace(/^[-*_]{3,}$/gm, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\n{2,}/g, ' ')
+      .trim();
   };
 
   const handleGetStarted = () => {
@@ -174,8 +226,6 @@ const HomePage = () => {
       {/* 최근 Q&A 및 습관 섹션 */}
       {!loading && (recentQuestions.length > 0 || recentHabits.length > 0) && (
         <ContentSection>
-          <SectionTitle>최근 활동</SectionTitle>
-
           <PreviewGrid>
             {/* 최근 Q&A */}
             <PreviewSection>
@@ -243,6 +293,49 @@ const HomePage = () => {
               </HabitList>
             </PreviewSection>
           </PreviewGrid>
+        </ContentSection>
+      )}
+
+      {/* 인기 성장기록 섹션 */}
+      {!loading && popularGrowthLogs.length > 0 && (
+        <ContentSection>
+          <PreviewHeader>
+            <SectionTitle style={{ marginBottom: 0, textAlign: 'left' }}>인기 성장기록</SectionTitle>
+            <ViewAllButton onClick={() => navigate('/growth-logs')}>
+              전체보기 →
+            </ViewAllButton>
+          </PreviewHeader>
+
+          <GrowthLogList style={{ marginTop: '32px' }}>
+            {popularGrowthLogs.map(growthLog => (
+              <GrowthLogCard key={growthLog.id} onClick={() => navigate(`/growth-logs/${growthLog.id}`)}>
+                {growthLog.thumbnailUrl && <GrowthLogCardImage $src={growthLog.thumbnailUrl} />}
+                <GrowthLogCardContent>
+                  {growthLog.category && <GrowthLogTag>{growthLog.category}</GrowthLogTag>}
+                  <GrowthLogTitle>{growthLog.title}</GrowthLogTitle>
+                  <GrowthLogExcerpt>
+                    {stripMarkdown(growthLog.content || growthLog.summary || growthLog.contentPreview || '').substring(0, 100)}
+                    {stripMarkdown(growthLog.content || growthLog.summary || growthLog.contentPreview || '').length > 100 && '...'}
+                  </GrowthLogExcerpt>
+                  <GrowthLogInfoRow>
+                    <TagList>
+                      {growthLog.tags && growthLog.tags.slice(0, 3).map((tag, i) => (
+                        <Tag key={i}>{typeof tag === 'string' ? tag : tag.name}</Tag>
+                      ))}
+                    </TagList>
+                    <GrowthLogDate>{new Date(growthLog.updatedAt || growthLog.createdAt).toLocaleDateString()}</GrowthLogDate>
+                  </GrowthLogInfoRow>
+                  <GrowthLogMeta>
+                    <AuthorInfo>by {growthLog.userNickname || '익명'}</AuthorInfo>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <CommentCount>💬 {growthLog.commentCount || 0}</CommentCount>
+                      <LikeCount>♡ {growthLog.voteCount || 0}</LikeCount>
+                    </div>
+                  </GrowthLogMeta>
+                </GrowthLogCardContent>
+              </GrowthLogCard>
+            ))}
+          </GrowthLogList>
         </ContentSection>
       )}
 

@@ -826,7 +826,7 @@ export const FixedAnswerButton = styled.button`
   position: fixed;
   bottom: ${props => props.theme.spacing[8]};
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) ${props => props.$show ? 'translateY(0)' : 'translateY(20px)'};
   padding: ${props => props.theme.spacing[4]} ${props => props.theme.spacing[8]};
   background: ${props => props.theme.colors.primary[600]};
   color: ${props => props.theme.colors.white};
@@ -835,9 +835,11 @@ export const FixedAnswerButton = styled.button`
   font-size: ${props => props.theme.fonts.size.lg};
   font-weight: ${props => props.theme.fonts.weight.bold};
   cursor: pointer;
-  transition: all ${props => props.theme.transitions.base};
+  transition: all 0.3s ease-in-out;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
   z-index: ${props => props.theme.zIndex.sticky};
+  opacity: ${props => props.$show ? '1' : '0'};
+  pointer-events: ${props => props.$show ? 'auto' : 'none'};
 
   &:hover {
     background: ${props => props.theme.colors.primary[700]};

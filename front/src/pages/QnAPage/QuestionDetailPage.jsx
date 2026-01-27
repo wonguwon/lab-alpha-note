@@ -76,6 +76,7 @@ const QuestionDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
   // 댓글 토글 상태
   const [showQuestionComments, setShowQuestionComments] = useState(false);
   const [showAnswerComments, setShowAnswerComments] = useState({});
@@ -104,10 +105,36 @@ const QuestionDetailPage = () => {
   const [votingQuestion, setVotingQuestion] = useState(false);
   const [votingAnswers, setVotingAnswers] = useState({});
 
+  // 답변하기 버튼 표시 상태 (스크롤 위치에 따라 제어)
+  const [showAnswerButton, setShowAnswerButton] = useState(true);
+
   // 데이터 로드
   useEffect(() => {
     loadQuestionDetail();
   }, [id]);
+
+  // 스크롤 이벤트 처리 - 하단 도달 시 답변하기 버튼 숨김
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      
+      // 하단에서 100px 이내에 도달하면 버튼 숨김
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
+      
+      setShowAnswerButton(!isNearBottom);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    
+    // 초기 상태 확인
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const loadQuestionDetail = async () => {
     setLoading(true);
@@ -645,7 +672,6 @@ const QuestionDetailPage = () => {
               👍 {question.voteCount || 0}
             </VoteButton>
           </VoteSection>
-          {console.log(user)}
           {isAuthenticated && user?.id === question.userId && (
             <ActionButtons>
               <ActionButton onClick={handleEditQuestion}>
@@ -929,7 +955,7 @@ const QuestionDetailPage = () => {
       </Section>
 
       {/* 하단 고정 답변하기 버튼 */}
-      <FixedAnswerButton onClick={handleAnswerClick}>
+      <FixedAnswerButton onClick={handleAnswerClick} $show={showAnswerButton}>
         답변하기
       </FixedAnswerButton>
     </DetailContainer>

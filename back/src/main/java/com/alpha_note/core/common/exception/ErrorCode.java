@@ -88,9 +88,9 @@ public enum ErrorCode {
     RECORD_DATE_BEFORE_START_DATE(HttpStatus.BAD_REQUEST, "H009", "습관 시작일 이전에 기록을 남길 수 없습니다."),
     HABIT_END_DATE_PASSED(HttpStatus.BAD_REQUEST, "H010", "습관 종료일 이후에 기록을 남길 수 없습니다."),
 
-    // Blog 관련 에러
-    BLOG_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "블로그를 찾을 수 없습니다."),
-    BLOG_ACCESS_DENIED(HttpStatus.FORBIDDEN, "B002", "블로그에 접근할 권한이 없습니다."),
+    // GrowthLog (성장기록) 관련 에러
+    GROWTH_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "성장기록을 찾을 수 없습니다."),
+    GROWTH_LOG_ACCESS_DENIED(HttpStatus.FORBIDDEN, "B002", "성장기록에 접근할 권한이 없습니다."),
 
     // 알림 관련 에러
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "알림을 찾을 수 없습니다."),
