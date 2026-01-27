@@ -56,6 +56,10 @@ const BlogPage = () => {
     }, [sortType]);
 
     const loadBlogs = async () => {
+        if (sortType === 'FEED' && !isAuthenticated) {
+            setBlogs([]);
+            return;
+        }
         setLoading(true);
         try {
             const params = {
@@ -147,13 +151,13 @@ const BlogPage = () => {
                         $active={sortType === 'LATEST'}
                         onClick={() => handleSortChange('LATEST')}
                     >
-                        최근
+                        최신순
                     </FilterTab>
                     <FilterTab 
                         $active={sortType === 'POPULAR'}
                         onClick={() => handleSortChange('POPULAR')}
                     >
-                        인기
+                        인기순
                     </FilterTab>
                     <FilterTab 
                         $active={sortType === 'FEED'}
@@ -186,6 +190,15 @@ const BlogPage = () => {
 
             {loading ? (
                 <Loading>블로그 글을 불러오는 중...</Loading>
+            ) : (sortType === 'FEED' && (!isAuthenticated || blogs.length === 0)) ? (
+                <EmptyState>
+                    <EmptyIcon>🔒</EmptyIcon>
+                    <EmptyTitle>피드가 없습니다.</EmptyTitle>
+                    <EmptyDescription>
+                        인기 있는 블로그 글들을 확인해보세요!
+                    </EmptyDescription>
+                    <CreateButton onClick={() => setSortType('POPULAR')}>인기 블로그 보기</CreateButton>
+                </EmptyState>
             ) : blogs.length === 0 ? (
                 <EmptyState>
                     <EmptyIcon>📝</EmptyIcon>
