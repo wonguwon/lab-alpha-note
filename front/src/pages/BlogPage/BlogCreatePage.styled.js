@@ -206,59 +206,6 @@ export const DraftCountButton = styled.button`
   }
 `;
 
-export const DraftButtonWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  border: 1px solid ${props => props.theme.colors.gray[300]};
-  border-radius: ${props => props.theme.borderRadius.md};
-  overflow: hidden;
-  background: ${props => props.theme.colors.white};
-  transition: all ${props => props.theme.transitions.base};
-
-  &:hover {
-    border-color: ${props => props.theme.colors.gray[400]};
-    background: ${props => props.theme.colors.gray[50]};
-  }
-`;
-
-export const DraftButton = styled.button`
-  padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[4]};
-  font-size: ${props => props.theme.fonts.size.sm};
-  font-weight: ${props => props.theme.fonts.weight.medium};
-  color: ${props => props.theme.colors.gray[700]};
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all ${props => props.theme.transitions.base};
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-`;
-
-export const DraftDivider = styled.div`
-  width: 1px;
-  height: 24px;
-  background: ${props => props.theme.colors.gray[300]};
-`;
-
-export const DraftCountButton = styled.button`
-  padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[4]};
-  font-size: ${props => props.theme.fonts.size.sm};
-  font-weight: ${props => props.theme.fonts.weight.semibold};
-  color: ${props => props.theme.colors.primary[600]};
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all ${props => props.theme.transitions.base};
-  white-space: nowrap;
-
-  &:hover {
-    color: ${props => props.theme.colors.primary[700]};
-  }
-`;
-
 export const SubmitButton = styled.button`
   padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[8]};
   font-size: ${props => props.theme.fonts.size.sm};
