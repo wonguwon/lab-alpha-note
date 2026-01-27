@@ -102,7 +102,8 @@ public class SecurityConfig {
                     "/api/public/**",            // 공개 API
                     "/oauth2/**",                // OAuth2 관련 경로 (Google 로그인)
                     "/login/oauth2/**",          // 콜백
-                    "/error"                     // 에러 페이지
+                    "/error",                    // 에러 페이지
+                    "/favicon.ico"               // 파비콘
                 ).permitAll()
                 // QNA 관련 조회 API는 공개 (GET 요청만)
                 .requestMatchers(
