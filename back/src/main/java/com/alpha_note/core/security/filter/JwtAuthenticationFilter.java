@@ -106,4 +106,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
+    /**
+     * 비동기 dispatch에서도 JWT 필터가 실행되도록 설정
+     * SSE 연결 등 비동기 요청 시 SecurityContext가 전파되지 않는 문제 해결
+     */
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
+    }
 }
