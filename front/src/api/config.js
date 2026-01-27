@@ -37,7 +37,6 @@ export const API_ENDPOINTS = {
     UPDATE_EMAIL: '/users/me/email',
     UPDATE_PROFILE_IMAGE: '/users/me/profile-image',
     DELETE_PROFILE_IMAGE: '/users/me/profile-image',
-    EMAIL_SUBSCRIPTION: '/users/me/email-subscription',
   },
   // 스토리지 관련
   STORAGE: {

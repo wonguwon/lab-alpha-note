@@ -60,19 +60,6 @@ public class UserController {
     }
 
     /**
-     * 이메일 수신동의 설정 변경
-     * PATCH /api/v1/users/me/email-subscription
-     */
-    @PatchMapping("/me/email-subscription")
-    public ResponseEntity<ApiResponse<UserResponse>> updateEmailSubscription(
-            @AuthenticationPrincipal User user,
-            @Valid @RequestBody UpdateEmailSubscriptionRequest request) {
-
-        UserResponse response = userService.updateEmailSubscription(user.getId(), request.getEmailSubscribed());
-        return ResponseEntity.ok(ApiResponse.success("이메일 수신동의 설정이 변경되었습니다.", response));
-    }
-
-    /**
      * 프로필 이미지 삭제
      * DELETE /api/v1/users/me/profile-image
      */

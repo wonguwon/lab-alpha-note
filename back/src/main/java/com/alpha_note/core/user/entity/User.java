@@ -153,10 +153,6 @@ public class User implements UserDetails {
         this.profileImageUrl = null;
     }
 
-    public void updateEmailSubscribed(boolean emailSubscribed) {
-        this.emailSubscribed = emailSubscribed;
-    }
-
     // 계정 상태 관리 메서드
     public void lockAccount() {
         this.accountLocked = true;

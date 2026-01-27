@@ -172,13 +172,6 @@ export const userService = {
       data: requestData
     });
   },
-
-  // 이메일 수신동의 변경 - 반환: User 객체
-  updateEmailSubscription: async (emailSubscribed) => {
-    return await api.patch(API_ENDPOINTS.USER.EMAIL_SUBSCRIPTION, {
-      emailSubscribed
-    });
-  },
 };
 
 // QnA 관련 API 서비스

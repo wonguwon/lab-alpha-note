@@ -99,21 +99,6 @@ public class UserService {
     }
 
     /**
-     * 이메일 수신동의 설정 변경
-     */
-    @Transactional
-    public UserResponse updateEmailSubscription(Long userId, boolean emailSubscribed) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        user.updateEmailSubscribed(emailSubscribed);
-        User updatedUser = userRepository.save(user);
-
-        log.info("Email subscription updated for user: {}, subscribed: {}", user.getEmail(), emailSubscribed);
-        return UserResponse.from(updatedUser);
-    }
-
-    /**
      * 프로필 이미지 삭제
      */
     @Transactional

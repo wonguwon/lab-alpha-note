@@ -24,10 +24,6 @@ import {
   Label,
   Input,
   DisabledInput,
-  ToggleSection,
-  ToggleLabel,
-  ToggleSwitch,
-  ToggleSlider,
   ButtonGroup,
   SaveButton,
   DangerSection,
@@ -47,7 +43,6 @@ const ProfilePage = () => {
   const [profileImagePreview, setProfileImagePreview] = useState(null);
   const [email, setEmail] = useState('');
   const [nickname, setNickname] = useState('');
-  const [emailSubscribed, setEmailSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef(null);
@@ -86,7 +81,6 @@ const ProfilePage = () => {
       // 로그인한 사용자 정보에서 설정
       setEmail(user.email || '');
       setNickname(user.nickname || '');
-      setEmailSubscribed(user.emailSubscribed || false);
 
       // 프로필 이미지가 있으면 설정
       if (user.profileImageUrl) {
@@ -225,23 +219,6 @@ const ProfilePage = () => {
     }
   };
 
-  // 이메일 수신동의 변경
-  const handleEmailSubscriptionToggle = async () => {
-    const newValue = !emailSubscribed;
-    setIsLoading(true);
-    setErrorMessage('');
-
-    try {
-      const updatedUser = await userService.updateEmailSubscription(newValue);
-      setUser(updatedUser);
-      setEmailSubscribed(newValue);
-    } catch (error) {
-      setErrorMessage(error.message || '이메일 수신동의 설정 변경에 실패했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // 회원탈퇴
   const handleDeleteAccount = async () => {
     setDeleteError('');
@@ -370,22 +347,6 @@ const ProfilePage = () => {
               required
             />
           </InputGroup>
-
-          {/* 광고성 이메일 수신동의 */}
-          <ToggleSection>
-            <ToggleLabel>
-              <span>광고성 이메일 수신동의</span>
-              <ToggleSwitch>
-                <input
-                  type="checkbox"
-                  checked={emailSubscribed}
-                  onChange={handleEmailSubscriptionToggle}
-                  disabled={isLoading}
-                />
-                <ToggleSlider />
-              </ToggleSwitch>
-            </ToggleLabel>
-          </ToggleSection>
 
           {errorMessage && (
             <div style={{ color: '#e74c3c', fontSize: '0.875rem', marginTop: '8px' }}>
