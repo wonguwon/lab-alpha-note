@@ -578,7 +578,6 @@ const ProfilePage = () => {
                 </p>
               </div>
 
-              {/* LOCAL 사용자만 비밀번호 입력 */}
               {user?.provider === 'LOCAL' && (
                 <PasswordInputGroup style={{ marginBottom: '12px' }}>
                   <Label htmlFor="deletePassword">비밀번호 확인</Label>

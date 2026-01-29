@@ -70,8 +70,8 @@ public class OAuth2UserSynchronizer {
             throw new OAuth2AuthenticationException(error);
         }
 
-        // 활성 계정만 조회 (삭제된 계정 제외)
-        Optional<User> userOptional = userRepository.findByEmailAndIsDeletedFalse(userInfo.getEmail());
+        // 모든 상태의 계정 조회 (탈퇴한 계정 포함하여 중복 가입 방지)
+        Optional<User> userOptional = userRepository.findByEmail(userInfo.getEmail());
         User user;
         boolean isNewUser;
 
@@ -79,7 +79,7 @@ public class OAuth2UserSynchronizer {
             user = userOptional.get();
             isNewUser = false;
             
-            // 다른 제공자로 이미 가입된 경우 에러
+            // 1. 다른 제공자로 가입된 경우 에러 (A010 우선순위)
             if (!user.getProvider().equals(provider)) {
                 String providerName = getProviderDisplayName(user.getProvider());
                 String errorMessage = "이미 " + providerName + "로 가입된 계정입니다. " +
@@ -88,10 +88,16 @@ public class OAuth2UserSynchronizer {
                         "provider_mismatch",
                         errorMessage,
                         null
-                );
+                    );
                 log.warn("OAuth2 provider mismatch: existing={}, requested={}, email={}",
                         user.getProvider(), provider, userInfo.getEmail());
                 throw new OAuth2AuthenticationException(error, errorMessage);
+            }
+
+            // 2. 탈퇴 신청된 계정인 경우 에러 (복구 플로우 유도)
+            if (user.isDeleted()) {
+                log.warn("Deleted OAuth2 user login attempt: email={}, provider={}", user.getEmail(), provider);
+                throw new OAuth2UserDeletedException(user, "탈퇴 신청된 계정입니다. 복구 후 이용 가능합니다.");
             }
 
             // profileImageUrl이 null인 경우에만 기본 이미지 설정

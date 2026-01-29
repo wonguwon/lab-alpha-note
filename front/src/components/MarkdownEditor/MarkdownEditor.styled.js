@@ -199,6 +199,14 @@ export const PreviewPane = styled.div`
     margin: 0.75em 0;
   }
 
+  ul {
+    list-style-type: disc;
+  }
+
+  ol {
+    list-style-type: decimal;
+  }
+
   li {
     margin: 0.25em 0;
   }

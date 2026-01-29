@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
-import { qnaService, habitService, goalService, growthLogService } from '../../api/services';
+import { qnaService, habitService, growthLogService } from '../../api/services';
 import {
   HomeContainer,
   HeroSection,
@@ -33,10 +33,6 @@ import {
   FeatureIcon,
   FeatureTitle,
   FeatureDescription,
-  GoalSection,
-  GoalListHome,
-  GoalItemHome,
-  GoalTextHome
 } from './HomePage.styled';
 import {
   GrowthLogList,
@@ -60,7 +56,6 @@ const HomePage = () => {
   const [recentQuestions, setRecentQuestions] = useState([]);
   const [recentHabits, setRecentHabits] = useState([]);
   const [popularGrowthLogs, setPopularGrowthLogs] = useState([]);
-  const [myYearlyGoal, setMyYearlyGoal] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -103,20 +98,6 @@ const HomePage = () => {
         setRecentQuestions(questionsData.content || []);
         setRecentHabits(habitsData.habits || []);
         setPopularGrowthLogs(growthLogsData.content || []);
-
-        // 로그인한 경우 올해 목표 가져오기
-        if (isAuthenticated) {
-          try {
-            const currentYear = new Date().getFullYear();
-            const goalData = await goalService.getMyYearlyGoal(currentYear);
-            setMyYearlyGoal(goalData);
-          } catch (error) {
-            // 목표가 없으면 404 에러가 발생할 수 있으므로 무시
-            if (error.response?.status !== 404) {
-              console.error('목표 로딩 실패:', error);
-            }
-          }
-        }
       } catch (error) {
         console.error('데이터 로딩 실패:', error);
       } finally {
@@ -175,14 +156,6 @@ const HomePage = () => {
     }
   };
 
-  const handleGoalSetting = () => {
-    if (isAuthenticated) {
-      navigate('/goals');
-    } else {
-      navigate('/login');
-    }
-  };
-
   return (
     <HomeContainer>
       {/* 히어로 섹션 */}
@@ -197,31 +170,8 @@ const HomePage = () => {
         </HeroDescription>
         <CTAButtons>
           <Button className="primary" onClick={handleGetStarted}>습관 기록하기</Button>
-          <Button className="secondary" onClick={handleGoalSetting}>목표 설정하기</Button>
         </CTAButtons>
       </HeroSection>
-
-      {/* 올해 목표 섹션 */}
-      {isAuthenticated && !loading && myYearlyGoal && myYearlyGoal.goals && myYearlyGoal.goals.length > 0 && (
-        <ContentSection>
-          <SectionTitle>🎯 {new Date().getFullYear()}년 목표</SectionTitle>
-          <GoalSection>
-            <GoalListHome>
-              {myYearlyGoal.goals.map((goal, index) => (
-                <GoalItemHome 
-                  key={index} 
-                  $completed={goal.completed || false}
-                  onClick={() => navigate('/goals')}
-                >
-                  <GoalTextHome $completed={goal.completed || false}>
-                    {goal.text}
-                  </GoalTextHome>
-                </GoalItemHome>
-              ))}
-            </GoalListHome>
-          </GoalSection>
-        </ContentSection>
-      )}
 
       {/* 최근 Q&A 및 습관 섹션 */}
       {!loading && (recentQuestions.length > 0 || recentHabits.length > 0) && (
@@ -371,7 +321,7 @@ const HomePage = () => {
             </FeatureDescription>
           </FeatureCard>
 
-            <FeatureCard style={{ cursor: 'pointer' }} onClick={() => navigate('/growth-logs')}>
+          <FeatureCard style={{ cursor: 'pointer' }} onClick={() => navigate('/growth-logs')}>
             <FeatureIcon>✍️</FeatureIcon>
             <FeatureTitle>성장로그</FeatureTitle>
             <FeatureDescription>

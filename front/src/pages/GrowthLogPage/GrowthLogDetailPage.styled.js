@@ -135,6 +135,27 @@ export const GrowthLogBody = styled.div`
     padding-left: ${props => props.theme.spacing[6]};
   }
 
+  ul {
+    list-style-type: disc;
+  }
+
+  ol {
+    list-style-type: decimal;
+  }
+
+  /* 링크 스타일 */
+  a {
+    color: ${props => props.theme.colors.primary[600]};
+    text-decoration: none;
+    font-weight: ${props => props.theme.fonts.weight.medium};
+    transition: all ${props => props.theme.transitions.fast};
+
+    &:hover {
+      color: ${props => props.theme.colors.primary[700]};
+      text-decoration: underline;
+    }
+  }
+
   blockquote {
     border-left: 4px solid ${props => props.theme.colors.gray[300]};
     padding-left: ${props => props.theme.spacing[4]};
@@ -149,6 +170,26 @@ export const GrowthLogBody = styled.div`
     content: "";
     display: block;
     margin: 0;
+  }
+
+  /* 테이블 스타일 (GFM) */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5rem 0;
+    font-size: ${props => props.theme.fonts.size.sm};
+  }
+
+  th, td {
+    border: 1px solid ${props => props.theme.colors.gray[200]};
+    padding: ${props => props.theme.spacing[3]};
+    text-align: left;
+  }
+
+  th {
+    background: ${props => props.theme.colors.gray[50]};
+    font-weight: ${props => props.theme.fonts.weight.bold};
+    color: ${props => props.theme.colors.gray[900]};
   }
 
   @media (max-width: ${props => props.theme.breakpoints.md}) {

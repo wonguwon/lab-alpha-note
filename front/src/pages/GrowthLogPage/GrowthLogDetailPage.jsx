@@ -182,12 +182,12 @@ const GrowthLogDetailPage = () => {
   };
 
   const formatTimeAgo = (dateString, updatedDateString) => {
-      const date = new Date(updatedDateString || dateString);
-      return date.toLocaleDateString('ko-KR', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-      });
+    const date = new Date(updatedDateString || dateString);
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   // Markdown 여부 체크 (기존 HTML과 호환)
@@ -199,12 +199,25 @@ const GrowthLogDetailPage = () => {
     }
     // Markdown 특징이 있으면 Markdown으로 판단
     return content.includes('#') ||
-           content.includes('```') ||
-           content.includes('**') ||
-           content.includes('![') ||  // 이미지
-           content.includes('[](') || // 링크
-           content.includes('- ') ||  // 리스트
-           content.includes('* ');    // 리스트
+      content.includes('```') ||
+      content.includes('**') ||
+      content.includes('![') ||  // 이미지
+      content.includes('[](') || // 링크
+      content.includes('- ') ||  // 리스트
+      content.includes('|') ||   // 테이블
+      content.includes('* ');    // 리스트
+  };
+
+  // 헬퍼 함수: 텍스트에서 slug 생성
+  const createSlug = (children) => {
+    const text = React.Children.toArray(children)
+      .map((child) => (typeof child === 'string' ? child : (child.props?.children ? createSlug(child.props.children) : '')))
+      .join('');
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s가-힣-]/g, '')
+      .replace(/\s+/g, '-');
   };
 
   if (loading) {
@@ -246,7 +259,7 @@ const GrowthLogDetailPage = () => {
 
       <GrowthLogCard>
         {growthLog.thumbnailUrl && <GrowthLogImage src={growthLog.thumbnailUrl} alt={growthLog.title} />}
-        
+
         <GrowthLogHeader>
           <GrowthLogTitle>{growthLog.title}</GrowthLogTitle>
           <GrowthLogMeta>
@@ -267,9 +280,9 @@ const GrowthLogDetailPage = () => {
 
           {growthLog.tags && growthLog.tags.length > 0 && (
             <TagList>
-                {growthLog.tags.map((tag, index) => (
-                    <Tag key={index}>{typeof tag === 'string' ? tag : tag.name}</Tag>
-                ))}
+              {growthLog.tags.map((tag, index) => (
+                <Tag key={index}>{typeof tag === 'string' ? tag : tag.name}</Tag>
+              ))}
             </TagList>
           )}
         </GrowthLogHeader>
@@ -279,7 +292,33 @@ const GrowthLogDetailPage = () => {
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkBreaks]}
               components={{
-                code({node, inline, className, children, ...props}) {
+                h1: ({ children }) => <h1 id={createSlug(children)}>{children}</h1>,
+                h2: ({ children }) => <h2 id={createSlug(children)}>{children}</h2>,
+                h3: ({ children }) => <h3 id={createSlug(children)}>{children}</h3>,
+                h4: ({ children }) => <h4 id={createSlug(children)}>{children}</h4>,
+                h5: ({ children }) => <h5 id={createSlug(children)}>{children}</h5>,
+                h6: ({ children }) => <h6 id={createSlug(children)}>{children}</h6>,
+                a: ({ href, children, ...props }) => {
+                  if (href?.startsWith('#')) {
+                    const handleClick = (e) => {
+                      e.preventDefault();
+                      const element = document.getElementById(decodeURIComponent(href.slice(1)));
+                      if (element) {
+                        const offset = 80; // 헤더 높이(60px) + 여백
+                        const elementPosition = element.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+                        window.scrollTo({
+                          top: offsetPosition,
+                          behavior: 'smooth'
+                        });
+                      }
+                    };
+                    return <a href={href} onClick={handleClick} {...props}>{children}</a>;
+                  }
+                  return <a href={href} {...props}>{children}</a>;
+                },
+                code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '');
                   return !inline && match ? (
                     <SyntaxHighlighter
@@ -306,31 +345,31 @@ const GrowthLogDetailPage = () => {
         </GrowthLogBody>
 
         <ActionBar>
-            <VoteSection>
+          <VoteSection>
             <CommentToggleButton onClick={toggleComments}>
-                <FaRegCommentDots />
-                댓글 {growthLog.commentCount || 0}
+              <FaRegCommentDots />
+              댓글 {growthLog.commentCount || 0}
             </CommentToggleButton>
-            <VoteButton 
-                onClick={handleVote} 
-                $voted={growthLog.isVotedByCurrentUser}
-                disabled={voting}
+            <VoteButton
+              onClick={handleVote}
+              $voted={growthLog.isVotedByCurrentUser}
+              disabled={voting}
             >
-                👍 {growthLog.voteCount || 0}
+              👍 {growthLog.voteCount || 0}
             </VoteButton>
-            </VoteSection>
-            {isAuthenticated && user?.id === growthLog.userId && (
+          </VoteSection>
+          {isAuthenticated && user?.id === growthLog.userId && (
             <ActionButtons>
-                <ActionButton onClick={handleEdit}>
+              <ActionButton onClick={handleEdit}>
                 <MdEdit size={16} />
                 수정
-                </ActionButton>
-                <ActionButton onClick={handleDelete} $danger>
+              </ActionButton>
+              <ActionButton onClick={handleDelete} $danger>
                 <MdDelete size={16} />
                 삭제
-                </ActionButton>
+              </ActionButton>
             </ActionButtons>
-            )}
+          )}
         </ActionBar>
 
         {showComments && (
@@ -342,9 +381,9 @@ const GrowthLogDetailPage = () => {
                     placeholder="칭찬과 격려의 댓글은 작성자에게 큰 힘이 됩니다 :)"
                     value={newComment}
                     onChange={(e) => {
-                        if (e.target.value.length <= MAX_COMMENT_LENGTH) {
-                            setNewComment(e.target.value);
-                        }
+                      if (e.target.value.length <= MAX_COMMENT_LENGTH) {
+                        setNewComment(e.target.value);
+                      }
                     }}
                     maxLength={MAX_COMMENT_LENGTH}
                   />
@@ -363,7 +402,7 @@ const GrowthLogDetailPage = () => {
                 </CommentInputArea>
               </CommentForm>
             )}
-            
+
             {loadingComments ? (
               <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
                 댓글을 불러오는 중...

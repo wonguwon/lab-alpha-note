@@ -162,6 +162,9 @@ public class UserService {
 
         // LOCAL 사용자인 경우 비밀번호 검증
         if (user.getProvider() == AuthProvider.LOCAL) {
+            if (request.getPassword() == null || request.getPassword().isBlank()) {
+                throw new CustomException(ErrorCode.INCORRECT_PASSWORD); // 또는 전용 에러 코드 사용
+            }
             if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
                 throw new CustomException(ErrorCode.INCORRECT_PASSWORD);
             }

@@ -2,42 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import {
-  GrowthLogContainer,
-  GrowthLogHeader,
-  PageTitle,
-  CreateButton,
-  HeaderActions,
-  ViewToggle,
-  ViewToggleButton,
-  FilterSection,
-  FilterTabs,
-  FilterTab,
-  GrowthLogList,
-  GrowthLogCard,
-  GrowthLogCardImage,
-  GrowthLogCardContent,
-  GrowthLogTag,
-  GrowthLogTitle,
-  GrowthLogExcerpt,
-  GrowthLogMeta,
-  AuthorInfo,
-  GrowthLogDate,
-  EmptyState,
-  EmptyIcon,
-  EmptyTitle,
-  EmptyDescription,
-  Loading,
-  CommentCount,
-  LikeCount,
-  GrowthLogInfoRow,
-  TagList,
-  Tag,
-  SearchBox,
-  SearchTypeSelect,
-  SearchInput,
-  SearchButton,
-  VisibilityBadge,
-  BadgeContainer,
+    GrowthLogContainer,
+    GrowthLogHeader,
+    PageTitle,
+    CreateButton,
+    HeaderActions,
+    ViewToggle,
+    ViewToggleButton,
+    FilterSection,
+    FilterTabs,
+    FilterTab,
+    GrowthLogList,
+    GrowthLogCard,
+    GrowthLogCardImage,
+    GrowthLogCardContent,
+    GrowthLogTag,
+    GrowthLogTitle,
+    GrowthLogExcerpt,
+    GrowthLogMeta,
+    AuthorInfo,
+    GrowthLogDate,
+    EmptyState,
+    EmptyIcon,
+    EmptyTitle,
+    EmptyDescription,
+    Loading,
+    CommentCount,
+    LikeCount,
+    GrowthLogInfoRow,
+    TagList,
+    Tag,
+    SearchBox,
+    SearchTypeSelect,
+    SearchInput,
+    SearchButton,
+    VisibilityBadge,
+    BadgeContainer,
 } from './GrowthLogPage.styled';
 import { growthLogService } from '../../api/services';
 
@@ -60,36 +60,29 @@ const GrowthLogPage = () => {
         if (!markdown) return '';
 
         return markdown
-            // 헤더 제거 (# ## ### 등)
-            .replace(/^#{1,6}\s+/gm, '')
-            // 굵은 글씨 제거 (**text** or __text__)
-            .replace(/\*\*([^*]+)\*\*/g, '$1')
-            .replace(/__([^_]+)__/g, '$1')
-            // 기울임 제거 (*text* or _text_)
-            .replace(/\*([^*]+)\*/g, '$1')
-            .replace(/_([^_]+)_/g, '$1')
-            // 취소선 제거 (~~text~~)
-            .replace(/~~([^~]+)~~/g, '$1')
-            // 링크 제거 [text](url)
-            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-            // 이미지 제거 ![alt](url)
-            .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
-            // 인라인 코드 제거 `code`
+            // 코드 블록 먼저 제거
+            .replace(/```[\s\S]*?```/g, ' ')
+            // 인라인 코드 제거
             .replace(/`([^`]+)`/g, '$1')
-            // 코드 블록 제거
-            .replace(/```[\s\S]*?```/g, '')
+            // 이미지 제거 ![alt](url) -> empty
+            .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+            // 링크 제거 [text](url) -> text
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+            // 헤더 제거 (# ## ### 등) - 줄 시작 무관하게 #이 연속된 후 시작되는 패턴 처리
+            // #+ 뒤에 공백이 있거나 바로 문자가 오는 경우 모두 처리
+            .replace(/#+\s?/g, '')
+            // 굵은 글씨, 기울임, 취소선 기호 제거
+            .replace(/(\*\*|__|[*_]|~~)/g, '')
             // 인용구 제거 (>)
-            .replace(/^>\s+/gm, '')
-            // 리스트 제거 (- * +)
-            .replace(/^[-*+]\s+/gm, '')
-            // 숫자 리스트 제거 (1. 2. 등)
-            .replace(/^\d+\.\s+/gm, '')
-            // 구분선 제거 (---, ***, ___)
-            .replace(/^[-*_]{3,}$/gm, '')
+            .replace(/^\s*>\s+/gm, ' ')
+            // 리스트 기호 및 숫자 리스트 기호 제거
+            .replace(/^\s*([-*+]|\d+\.)\s+/gm, ' ')
+            // 구분선 제거
+            .replace(/^\s*[-*_]{3,}\s*$/gm, ' ')
             // HTML 태그 제거
-            .replace(/<[^>]+>/g, '')
-            // 여러 줄바꿈을 하나로
-            .replace(/\n{2,}/g, ' ')
+            .replace(/<[^>]+>/g, ' ')
+            // 여러 줄바꿈 및 연속된 공백을 하나의 공백으로
+            .replace(/\s+/g, ' ')
             // 앞뒤 공백 제거
             .trim();
     };
@@ -323,43 +316,43 @@ const GrowthLogPage = () => {
                 </EmptyState>
             ) : (
                 <>
-                <GrowthLogList>
-                    {growthLogs.map(post => (
-                        <GrowthLogCard
-                            key={post.id}
-                            onClick={() => navigate(`/growth-logs/${post.id}`)}
-                        >
-                            {post.thumbnailUrl && <GrowthLogCardImage $src={post.thumbnailUrl} />}
-                            <GrowthLogCardContent>
-                                {/* 비공개 배지만 표시 */}
-                                {post.visibility === 'PRIVATE' && (
-                                    <BadgeContainer>
-                                        <VisibilityBadge>비공개</VisibilityBadge>
-                                    </BadgeContainer>
-                                )}
-                                {post.category && <GrowthLogTag>{post.category}</GrowthLogTag>}
-                                <GrowthLogTitle>{post.title}</GrowthLogTitle>
-                                <GrowthLogExcerpt>{stripMarkdown(post.summary || post.contentPreview)?.substring(0, 100)}...</GrowthLogExcerpt>
-                                <GrowthLogInfoRow>
-                                    <TagList>
-                                        {post.tags && post.tags.slice(0, 3).map((tag, i) => (
-                                            <Tag key={i}>{typeof tag === 'string' ? tag : tag.name}</Tag>
-                                        ))}
-                                    </TagList>
-                                    <GrowthLogDate>{new Date(post.updatedAt || post.createdAt).toLocaleDateString()}</GrowthLogDate>
-                                </GrowthLogInfoRow>
-                                <GrowthLogMeta>
-                                    <AuthorInfo>by {post.userNickname || 'Unknown'}</AuthorInfo>
-                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                        <CommentCount>💬 {post.commentCount || 0}</CommentCount>
-                                        <LikeCount>♡ {post.voteCount || 0}</LikeCount>
-                                    </div>
-                                </GrowthLogMeta>
-                            </GrowthLogCardContent>
-                        </GrowthLogCard>
-                    ))}
-                </GrowthLogList>
-                {loading && <Loading>더 많은 글을 불러오는 중...</Loading>}
+                    <GrowthLogList>
+                        {growthLogs.map(post => (
+                            <GrowthLogCard
+                                key={post.id}
+                                onClick={() => navigate(`/growth-logs/${post.id}`)}
+                            >
+                                {post.thumbnailUrl && <GrowthLogCardImage $src={post.thumbnailUrl} />}
+                                <GrowthLogCardContent>
+                                    {/* 비공개 배지만 표시 */}
+                                    {post.visibility === 'PRIVATE' && (
+                                        <BadgeContainer>
+                                            <VisibilityBadge>비공개</VisibilityBadge>
+                                        </BadgeContainer>
+                                    )}
+                                    {post.category && <GrowthLogTag>{post.category}</GrowthLogTag>}
+                                    <GrowthLogTitle>{post.title}</GrowthLogTitle>
+                                    <GrowthLogExcerpt>{stripMarkdown(post.summary || post.contentPreview)?.substring(0, 100)}...</GrowthLogExcerpt>
+                                    <GrowthLogInfoRow>
+                                        <TagList>
+                                            {post.tags && post.tags.slice(0, 3).map((tag, i) => (
+                                                <Tag key={i}>{typeof tag === 'string' ? tag : tag.name}</Tag>
+                                            ))}
+                                        </TagList>
+                                        <GrowthLogDate>{new Date(post.updatedAt || post.createdAt).toLocaleDateString()}</GrowthLogDate>
+                                    </GrowthLogInfoRow>
+                                    <GrowthLogMeta>
+                                        <AuthorInfo>by {post.userNickname || 'Unknown'}</AuthorInfo>
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                            <CommentCount>💬 {post.commentCount || 0}</CommentCount>
+                                            <LikeCount>♡ {post.voteCount || 0}</LikeCount>
+                                        </div>
+                                    </GrowthLogMeta>
+                                </GrowthLogCardContent>
+                            </GrowthLogCard>
+                        ))}
+                    </GrowthLogList>
+                    {loading && <Loading>더 많은 글을 불러오는 중...</Loading>}
                 </>
             )}
         </GrowthLogContainer>

@@ -131,6 +131,14 @@ public class SecurityConfig {
                     "/api/v1/habits/*/records/*",
                     "/api/v1/habits/*/records/calendar"
                 ).permitAll()
+                // Growth Logs 관련 조회 API는 공개 (GET 요청만)
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.GET,
+                    "/api/v1/growth-logs",
+                    "/api/v1/growth-logs/*",
+                    "/api/v1/growth-logs/search",
+                    "/api/v1/growth-logs/*/comments"
+                ).permitAll()
                 .anyRequest().authenticated()  // 나머지는 인증 필요 (/api/v1/auth/me 포함)
             )
             // Google OAuth2 로그인 설정
