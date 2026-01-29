@@ -1,6 +1,7 @@
 package com.alpha_note.core.qna.repository;
 
 import com.alpha_note.core.qna.entity.Question;
+import com.alpha_note.core.qna.enums.QuestionCategory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,6 +28,28 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 
     // 답변 여부별 조회 (최신순)
     Page<Question> findByIsAnsweredAndIsDeletedFalseOrderByCreatedAtDesc(Boolean isAnswered, Pageable pageable);
+
+    // 카테고리별 조회 (Pageable의 sort 사용)
+    Page<Question> findByCategoryAndIsDeletedFalse(QuestionCategory category, Pageable pageable);
+
+    // 사용자별 + 카테고리별 질문 조회
+    Page<Question> findByUserIdAndCategoryAndIsDeletedFalse(Long userId, QuestionCategory category, Pageable pageable);
+
+    // 제목 + 내용 검색 + 카테고리 필터
+    @Query("SELECT q FROM Question q WHERE (q.title LIKE %:keyword% OR q.content LIKE %:keyword%) AND q.category = :category AND q.isDeleted = false")
+    Page<Question> searchByKeywordAndCategory(@Param("keyword") String keyword, @Param("category") QuestionCategory category, Pageable pageable);
+
+    // 제목만 검색 + 카테고리 필터
+    @Query("SELECT q FROM Question q WHERE q.title LIKE %:keyword% AND q.category = :category AND q.isDeleted = false")
+    Page<Question> searchByTitleAndCategory(@Param("keyword") String keyword, @Param("category") QuestionCategory category, Pageable pageable);
+
+    // 내용만 검색 + 카테고리 필터
+    @Query("SELECT q FROM Question q WHERE q.content LIKE %:keyword% AND q.category = :category AND q.isDeleted = false")
+    Page<Question> searchByContentAndCategory(@Param("keyword") String keyword, @Param("category") QuestionCategory category, Pageable pageable);
+
+    // 작성자 닉네임으로 검색 + 카테고리 필터
+    @Query("SELECT q FROM Question q JOIN User u ON q.userId = u.id WHERE u.nickname LIKE %:keyword% AND q.category = :category AND q.isDeleted = false")
+    Page<Question> searchByAuthorAndCategory(@Param("keyword") String keyword, @Param("category") QuestionCategory category, Pageable pageable);
 
     // 제목 + 내용 검색 (JPQL, Pageable의 sort 사용)
     @Query("SELECT q FROM Question q WHERE (q.title LIKE %:keyword% OR q.content LIKE %:keyword%) AND q.isDeleted = false")

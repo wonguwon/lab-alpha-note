@@ -1,5 +1,6 @@
 package com.alpha_note.core.qna.entity;
 
+import com.alpha_note.core.qna.enums.QuestionCategory;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -23,7 +24,8 @@ import java.util.List;
         @Index(name = "idx_vote_count", columnList = "vote_count"),
         @Index(name = "idx_last_activity_at", columnList = "last_activity_at"),
         @Index(name = "idx_is_answered", columnList = "is_answered"),
-        @Index(name = "idx_accepted_answer_id", columnList = "accepted_answer_id")
+        @Index(name = "idx_accepted_answer_id", columnList = "accepted_answer_id"),
+        @Index(name = "idx_category", columnList = "category")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -43,6 +45,11 @@ public class Question {
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", length = 20)
+    @Builder.Default
+    private QuestionCategory category = QuestionCategory.TECH;
 
     @Column(name = "view_count", nullable = false)
     @Builder.Default
@@ -176,6 +183,21 @@ public class Question {
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
+        this.updateLastActivity();
+    }
+
+    /**
+     * 질문 수정 (카테고리 포함)
+     * @param title 제목
+     * @param content 내용
+     * @param category 카테고리
+     */
+    public void update(String title, String content, QuestionCategory category) {
+        this.title = title;
+        this.content = content;
+        if (category != null) {
+            this.category = category;
+        }
         this.updateLastActivity();
     }
 

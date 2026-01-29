@@ -91,8 +91,7 @@ export const Input = styled.input`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.$error ? '#ef4444' : props.theme.colors.primary[600]};
-    box-shadow: 0 0 0 1px ${props => props.$error ? '#ef4444' : props.theme.colors.primary[600]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   &::placeholder {
@@ -112,8 +111,7 @@ export const TextArea = styled.textarea`
   transition: all ${props => props.theme.transitions.base};
 
   &:focus {
-    border-color: ${props => props.$error ? '#ef4444' : props.theme.colors.primary[600]};
-    box-shadow: 0 0 0 1px ${props => props.$error ? '#ef4444' : props.theme.colors.primary[600]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   &::placeholder {
@@ -246,8 +244,7 @@ export const TagInput = styled.input`
   width: 100%;
 
   &:focus {
-    border-color: ${props => props.theme.colors.primary[600]};
-    box-shadow: 0 0 0 1px ${props => props.theme.colors.primary[600]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   &::placeholder {

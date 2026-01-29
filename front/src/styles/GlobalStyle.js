@@ -58,6 +58,15 @@ const GlobalStyle = createGlobalStyle`
     resize: none;
   }
 
+  /* 포커스 시 테두리 변화 제거 */
+  input:focus,
+  textarea:focus,
+  select:focus,
+  button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
   img {
     max-width: 100%;
     height: auto;
@@ -68,12 +77,6 @@ const GlobalStyle = createGlobalStyle`
   table {
     border-collapse: collapse;
     border-spacing: 0;
-  }
-
-  /* Focus styles */
-  *:focus-visible {
-    outline: 2px solid ${props => props.theme.colors.primary[500]};
-    outline-offset: 2px;
   }
 
   /* Custom scrollbar */

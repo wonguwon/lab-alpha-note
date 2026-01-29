@@ -117,15 +117,10 @@ public class YearlyGoalService {
      * 특정 연도 목표 조회
      */
     public YearlyGoalResponse getYearlyGoal(Long userId, Integer year) {
-        YearlyGoal yearlyGoal = yearlyGoalRepository.findByUserIdAndYear(userId, year)
-                .orElseThrow(() -> new CustomException(ErrorCode.YEARLY_GOAL_NOT_FOUND));
-
-        // 권한 확인
-        if (!yearlyGoal.isOwnedBy(userId)) {
-            throw new CustomException(ErrorCode.YEARLY_GOAL_ACCESS_DENIED);
-        }
-
-        return YearlyGoalResponse.from(yearlyGoal);
+        return yearlyGoalRepository.findByUserIdAndYear(userId, year)
+                .filter(goal -> goal.isOwnedBy(userId))
+                .map(YearlyGoalResponse::from)
+                .orElse(null);
     }
 
     /**

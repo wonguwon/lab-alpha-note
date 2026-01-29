@@ -617,8 +617,7 @@ export const NoteTextarea = styled.textarea`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${props => props.theme.colors.primary[100]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 `;
 

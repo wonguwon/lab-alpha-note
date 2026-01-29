@@ -88,14 +88,14 @@ const HomePage = () => {
           expired: false
         });
 
-        // 인기 성장기록 10개 가져오기 (최근 1개월 내, 조회수 기준)
+        // 인기 성장기록 8개 가져오기 (최근 1개월 내, 조회수 기준)
         const oneMonthAgo = new Date();
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
         const fromDate = oneMonthAgo.toISOString().split('T')[0];
 
         const growthLogsData = await growthLogService.getGrowthLogs({
           page: 0,
-          size: 10,
+          size: 8,
           sort: 'viewCount,desc',
           fromDate: fromDate
         });
@@ -230,7 +230,7 @@ const HomePage = () => {
             {/* 최근 Q&A */}
             <PreviewSection>
               <PreviewHeader>
-                <PreviewTitle>💬 최근 질문</PreviewTitle>
+                <PreviewTitle>최근 질문</PreviewTitle>
                 <ViewAllButton onClick={() => navigate('/qna')}>
                   전체보기 →
                 </ViewAllButton>
@@ -263,7 +263,7 @@ const HomePage = () => {
             {/* 최근 습관 */}
             <PreviewSection>
               <PreviewHeader>
-                <PreviewTitle>📅 최근 습관</PreviewTitle>
+                <PreviewTitle>최근 습관</PreviewTitle>
                 <ViewAllButton onClick={() => navigate('/habits')}>
                   전체보기 →
                 </ViewAllButton>
@@ -349,7 +349,7 @@ const HomePage = () => {
             <FeatureTitle>습관 트래킹</FeatureTitle>
             <FeatureDescription>
               매일의 습관을 기록하고 시각화하세요.
-              연간 활동 캘린더로 한눈에 진행 상황을 확인할 수 있습니다.
+              연간 활동판을 통해 한눈에 진행 상황을 확인할 수 있습니다.
             </FeatureDescription>
           </FeatureCard>
 
@@ -357,17 +357,47 @@ const HomePage = () => {
             <FeatureIcon>💬</FeatureIcon>
             <FeatureTitle>Q&A 커뮤니티</FeatureTitle>
             <FeatureDescription>
-              궁금한 점을 질문하고 다른 사용자들과 지식을 공유하세요.
-              답변을 통해 함께 성장할 수 있습니다.
+              궁금한 점을 질문하고 경험을 나누세요.
+              서로의 질문과 답변을 통해 함께 배우고 성장하는 커뮤니티입니다.
             </FeatureDescription>
           </FeatureCard>
 
           <FeatureCard style={{ cursor: 'pointer' }} onClick={() => navigate('/goals')}>
             <FeatureIcon>🎯</FeatureIcon>
-            <FeatureTitle>목표 관리</FeatureTitle>
+            <FeatureTitle>목표설정</FeatureTitle>
             <FeatureDescription>
-              연간 목표를 설정하고 달성 여부를 추적하세요.
-              목표를 달성하면서 성장의 과정을 기록할 수 있습니다.
+              연간 목표를 설정하고 달성 과정을 추적하세요.
+              목표를 향해 나아가는 과정을 기록하며 스스로의 성장을 확인할 수 있습니다.
+            </FeatureDescription>
+          </FeatureCard>
+
+            <FeatureCard style={{ cursor: 'pointer' }} onClick={() => navigate('/growth-logs')}>
+            <FeatureIcon>✍️</FeatureIcon>
+            <FeatureTitle>성장로그</FeatureTitle>
+            <FeatureDescription>
+              성장을 위한 나만의 기록 공간.
+              배운 것, 느낀 것, 시도한 것을 블로그 형태로 정리하고 공유할 수 있습니다.
+              나의 생각이 쌓여 하나의 성장 히스토리가 됩니다.
+            </FeatureDescription>
+          </FeatureCard>
+
+          <FeatureCard style={{ cursor: 'pointer' }} onClick={() => alert("개발중인 기능입니다.")}>
+            <FeatureIcon>🤖</FeatureIcon>
+            <FeatureTitle>AI 멘토링 (개발 중)</FeatureTitle>
+            <FeatureDescription>
+              내가 작성한 GrowthLog를 기반으로
+              AI와 질문·답변을 주고받으며 학습을 확장하세요.
+              기록이 곧 학습으로 이어지는 새로운 성장 경험을 제공합니다.
+            </FeatureDescription>
+          </FeatureCard>
+
+          <FeatureCard style={{ cursor: 'pointer' }} onClick={() => alert("개발중인 기능입니다.")}>
+            <FeatureIcon>🧩</FeatureIcon>
+            <FeatureTitle>성장 대시보드 (개발 중)</FeatureTitle>
+            <FeatureDescription>
+              습관 기록, 성장 로그, 목표 달성 이력을 하나로 모아
+              나만의 성장 페이지를 만들어 드립니다.
+              앞으로는 이 페이지가 이력서이자 포트폴리오가 될 수 있습니다.
             </FeatureDescription>
           </FeatureCard>
         </FeatureGrid>

@@ -8,6 +8,7 @@ import com.alpha_note.core.qna.dto.request.CreateQuestionRequest;
 import com.alpha_note.core.qna.dto.request.UpdateQuestionRequest;
 import com.alpha_note.core.qna.dto.response.*;
 import com.alpha_note.core.qna.entity.*;
+import com.alpha_note.core.qna.enums.QuestionCategory;
 import com.alpha_note.core.qna.enums.SearchType;
 import com.alpha_note.core.notification.enums.NotificationType;
 import com.alpha_note.core.notification.service.NotificationService;
@@ -55,6 +56,7 @@ public class QuestionService {
                 .userId(userId)
                 .title(request.getTitle())
                 .content(request.getContent())
+                .category(request.getCategory())
                 .build();
 
         Question savedQuestion = questionRepository.save(question);
@@ -100,26 +102,44 @@ public class QuestionService {
     }
 
     /**
-     * 질문 검색 (키워드 + 검색 타입)
+     * 질문 검색 (키워드 + 검색 타입 + 카테고리 필터)
      */
     @Transactional(readOnly = true)
-    public Page<QuestionResponse> searchQuestions(String keyword, SearchType searchType, Pageable pageable, Long currentUserId) {
+    public Page<QuestionResponse> searchQuestions(String keyword, SearchType searchType, QuestionCategory category, Pageable pageable, Long currentUserId) {
         Page<Question> questions;
 
-        switch (searchType) {
-            case TITLE:
-                questions = questionRepository.searchByTitle(keyword, pageable);
-                break;
-            case CONTENT:
-                questions = questionRepository.searchByContent(keyword, pageable);
-                break;
-            case AUTHOR:
-                questions = questionRepository.searchByAuthor(keyword, pageable);
-                break;
-            case ALL:
-            default:
-                questions = questionRepository.searchByKeyword(keyword, pageable);
-                break;
+        if (category != null) {
+            switch (searchType) {
+                case TITLE:
+                    questions = questionRepository.searchByTitleAndCategory(keyword, category, pageable);
+                    break;
+                case CONTENT:
+                    questions = questionRepository.searchByContentAndCategory(keyword, category, pageable);
+                    break;
+                case AUTHOR:
+                    questions = questionRepository.searchByAuthorAndCategory(keyword, category, pageable);
+                    break;
+                case ALL:
+                default:
+                    questions = questionRepository.searchByKeywordAndCategory(keyword, category, pageable);
+                    break;
+            }
+        } else {
+            switch (searchType) {
+                case TITLE:
+                    questions = questionRepository.searchByTitle(keyword, pageable);
+                    break;
+                case CONTENT:
+                    questions = questionRepository.searchByContent(keyword, pageable);
+                    break;
+                case AUTHOR:
+                    questions = questionRepository.searchByAuthor(keyword, pageable);
+                    break;
+                case ALL:
+                default:
+                    questions = questionRepository.searchByKeyword(keyword, pageable);
+                    break;
+            }
         }
 
         return questions.map(q -> buildQuestionResponse(q, currentUserId));
@@ -135,11 +155,16 @@ public class QuestionService {
     }
 
     /**
-     * 사용자별 질문 조회
+     * 사용자별 질문 조회 (카테고리 필터 지원)
      */
     @Transactional(readOnly = true)
-    public Page<QuestionResponse> getQuestionsByUser(Long userId, Pageable pageable, Long currentUserId) {
-        Page<Question> questions = questionRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
+    public Page<QuestionResponse> getQuestionsByUser(Long userId, QuestionCategory category, Pageable pageable, Long currentUserId) {
+        Page<Question> questions;
+        if (category != null) {
+            questions = questionRepository.findByUserIdAndCategoryAndIsDeletedFalse(userId, category, pageable);
+        } else {
+            questions = questionRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
+        }
         return questions.map(q -> buildQuestionResponse(q, currentUserId));
     }
 
@@ -149,6 +174,15 @@ public class QuestionService {
     @Transactional(readOnly = true)
     public Page<QuestionResponse> getUnansweredQuestions(Pageable pageable, Long currentUserId) {
         Page<Question> questions = questionRepository.findByIsAnsweredAndIsDeletedFalseOrderByCreatedAtDesc(false, pageable);
+        return questions.map(q -> buildQuestionResponse(q, currentUserId));
+    }
+
+    /**
+     * 카테고리별 질문 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> getQuestionsByCategory(QuestionCategory category, Pageable pageable, Long currentUserId) {
+        Page<Question> questions = questionRepository.findByCategoryAndIsDeletedFalse(category, pageable);
         return questions.map(q -> buildQuestionResponse(q, currentUserId));
     }
 
@@ -166,7 +200,7 @@ public class QuestionService {
         }
 
         // 질문 업데이트
-        question.update(request.getTitle(), request.getContent());
+        question.update(request.getTitle(), request.getContent(), request.getCategory());
         questionRepository.save(question);
 
         // 태그 업데이트

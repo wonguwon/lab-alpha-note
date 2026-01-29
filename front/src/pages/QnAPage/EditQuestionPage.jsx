@@ -13,6 +13,7 @@ import {
   RequiredMark,
   HelperText,
   Input,
+  CategorySelect,
   TagInputWrapper,
   TagInput,
   TagList,
@@ -31,6 +32,7 @@ const EditQuestionPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
+    category: 'TECH',
     tags: []
   });
   const [tagInput, setTagInput] = useState('');
@@ -48,6 +50,7 @@ const EditQuestionPage = () => {
       setFormData({
         title: data.title,
         content: data.content,
+        category: data.category || 'TECH',
         tags: data.tags?.map(tag => tag.name) || []
       });
     } catch (error) {
@@ -73,6 +76,13 @@ const EditQuestionPage = () => {
     setFormData({ ...formData, content: html });
     if (errors.content) {
       setErrors({ ...errors, content: '' });
+    }
+  };
+
+  const handleCategoryChange = (e) => {
+    setFormData({ ...formData, category: e.target.value });
+    if (errors.category) {
+      setErrors({ ...errors, category: '' });
     }
   };
 
@@ -122,6 +132,10 @@ const EditQuestionPage = () => {
       newErrors.content = '내용을 입력해주세요.';
     }
 
+    if (!formData.category) {
+      newErrors.category = '카테고리를 선택해주세요.';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -136,6 +150,7 @@ const EditQuestionPage = () => {
       await qnaService.updateQuestion(id, {
         title: formData.title.trim(),
         content: formData.content.trim(),
+        category: formData.category,
         tags: formData.tags
       });
 
@@ -186,6 +201,24 @@ const EditQuestionPage = () => {
               error={errors.title}
             />
             {errors.title && <ErrorMessage>{errors.title}</ErrorMessage>}
+          </FormGroup>
+
+          {/* 카테고리 */}
+          <FormGroup>
+            <Label>
+              카테고리 <RequiredMark>*</RequiredMark>
+            </Label>
+            <HelperText>질문의 주제에 맞는 카테고리를 선택하세요.</HelperText>
+            <CategorySelect
+              value={formData.category}
+              onChange={handleCategoryChange}
+              error={errors.category}
+            >
+              <option value="TECH">기술</option>
+              <option value="CAREER">커리어</option>
+              <option value="ETC">기타</option>
+            </CategorySelect>
+            {errors.category && <ErrorMessage>{errors.category}</ErrorMessage>}
           </FormGroup>
 
           {/* 내용 */}

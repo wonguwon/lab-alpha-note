@@ -48,6 +48,7 @@ export const API_ENDPOINTS = {
     QUESTIONS: '/qna/questions',
     QUESTIONS_SEARCH: '/qna/questions/search',
     QUESTIONS_BY_USER: (userId) => `/qna/questions/user/${userId}`,
+    QUESTIONS_BY_CATEGORY: (category) => `/qna/questions/category/${category}`,
     QUESTION_DETAIL: (id) => `/qna/questions/${id}`,
     ANSWERS: (questionId) => `/qna/questions/${questionId}/answers`,
     ANSWER_DETAIL: (answerId) => `/qna/answers/${answerId}`,
@@ -57,6 +58,7 @@ export const API_ENDPOINTS = {
     ANSWER_COMMENT_DETAIL: (commentId) => `/qna/comments/answer/${commentId}`,
     QUESTION_VOTE: (questionId) => `/qna/questions/${questionId}/vote`,
     ANSWER_VOTE: (answerId) => `/qna/answers/${answerId}/vote`,
+    ACCEPT_ANSWER: (questionId, answerId) => `/qna/questions/${questionId}/accept/${answerId}`,
   },
   // Habit 관련
   HABIT: {

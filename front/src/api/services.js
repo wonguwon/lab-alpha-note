@@ -198,6 +198,11 @@ export const qnaService = {
     return await api.get(API_ENDPOINTS.QNA.QUESTIONS_BY_USER(userId), { params });
   },
 
+  // 카테고리별 질문 조회 - 반환: { content: [], page, size, totalElements, totalPages }
+  getQuestionsByCategory: async (category, params) => {
+    return await api.get(API_ENDPOINTS.QNA.QUESTIONS_BY_CATEGORY(category), { params });
+  },
+
   // 질문 상세 조회 - 반환: Question 객체
   getQuestionDetail: async (id) => {
     return await api.get(API_ENDPOINTS.QNA.QUESTION_DETAIL(id));
@@ -296,6 +301,11 @@ export const qnaService = {
   // 답변 추천 취소 - 반환: Answer 객체
   unvoteAnswer: async (answerId) => {
     return await api.delete(API_ENDPOINTS.QNA.ANSWER_VOTE(answerId));
+  },
+
+  // 답변 채택 - 반환: Answer 객체
+  acceptAnswer: async (questionId, answerId) => {
+    return await api.post(API_ENDPOINTS.QNA.ACCEPT_ANSWER(questionId, answerId));
   },
 };
 

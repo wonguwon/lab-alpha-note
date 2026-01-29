@@ -1,6 +1,7 @@
 package com.alpha_note.core.qna.dto.response;
 
 import com.alpha_note.core.qna.entity.Question;
+import com.alpha_note.core.qna.enums.QuestionCategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +26,8 @@ public class QuestionResponse {
     private String profileImageUrl; // Service에서 추가
     private String title;
     private String contentPreview; // 앞부분만 (최대 200자)
+    private QuestionCategory category;
+    private String categoryDisplayName;
     private Integer viewCount;
     private Integer voteCount;
     private Integer answerCount;
@@ -44,11 +47,17 @@ public class QuestionResponse {
             }
         }
 
+        QuestionCategory category = question.getCategory() != null
+                ? question.getCategory()
+                : QuestionCategory.TECH;
+
         return QuestionResponse.builder()
                 .id(question.getId())
                 .userId(question.getUserId())
                 .title(question.getTitle())
                 .contentPreview(preview)
+                .category(category)
+                .categoryDisplayName(category.getDisplayName())
                 .viewCount(question.getViewCount())
                 .voteCount(question.getVoteCount())
                 .answerCount(question.getAnswerCount())

@@ -85,10 +85,10 @@ export const CreateButton = styled.button`
 
 export const HabitList = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: ${props => props.theme.spacing[4]};
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: ${props => props.theme.spacing[6]};
 
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
     grid-template-columns: 1fr;
   }
 `;
