@@ -14,15 +14,15 @@ public interface QuestionCommentRepository extends JpaRepository<QuestionComment
     Optional<QuestionComment> findByIdAndIsDeletedFalse(Long id);
 
     // 질문별 댓글 조회 (생성일 내림차순 - 최신순)
-    List<QuestionComment> findByQuestionIdAndIsDeletedFalseOrderByCreatedAtDesc(Long questionId);
+    List<QuestionComment> findByQuestionEntity_IdAndIsDeletedFalseOrderByCreatedAtDesc(Long questionId);
 
     // 사용자별 댓글 조회
-    List<QuestionComment> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId);
+    List<QuestionComment> findByUser_IdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId);
 
     // 댓글 수 카운트
-    long countByQuestionIdAndIsDeletedFalse(Long questionId);
-    long countByUserIdAndIsDeletedFalse(Long userId);
+    long countByQuestionEntity_IdAndIsDeletedFalse(Long questionId);
+    long countByUser_IdAndIsDeletedFalse(Long userId);
 
     // 특정 질문의 모든 댓글 조회 (삭제된 것 포함 - Soft Delete 처리용)
-    List<QuestionComment> findByQuestionId(Long questionId);
+    List<QuestionComment> findByQuestionEntity_Id(Long questionId);
 }

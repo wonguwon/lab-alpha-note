@@ -1,5 +1,6 @@
 package com.alpha_note.core.growthlog.entity;
 
+import com.alpha_note.core.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -24,11 +25,13 @@ public class GrowthLogComment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "growth_log_id", nullable = false)
-    private Long growthLogId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "growth_log_id", nullable = false)
+    private GrowthLog growthLogEntity;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -48,11 +51,19 @@ public class GrowthLogComment {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    // ========== 관계 매핑 ==========
+    // ========== 편의 메서드 (하위 호환성) ==========
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "growth_log_id", insertable = false, updatable = false)
-    private GrowthLog growthLog;
+    public Long getGrowthLogId() {
+        return growthLogEntity != null ? growthLogEntity.getId() : null;
+    }
+
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
+
+    public GrowthLog getGrowthLog() {
+        return growthLogEntity;
+    }
 
     // ========== 비즈니스 메소드 ==========
 
@@ -83,6 +94,6 @@ public class GrowthLogComment {
      * 작성자 확인
      */
     public boolean isOwnedBy(Long userId) {
-        return this.userId.equals(userId);
+        return this.user != null && this.user.getId().equals(userId);
     }
 }

@@ -1,6 +1,7 @@
 package com.alpha_note.core.qna.entity;
 
 import com.alpha_note.core.qna.enums.QuestionCategory;
+import com.alpha_note.core.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -37,8 +38,9 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "title", nullable = false)
     private String title;
@@ -91,15 +93,15 @@ public class Question {
 
     // ========== 관계 매핑 (양방향) ==========
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "questionEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Answer> answers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "questionEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<QuestionComment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "questionEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<QuestionVote> votes = new ArrayList<>();
 
@@ -218,10 +220,17 @@ public class Question {
     }
 
     /**
+     * 편의 메서드 (하위 호환성)
+     */
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
+
+    /**
      * 작성자 확인
      */
     public boolean isOwnedBy(Long userId) {
-        return this.userId.equals(userId);
+        return this.user != null && this.user.getId().equals(userId);
     }
 
     /**

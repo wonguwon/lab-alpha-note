@@ -1,5 +1,6 @@
 package com.alpha_note.core.habit.entity;
 
+import com.alpha_note.core.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -26,11 +27,13 @@ public class HabitRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "habit_id", nullable = false)
-    private Long habitId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "habit_id", nullable = false)
+    private Habit habitEntity;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "record_date", nullable = false)
     private LocalDate recordDate;  // 날짜 기준 (YYYY-MM-DD)
@@ -58,10 +61,20 @@ public class HabitRecord {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    // 읽기 전용 관계
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "habit_id", insertable = false, updatable = false)
-    private Habit habit;
+    /**
+     * 편의 메서드 (하위 호환성)
+     */
+    public Long getHabitId() {
+        return habitEntity != null ? habitEntity.getId() : null;
+    }
+
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
+
+    public Habit getHabit() {
+        return habitEntity;
+    }
 
     // ========== 비즈니스 메서드 ==========
 
@@ -84,7 +97,7 @@ public class HabitRecord {
      * 권한 확인
      */
     public boolean isOwnedBy(Long userId) {
-        return this.userId.equals(userId);
+        return this.user != null && this.user.getId().equals(userId);
     }
 
     /**

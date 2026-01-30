@@ -51,7 +51,7 @@ public class HabitSpecification {
             if (userId == null) {
                 return null;
             }
-            return criteriaBuilder.equal(root.get("userId"), userId);
+            return criteriaBuilder.equal(root.get("user").get("id"), userId);
         };
     }
 
@@ -99,7 +99,7 @@ public class HabitSpecification {
             if (keyword == null || keyword.trim().isEmpty()) {
                 return null;
             }
-            Join<Habit, User> userJoin = root.join("userId");
+            Join<Habit, User> userJoin = root.join("user");
             return criteriaBuilder.like(userJoin.get("nickname"), "%" + keyword + "%");
         };
     }
@@ -113,7 +113,7 @@ public class HabitSpecification {
 
             // userId 필터
             if (userId != null) {
-                predicates.add(criteriaBuilder.equal(root.get("userId"), userId));
+                predicates.add(criteriaBuilder.equal(root.get("user").get("id"), userId));
             }
 
             // status 필터
@@ -168,13 +168,13 @@ public class HabitSpecification {
                         break;
 
                     case AUTHOR:
-                        Join<Habit, User> userJoin = root.join("userId");
+                        Join<Habit, User> userJoin = root.join("user");
                         predicates.add(criteriaBuilder.like(userJoin.get("nickname"), searchKeyword));
                         break;
 
                     case ALL:
                     default:
-                        Join<Habit, User> userJoinAll = root.join("userId");
+                        Join<Habit, User> userJoinAll = root.join("user");
                         predicates.add(criteriaBuilder.or(
                                 criteriaBuilder.like(root.get("title"), searchKeyword),
                                 criteriaBuilder.like(userJoinAll.get("nickname"), searchKeyword)
@@ -185,7 +185,7 @@ public class HabitSpecification {
 
             // 2. userId 필터
             if (userId != null) {
-                predicates.add(criteriaBuilder.equal(root.get("userId"), userId));
+                predicates.add(criteriaBuilder.equal(root.get("user").get("id"), userId));
             }
 
             // 3. status 필터 (기본적으로 DELETED 제외)
@@ -241,13 +241,13 @@ public class HabitSpecification {
                         break;
 
                     case AUTHOR:
-                        Join<Habit, User> userJoin = root.join("userId");
+                        Join<Habit, User> userJoin = root.join("user");
                         predicates.add(criteriaBuilder.like(userJoin.get("nickname"), searchKeyword));
                         break;
 
                     case ALL:
                     default:
-                        Join<Habit, User> userJoinAll = root.join("userId");
+                        Join<Habit, User> userJoinAll = root.join("user");
                         predicates.add(criteriaBuilder.or(
                                 criteriaBuilder.like(root.get("title"), searchKeyword),
                                 criteriaBuilder.like(userJoinAll.get("nickname"), searchKeyword)
@@ -258,7 +258,7 @@ public class HabitSpecification {
 
             // 2. userId 필터
             if (userId != null) {
-                predicates.add(criteriaBuilder.equal(root.get("userId"), userId));
+                predicates.add(criteriaBuilder.equal(root.get("user").get("id"), userId));
             }
 
             // 3. status 필터 (기본적으로 DELETED 제외)
@@ -332,7 +332,7 @@ public class HabitSpecification {
 
             // userId 필터
             if (userId != null) {
-                predicates.add(criteriaBuilder.equal(root.get("userId"), userId));
+                predicates.add(criteriaBuilder.equal(root.get("user").get("id"), userId));
             }
 
             // status 필터

@@ -12,6 +12,7 @@ import com.alpha_note.core.qna.entity.Question;
 import com.alpha_note.core.notification.enums.NotificationType;
 import com.alpha_note.core.notification.service.NotificationService;
 import com.alpha_note.core.qna.repository.*;
+import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,15 +45,14 @@ public class AnswerService {
         Question question = questionRepository.findByIdAndIsDeletedFalse(questionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.QUESTION_NOT_FOUND));
 
-        // 사용자 검증
-        if (!userRepository.existsById(userId)) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 답변 생성
         Answer answer = Answer.builder()
-                .questionId(questionId)
-                .userId(userId)
+                .questionEntity(question)
+                .user(user)
                 .content(request.getContent())
                 .build();
 
@@ -100,7 +100,7 @@ public class AnswerService {
      */
     @Transactional(readOnly = true)
     public Page<AnswerResponse> getAnswersByUser(Long userId, Pageable pageable, Long currentUserId) {
-        Page<Answer> answers = answerRepository.findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(userId, pageable);
+        Page<Answer> answers = answerRepository.findByUser_IdAndIsDeletedFalseOrderByCreatedAtDesc(userId, pageable);
         return answers.map(answer -> buildAnswerResponse(answer, currentUserId));
     }
 
@@ -184,7 +184,7 @@ public class AnswerService {
      */
     private void softDeleteRelatedEntities(Long answerId) {
         // 댓글들 Soft Delete
-        List<AnswerComment> comments = answerCommentRepository.findByAnswerId(answerId);
+        List<AnswerComment> comments = answerCommentRepository.findByAnswerEntity_Id(answerId);
         comments.forEach(comment -> {
             comment.markAsDeleted();
             answerCommentRepository.save(comment);
@@ -205,12 +205,12 @@ public class AnswerService {
 
         // 추천 여부
         if (currentUserId != null) {
-            boolean isVoted = answerVoteRepository.existsByAnswerIdAndUserId(answer.getId(), currentUserId);
+            boolean isVoted = answerVoteRepository.existsByAnswerEntity_IdAndUser_Id(answer.getId(), currentUserId);
             response.setIsVotedByCurrentUser(isVoted);
         }
 
         // 댓글 개수
-        long commentCount = answerCommentRepository.countByAnswerIdAndIsDeletedFalse(answer.getId());
+        long commentCount = answerCommentRepository.countByAnswerEntity_IdAndIsDeletedFalse(answer.getId());
         response.setCommentCount((int) commentCount);
 
         return response;

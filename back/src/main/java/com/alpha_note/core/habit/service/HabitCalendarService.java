@@ -39,7 +39,7 @@ public class HabitCalendarService {
 
         // 날짜별 기록 횟수 집계
         List<HabitRecord> records = habitRecordRepository
-                .findByHabitIdAndRecordDateBetweenAndIsDeletedFalse(habitId, startDate, endDate);
+                .findByHabitEntity_IdAndRecordDateBetweenAndIsDeletedFalse(habitId, startDate, endDate);
 
         Map<LocalDate, Long> recordCountByDate = records.stream()
                 .collect(Collectors.groupingBy(
@@ -67,7 +67,7 @@ public class HabitCalendarService {
 
         // 날짜별 기록 횟수 집계
         List<HabitRecord> records = habitRecordRepository
-                .findByHabitIdAndRecordDateBetweenAndIsDeletedFalse(habitId, startDate, endDate);
+                .findByHabitEntity_IdAndRecordDateBetweenAndIsDeletedFalse(habitId, startDate, endDate);
 
         Map<LocalDate, Long> recordCountByDate = records.stream()
                 .collect(Collectors.groupingBy(
@@ -95,7 +95,7 @@ public class HabitCalendarService {
 
         // 날짜별 기록 횟수 집계
         List<HabitRecord> records = habitRecordRepository
-                .findByHabitIdAndRecordDateBetweenAndIsDeletedFalse(habitId, startDate, endDate);
+                .findByHabitEntity_IdAndRecordDateBetweenAndIsDeletedFalse(habitId, startDate, endDate);
 
         Map<LocalDate, Long> recordCountByDate = records.stream()
                 .collect(Collectors.groupingBy(

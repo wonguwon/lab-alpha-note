@@ -14,27 +14,27 @@ import java.util.Optional;
 public interface AnswerVoteRepository extends JpaRepository<AnswerVote, Long> {
 
     // 특정 사용자의 특정 답변 투표 조회
-    Optional<AnswerVote> findByAnswerIdAndUserId(Long answerId, Long userId);
+    Optional<AnswerVote> findByAnswerEntity_IdAndUser_Id(Long answerId, Long userId);
 
     // 투표 존재 여부 (중복 체크)
-    boolean existsByAnswerIdAndUserId(Long answerId, Long userId);
+    boolean existsByAnswerEntity_IdAndUser_Id(Long answerId, Long userId);
 
     // 답변별 투표 수
-    long countByAnswerId(Long answerId);
+    long countByAnswerEntity_Id(Long answerId);
 
     // 사용자별 투표 목록
-    List<AnswerVote> findByUserId(Long userId);
+    List<AnswerVote> findByUser_Id(Long userId);
 
     // 답변별 모든 투표 조회
-    List<AnswerVote> findByAnswerId(Long answerId);
+    List<AnswerVote> findByAnswerEntity_Id(Long answerId);
 
     // 특정 투표 삭제
     @Modifying
-    @Query("DELETE FROM AnswerVote av WHERE av.answerId = :answerId AND av.userId = :userId")
+    @Query("DELETE FROM AnswerVote av WHERE av.answerEntity.id = :answerId AND av.user.id = :userId")
     void deleteByAnswerIdAndUserId(@Param("answerId") Long answerId, @Param("userId") Long userId);
 
     // 답변별 모든 투표 삭제 (답변 삭제 시)
     @Modifying
-    @Query("DELETE FROM AnswerVote av WHERE av.answerId = :answerId")
+    @Query("DELETE FROM AnswerVote av WHERE av.answerEntity.id = :answerId")
     void deleteByAnswerId(@Param("answerId") Long answerId);
 }

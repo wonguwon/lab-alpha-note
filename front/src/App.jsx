@@ -16,6 +16,7 @@ import ContactPage from './pages/ContactPage';
 import HabitPage from './pages/HabitPage';
 import HabitCreatePage from './pages/HabitPage/HabitCreatePage';
 import HabitDetailPage from './pages/HabitPage/HabitDetailPage';
+import HabitEditPage from './pages/HabitPage/HabitEditPage';
 import QnAPage, { AskQuestionPage, QuestionDetailPage, AnswerPage, EditQuestionPage, EditAnswerPage } from './pages/QnAPage';
 import NotificationPage from './pages/NotificationPage';
 import GoalPage from './pages/GoalPage';
@@ -83,6 +84,7 @@ function App() {
           <Route path="/habits" element={<HabitPage />} />
           <Route path="/habits/create" element={<ProtectedRoute><HabitCreatePage /></ProtectedRoute>} />
           <Route path="/habits/:habitId" element={<HabitDetailPage />} />
+          <Route path="/habits/:habitId/edit" element={<ProtectedRoute><HabitEditPage /></ProtectedRoute>} />
           <Route path="/qna/:id" element={<QuestionDetailPage />} />
           <Route path="/qna/:id/edit" element={<ProtectedRoute><EditQuestionPage /></ProtectedRoute>} />
           <Route path="/qna/:id/answer" element={<ProtectedRoute><AnswerPage /></ProtectedRoute>} />

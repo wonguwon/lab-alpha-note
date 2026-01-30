@@ -8,6 +8,7 @@ import com.alpha_note.core.goal.dto.request.UpdateYearlyGoalRequest;
 import com.alpha_note.core.goal.dto.response.YearlyGoalResponse;
 import com.alpha_note.core.goal.entity.YearlyGoal;
 import com.alpha_note.core.goal.repository.YearlyGoalRepository;
+import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,15 +32,14 @@ public class YearlyGoalService {
      */
     @Transactional
     public YearlyGoalResponse createYearlyGoal(Long userId, CreateYearlyGoalRequest request) {
-        // 사용자 존재 확인
-        if (!userRepository.existsById(userId)) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 기존 목표 조회 (있으면 업데이트, 없으면 생성)
-        YearlyGoal yearlyGoal = yearlyGoalRepository.findByUserIdAndYear(userId, request.getYear())
+        YearlyGoal yearlyGoal = yearlyGoalRepository.findByUser_IdAndYear(userId, request.getYear())
                 .orElse(YearlyGoal.builder()
-                        .userId(userId)
+                        .user(user)
                         .year(request.getYear())
                         .goals(request.getGoals())
                         .build());
@@ -117,7 +117,7 @@ public class YearlyGoalService {
      * 특정 연도 목표 조회
      */
     public YearlyGoalResponse getYearlyGoal(Long userId, Integer year) {
-        return yearlyGoalRepository.findByUserIdAndYear(userId, year)
+        return yearlyGoalRepository.findByUser_IdAndYear(userId, year)
                 .filter(goal -> goal.isOwnedBy(userId))
                 .map(YearlyGoalResponse::from)
                 .orElse(null);
@@ -127,7 +127,7 @@ public class YearlyGoalService {
      * 사용자의 모든 연도 목표 조회
      */
     public List<YearlyGoalResponse> getAllYearlyGoals(Long userId) {
-        List<YearlyGoal> yearlyGoals = yearlyGoalRepository.findAllByUserIdOrderByYearDesc(userId);
+        List<YearlyGoal> yearlyGoals = yearlyGoalRepository.findAllByUser_IdOrderByYearDesc(userId);
         return yearlyGoals.stream()
                 .map(YearlyGoalResponse::from)
                 .collect(Collectors.toList());

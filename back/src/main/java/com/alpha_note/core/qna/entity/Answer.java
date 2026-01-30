@@ -1,5 +1,6 @@
 package com.alpha_note.core.qna.entity;
 
+import com.alpha_note.core.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -33,11 +34,13 @@ public class Answer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "question_id", nullable = false)
-    private Long questionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id", nullable = false)
+    private Question questionEntity;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -65,17 +68,25 @@ public class Answer {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    // ========== 관계 매핑 ==========
+    // ========== 편의 메서드 (하위 호환성) ==========
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "question_id", insertable = false, updatable = false)
-    private Question question;
+    public Long getQuestionId() {
+        return questionEntity != null ? questionEntity.getId() : null;
+    }
 
-    @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
+
+    public Question getQuestion() {
+        return questionEntity;
+    }
+
+    @OneToMany(mappedBy = "answerEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<AnswerComment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "answerEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<AnswerVote> votes = new ArrayList<>();
 
@@ -139,6 +150,6 @@ public class Answer {
      * 작성자 확인
      */
     public boolean isOwnedBy(Long userId) {
-        return this.userId.equals(userId);
+        return this.user != null && this.user.getId().equals(userId);
     }
 }

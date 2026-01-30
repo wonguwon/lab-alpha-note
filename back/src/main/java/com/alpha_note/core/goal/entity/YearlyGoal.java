@@ -1,6 +1,7 @@
 package com.alpha_note.core.goal.entity;
 
 import com.alpha_note.core.goal.dto.GoalItem;
+import com.alpha_note.core.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -30,8 +31,14 @@ public class YearlyGoal {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    // 편의 메서드 (하위 호환성)
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
 
     @Column(name = "year", nullable = false)
     private Integer year;
@@ -72,7 +79,7 @@ public class YearlyGoal {
      * 권한 확인
      */
     public boolean isOwnedBy(Long userId) {
-        return this.userId.equals(userId);
+        return this.user != null && this.user.getId().equals(userId);
     }
 }
 

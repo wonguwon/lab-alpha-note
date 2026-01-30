@@ -6,6 +6,8 @@ import com.alpha_note.core.growthlog.repository.GrowthLogRepository;
 import com.alpha_note.core.growthlog.repository.GrowthLogVoteRepository;
 import com.alpha_note.core.common.exception.CustomException;
 import com.alpha_note.core.common.exception.ErrorCode;
+import com.alpha_note.core.user.entity.User;
+import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ public class GrowthLogVoteService {
 
     private final GrowthLogRepository growthLogRepository;
     private final GrowthLogVoteRepository growthLogVoteRepository;
+    private final UserRepository userRepository;
 
     /**
      * 성장기록 추천
@@ -28,15 +31,19 @@ public class GrowthLogVoteService {
         GrowthLog growthLog = growthLogRepository.findByIdAndIsDeletedFalse(growthLogId)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROWTH_LOG_NOT_FOUND));
 
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
         // 중복 추천 체크
-        if (growthLogVoteRepository.existsByGrowthLogIdAndUserId(growthLogId, userId)) {
+        if (growthLogVoteRepository.existsByGrowthLogEntity_IdAndUser_Id(growthLogId, userId)) {
             throw new CustomException(ErrorCode.VOTE_ALREADY_EXISTS);
         }
 
         // 추천 생성
         GrowthLogVote vote = GrowthLogVote.builder()
-                .growthLogId(growthLogId)
-                .userId(userId)
+                .growthLogEntity(growthLog)
+                .user(user)
                 .build();
         growthLogVoteRepository.save(vote);
 
@@ -57,7 +64,7 @@ public class GrowthLogVoteService {
                 .orElseThrow(() -> new CustomException(ErrorCode.GROWTH_LOG_NOT_FOUND));
 
         // 추천 기록 확인
-        if (!growthLogVoteRepository.existsByGrowthLogIdAndUserId(growthLogId, userId)) {
+        if (!growthLogVoteRepository.existsByGrowthLogEntity_IdAndUser_Id(growthLogId, userId)) {
             throw new CustomException(ErrorCode.VOTE_NOT_FOUND);
         }
 
@@ -76,6 +83,6 @@ public class GrowthLogVoteService {
      */
     @Transactional(readOnly = true)
     public boolean isGrowthLogVoted(Long growthLogId, Long userId) {
-        return growthLogVoteRepository.existsByGrowthLogIdAndUserId(growthLogId, userId);
+        return growthLogVoteRepository.existsByGrowthLogEntity_IdAndUser_Id(growthLogId, userId);
     }
 }

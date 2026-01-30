@@ -8,6 +8,8 @@ import com.alpha_note.core.habit.dto.response.HabitRecordResponse;
 import com.alpha_note.core.habit.entity.Habit;
 import com.alpha_note.core.habit.entity.HabitRecord;
 import com.alpha_note.core.habit.repository.HabitRecordRepository;
+import com.alpha_note.core.user.entity.User;
+import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +29,7 @@ public class HabitRecordService {
     private final HabitRecordRepository habitRecordRepository;
     private final HabitService habitService;
     private final HabitStreakService habitStreakService;
+    private final UserRepository userRepository;
 
     /**
      * 습관 기록 생성
@@ -36,13 +39,17 @@ public class HabitRecordService {
         // 습관 조회 및 권한 확인
         Habit habit = habitService.getHabitEntity(habitId, userId);
 
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
         // 유효성 검증
         validateRecordDate(habit, request.getRecordDate());
 
         // 기록 생성
         HabitRecord record = HabitRecord.builder()
-                .habitId(habitId)
-                .userId(userId)
+                .habitEntity(habit)
+                .user(user)
                 .recordDate(request.getRecordDate())
                 .loggedAt(Instant.now())
                 .count(request.getCount())
@@ -65,7 +72,7 @@ public class HabitRecordService {
      */
     public Page<HabitRecordResponse> getRecords(Long habitId, Pageable pageable) {
         Page<HabitRecord> records = habitRecordRepository
-                .findByHabitIdAndIsDeletedFalseOrderByRecordDateDesc(habitId, pageable);
+                .findByHabitEntity_IdAndIsDeletedFalseOrderByRecordDateDesc(habitId, pageable);
 
         return records.map(HabitRecordResponse::from);
     }
@@ -75,7 +82,7 @@ public class HabitRecordService {
      */
     public List<HabitRecordResponse> getRecordsByDate(Long habitId, LocalDate date) {
         List<HabitRecord> records = habitRecordRepository
-                .findByHabitIdAndRecordDateAndIsDeletedFalse(habitId, date);
+                .findByHabitEntity_IdAndRecordDateAndIsDeletedFalse(habitId, date);
 
         return records.stream()
                 .map(HabitRecordResponse::from)

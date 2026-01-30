@@ -13,6 +13,7 @@ import com.alpha_note.core.qna.enums.SearchType;
 import com.alpha_note.core.notification.enums.NotificationType;
 import com.alpha_note.core.notification.service.NotificationService;
 import com.alpha_note.core.qna.repository.*;
+import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,14 +47,13 @@ public class QuestionService {
      */
     @Transactional
     public QuestionDetailResponse createQuestion(Long userId, CreateQuestionRequest request) {
-        // 사용자 검증
-        if (!userRepository.existsById(userId)) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 질문 생성
         Question question = Question.builder()
-                .userId(userId)
+                .user(user)
                 .title(request.getTitle())
                 .content(request.getContent())
                 .category(request.getCategory())
@@ -161,9 +161,9 @@ public class QuestionService {
     public Page<QuestionResponse> getQuestionsByUser(Long userId, QuestionCategory category, Pageable pageable, Long currentUserId) {
         Page<Question> questions;
         if (category != null) {
-            questions = questionRepository.findByUserIdAndCategoryAndIsDeletedFalse(userId, category, pageable);
+            questions = questionRepository.findByUser_IdAndCategoryAndIsDeletedFalse(userId, category, pageable);
         } else {
-            questions = questionRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
+            questions = questionRepository.findByUser_IdAndIsDeletedFalse(userId, pageable);
         }
         return questions.map(q -> buildQuestionResponse(q, currentUserId));
     }
@@ -334,14 +334,14 @@ public class QuestionService {
      */
     private void softDeleteRelatedEntities(Long questionId) {
         // 답변들 Soft Delete
-        List<Answer> answers = answerRepository.findByQuestionIdAndIsDeletedFalse(questionId);
+        List<Answer> answers = answerRepository.findByQuestionEntity_IdAndIsDeletedFalse(questionId);
         answers.forEach(answer -> {
             answer.markAsDeleted();
             answerRepository.save(answer);
         });
 
         // 댓글들 Soft Delete
-        List<QuestionComment> comments = questionCommentRepository.findByQuestionId(questionId);
+        List<QuestionComment> comments = questionCommentRepository.findByQuestionEntity_Id(questionId);
         comments.forEach(comment -> {
             comment.markAsDeleted();
             questionCommentRepository.save(comment);
@@ -386,7 +386,7 @@ public class QuestionService {
 
         // 추천 여부 (현재 사용자)
         if (currentUserId != null) {
-            boolean isVoted = questionVoteRepository.existsByQuestionIdAndUserId(question.getId(), currentUserId);
+            boolean isVoted = questionVoteRepository.existsByQuestionEntity_IdAndUser_Id(question.getId(), currentUserId);
             response.setIsVotedByCurrentUser(isVoted);
         }
 
@@ -400,7 +400,7 @@ public class QuestionService {
         response.setTags(tags);
 
         // 댓글 개수
-        long commentCount = questionCommentRepository.countByQuestionIdAndIsDeletedFalse(question.getId());
+        long commentCount = questionCommentRepository.countByQuestionEntity_IdAndIsDeletedFalse(question.getId());
         response.setCommentCount((int) commentCount);
 
         // 답변 목록 (채택 답변 우선 정렬)
@@ -427,12 +427,12 @@ public class QuestionService {
 
         // 추천 여부
         if (currentUserId != null) {
-            boolean isVoted = answerVoteRepository.existsByAnswerIdAndUserId(answer.getId(), currentUserId);
+            boolean isVoted = answerVoteRepository.existsByAnswerEntity_IdAndUser_Id(answer.getId(), currentUserId);
             response.setIsVotedByCurrentUser(isVoted);
         }
 
         // 댓글 개수
-        long commentCount = answerCommentRepository.countByAnswerIdAndIsDeletedFalse(answer.getId());
+        long commentCount = answerCommentRepository.countByAnswerEntity_IdAndIsDeletedFalse(answer.getId());
         response.setCommentCount((int) commentCount);
 
         return response;

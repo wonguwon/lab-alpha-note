@@ -23,19 +23,19 @@ public interface HabitRecordRepository extends JpaRepository<HabitRecord, Long> 
     /**
      * 습관 ID로 기록 조회 (페이징, 최신순)
      */
-    Page<HabitRecord> findByHabitIdAndIsDeletedFalseOrderByRecordDateDesc(Long habitId, Pageable pageable);
+    Page<HabitRecord> findByHabitEntity_IdAndIsDeletedFalseOrderByRecordDateDesc(Long habitId, Pageable pageable);
 
     /**
      * 습관 ID와 날짜로 기록 조회
      */
-    List<HabitRecord> findByHabitIdAndRecordDateAndIsDeletedFalse(Long habitId, LocalDate recordDate);
+    List<HabitRecord> findByHabitEntity_IdAndRecordDateAndIsDeletedFalse(Long habitId, LocalDate recordDate);
 
     /**
      * 기록된 날짜 목록 조회 (중복 제거, 최신순)
      * Streak 계산용
      */
     @Query("SELECT DISTINCT hr.recordDate FROM HabitRecord hr " +
-           "WHERE hr.habitId = :habitId AND hr.isDeleted = false " +
+           "WHERE hr.habitEntity.id = :habitId AND hr.isDeleted = false " +
            "ORDER BY hr.recordDate DESC")
     List<LocalDate> findDistinctRecordDatesByHabitIdOrderByRecordDateDesc(@Param("habitId") Long habitId);
 
@@ -43,7 +43,7 @@ public interface HabitRecordRepository extends JpaRepository<HabitRecord, Long> 
      * 기간별 기록 조회
      * 잔디 UI용
      */
-    List<HabitRecord> findByHabitIdAndRecordDateBetweenAndIsDeletedFalse(
+    List<HabitRecord> findByHabitEntity_IdAndRecordDateBetweenAndIsDeletedFalse(
         Long habitId, LocalDate startDate, LocalDate endDate
     );
 
@@ -51,7 +51,7 @@ public interface HabitRecordRepository extends JpaRepository<HabitRecord, Long> 
      * 특정 날짜의 기록 횟수 합계
      */
     @Query("SELECT COALESCE(SUM(hr.count), 0) FROM HabitRecord hr " +
-           "WHERE hr.habitId = :habitId AND hr.recordDate = :recordDate " +
+           "WHERE hr.habitEntity.id = :habitId AND hr.recordDate = :recordDate " +
            "AND hr.isDeleted = false")
     Integer sumCountByHabitIdAndRecordDate(
         @Param("habitId") Long habitId,
@@ -61,25 +61,25 @@ public interface HabitRecordRepository extends JpaRepository<HabitRecord, Long> 
     /**
      * 습관별 전체 기록 횟수
      */
-    long countByHabitIdAndIsDeletedFalse(Long habitId);
+    long countByHabitEntity_IdAndIsDeletedFalse(Long habitId);
 
     /**
      * 사용자별 기록 조회 (페이징)
      */
-    Page<HabitRecord> findByUserIdAndIsDeletedFalseOrderByRecordDateDesc(Long userId, Pageable pageable);
+    Page<HabitRecord> findByUser_IdAndIsDeletedFalseOrderByRecordDateDesc(Long userId, Pageable pageable);
 
     /**
      * 습관별 기록된 날짜 개수 (중복 제거)
      */
     @Query("SELECT COUNT(DISTINCT hr.recordDate) FROM HabitRecord hr " +
-           "WHERE hr.habitId = :habitId AND hr.isDeleted = false")
+           "WHERE hr.habitEntity.id = :habitId AND hr.isDeleted = false")
     long countDistinctRecordDatesByHabitId(@Param("habitId") Long habitId);
 
     /**
      * 특정 날짜 범위의 기록 횟수 합계
      */
     @Query("SELECT COALESCE(SUM(hr.count), 0) FROM HabitRecord hr " +
-           "WHERE hr.habitId = :habitId " +
+           "WHERE hr.habitEntity.id = :habitId " +
            "AND hr.recordDate BETWEEN :startDate AND :endDate " +
            "AND hr.isDeleted = false")
     Integer sumCountByHabitIdAndDateRange(
@@ -92,7 +92,7 @@ public interface HabitRecordRepository extends JpaRepository<HabitRecord, Long> 
      * 여러 습관의 날짜 범위 기록 일괄 조회
      * 대시보드 페이지에서 N+1 문제 방지용
      */
-    List<HabitRecord> findByHabitIdInAndRecordDateBetweenAndIsDeletedFalse(
+    List<HabitRecord> findByHabitEntity_IdInAndRecordDateBetweenAndIsDeletedFalse(
         List<Long> habitIds,
         LocalDate startDate,
         LocalDate endDate

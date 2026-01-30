@@ -12,12 +12,19 @@ export const Container = styled.div`
   }
 `;
 
+export const TopBar = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${props => props.theme.spacing[4]};
+  gap: ${props => props.theme.spacing[2]};
+`;
+
 export const BackButton = styled.button`
   display: inline-flex;
   align-items: center;
   gap: ${props => props.theme.spacing[1]};
   padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
-  margin-bottom: ${props => props.theme.spacing[4]};
   background: ${props => props.theme.colors.white};
   color: ${props => props.theme.colors.gray[700]};
   border: 1px solid ${props => props.theme.colors.gray[300]};
@@ -26,10 +33,16 @@ export const BackButton = styled.button`
   font-weight: ${props => props.theme.fonts.weight.medium};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.base};
+  white-space: nowrap;
 
   &:hover {
     background: ${props => props.theme.colors.gray[50]};
     border-color: ${props => props.theme.colors.gray[400]};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    padding: ${props => props.theme.spacing[2]};
+    font-size: ${props => props.theme.fonts.size.xs};
   }
 `;
 
@@ -66,6 +79,75 @@ export const HabitInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${props => props.theme.spacing[1]};
+`;
+
+export const TopActions = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing[2]};
+  align-items: center;
+  flex-shrink: 0;
+`;
+
+export const EditButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[1]};
+  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
+  background: ${props => props.theme.colors.white};
+  color: ${props => props.theme.colors.gray[700]};
+  border: 1px solid ${props => props.theme.colors.gray[300]};
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-size: ${props => props.theme.fonts.size.sm};
+  font-weight: ${props => props.theme.fonts.weight.medium};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+  white-space: nowrap;
+
+  &:hover {
+    background: ${props => props.theme.colors.gray[50]};
+    border-color: ${props => props.theme.colors.gray[400]};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    padding: ${props => props.theme.spacing[2]};
+    font-size: ${props => props.theme.fonts.size.xs};
+
+    /* 모바일에서 텍스트 숨기고 아이콘만 표시 */
+    span {
+      display: none;
+    }
+  }
+`;
+
+export const DeleteButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[1]};
+  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
+  background: ${props => props.theme.colors.white};
+  color: ${props => props.theme.colors.danger[600]};
+  border: 1px solid ${props => props.theme.colors.danger[300]};
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-size: ${props => props.theme.fonts.size.sm};
+  font-weight: ${props => props.theme.fonts.weight.medium};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+  white-space: nowrap;
+
+  &:hover {
+    background: ${props => props.theme.colors.danger[50]};
+    border-color: ${props => props.theme.colors.danger[400]};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    padding: ${props => props.theme.spacing[2]};
+    font-size: ${props => props.theme.fonts.size.xs};
+
+    /* 모바일에서 텍스트 숨기고 아이콘만 표시 */
+    span {
+      display: none;
+    }
+  }
 `;
 
 export const HabitTitle = styled.h1`

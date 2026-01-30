@@ -177,6 +177,14 @@ const Header = () => {
         </MobileNavLink>
         <MobileNavLink
           as={Link}
+          to="/growth-logs"
+          onClick={handleNavLinkClick}
+          className={location.pathname.startsWith('/growth-logs') ? 'active' : ''}
+        >
+          Growth
+        </MobileNavLink>
+        <MobileNavLink
+          as={Link}
           to="/goals"
           onClick={handleNavLinkClick}
           className={location.pathname.startsWith('/goals') ? 'active' : ''}

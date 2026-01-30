@@ -19,6 +19,7 @@ import com.alpha_note.core.common.entity.Tag;
 import com.alpha_note.core.common.exception.CustomException;
 import com.alpha_note.core.common.exception.ErrorCode;
 import com.alpha_note.core.common.repository.TagRepository;
+import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,14 +67,13 @@ public class GrowthLogService {
      */
     @Transactional
     public GrowthLogDetailResponse createGrowthLog(Long userId, CreateGrowthLogRequest request) {
-        // 사용자 검증
-        if (!userRepository.existsById(userId)) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 성장기록 생성
         GrowthLog growthLog = GrowthLog.builder()
-                .userId(userId)
+                .user(user)
                 .title(request.getTitle())
                 .content(request.getContent())
                 .thumbnailUrl(request.getThumbnailUrl())
@@ -234,9 +234,9 @@ public class GrowthLogService {
     public Page<GrowthLogResponse> getMyGrowthLogs(Long userId, GrowthLogStatus status, Pageable pageable) {
         Page<GrowthLog> growthLogs;
         if (status != null) {
-            growthLogs = growthLogRepository.findByUserIdAndStatusAndIsDeletedFalse(userId, status, pageable);
+            growthLogs = growthLogRepository.findByUser_IdAndStatusAndIsDeletedFalse(userId, status, pageable);
         } else {
-            growthLogs = growthLogRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
+            growthLogs = growthLogRepository.findByUser_IdAndIsDeletedFalse(userId, pageable);
         }
         return growthLogs.map(g -> buildGrowthLogResponse(g, userId));
     }
@@ -266,7 +266,7 @@ public class GrowthLogService {
      */
     @Transactional(readOnly = true)
     public long countMyDraftGrowthLogs(Long userId) {
-        return growthLogRepository.countByUserIdAndStatusAndIsDeletedFalse(userId, GrowthLogStatus.DRAFT);
+        return growthLogRepository.countByUser_IdAndStatusAndIsDeletedFalse(userId, GrowthLogStatus.DRAFT);
     }
 
     /**
@@ -355,7 +355,7 @@ public class GrowthLogService {
 
         // 추천 여부 (현재 사용자)
         if (currentUserId != null) {
-            boolean isVoted = growthLogVoteRepository.existsByGrowthLogIdAndUserId(growthLog.getId(), currentUserId);
+            boolean isVoted = growthLogVoteRepository.existsByGrowthLogEntity_IdAndUser_Id(growthLog.getId(), currentUserId);
             response.setIsVotedByCurrentUser(isVoted);
         }
 
@@ -367,7 +367,7 @@ public class GrowthLogService {
         response.setTags(tags);
 
         // 댓글 개수
-        long commentCount = growthLogCommentRepository.countByGrowthLogIdAndIsDeletedFalse(growthLog.getId());
+        long commentCount = growthLogCommentRepository.countByGrowthLogEntity_IdAndIsDeletedFalse(growthLog.getId());
         response.setCommentCount((int) commentCount);
 
         return response;
@@ -378,7 +378,7 @@ public class GrowthLogService {
      */
     private void softDeleteRelatedEntities(Long growthLogId) {
         // 댓글들 Soft Delete
-        List<GrowthLogComment> comments = growthLogCommentRepository.findByGrowthLogId(growthLogId);
+        List<GrowthLogComment> comments = growthLogCommentRepository.findByGrowthLogEntity_Id(growthLogId);
         comments.forEach(comment -> {
             comment.markAsDeleted();
             growthLogCommentRepository.save(comment);

@@ -25,10 +25,10 @@ public interface GrowthLogRepository extends JpaRepository<GrowthLog, Long> {
     Page<GrowthLog> findAllPublicPublished(Pageable pageable);
 
     // 내 성장기록 전체 조회
-    Page<GrowthLog> findByUserIdAndIsDeletedFalse(Long userId, Pageable pageable);
+    Page<GrowthLog> findByUser_IdAndIsDeletedFalse(Long userId, Pageable pageable);
 
     // 내 성장기록 상태별 조회
-    Page<GrowthLog> findByUserIdAndStatusAndIsDeletedFalse(Long userId, GrowthLogStatus status, Pageable pageable);
+    Page<GrowthLog> findByUser_IdAndStatusAndIsDeletedFalse(Long userId, GrowthLogStatus status, Pageable pageable);
 
     // 제목만 검색
     @Query("SELECT g FROM GrowthLog g WHERE g.title LIKE %:keyword% AND g.isDeleted = false")
@@ -39,7 +39,7 @@ public interface GrowthLogRepository extends JpaRepository<GrowthLog, Long> {
     Page<GrowthLog> searchByContent(@Param("keyword") String keyword, Pageable pageable);
 
     // 작성자 닉네임으로 검색
-    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN User u ON g.userId = u.id WHERE u.nickname LIKE %:keyword% AND g.isDeleted = false")
+    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN g.user u WHERE u.nickname LIKE %:keyword% AND g.isDeleted = false")
     Page<GrowthLog> searchByAuthor(@Param("keyword") String keyword, Pageable pageable);
 
     // 태그명으로 검색
@@ -56,7 +56,7 @@ public interface GrowthLogRepository extends JpaRepository<GrowthLog, Long> {
     Page<GrowthLog> searchPublicPublishedByContent(@Param("keyword") String keyword, Pageable pageable);
 
     // 공개+발행 성장기록 검색 (작성자)
-    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN User u ON g.userId = u.id WHERE u.nickname LIKE %:keyword% AND g.isDeleted = false AND g.status = 'PUBLISHED' AND g.visibility = 'PUBLIC'")
+    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN g.user u WHERE u.nickname LIKE %:keyword% AND g.isDeleted = false AND g.status = 'PUBLISHED' AND g.visibility = 'PUBLIC'")
     Page<GrowthLog> searchPublicPublishedByAuthor(@Param("keyword") String keyword, Pageable pageable);
 
     // 공개+발행 성장기록 검색 (태그)
@@ -65,29 +65,29 @@ public interface GrowthLogRepository extends JpaRepository<GrowthLog, Long> {
     Page<GrowthLog> searchPublicPublishedByTag(@Param("keyword") String keyword, Pageable pageable);
 
     // 피드 목록 - 투표한 건만 검색
-    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN GrowthLogVote v ON g.id = v.growthLogId WHERE g.isDeleted = false and v.userId = :userId")
+    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN GrowthLogVote v ON g.id = v.growthLogEntity.id WHERE g.isDeleted = false and v.user.id = :userId")
     Page<GrowthLog> findAllWithVotesByUserId(Long userId, Pageable pageable);
 
     // 제목만 검색
-    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN GrowthLogVote v ON g.id = v.growthLogId " +
-            "WHERE g.isDeleted = false and g.title LIKE %:keyword% AND v.userId = :userId")
+    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN GrowthLogVote v ON g.id = v.growthLogEntity.id " +
+            "WHERE g.isDeleted = false and g.title LIKE %:keyword% AND v.user.id = :userId")
     Page<GrowthLog> searchWithVotesByTitle(@Param("keyword") String keyword, Long userId, Pageable pageable);
 
     // 내용만 검색
-    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN GrowthLogVote v ON g.id = v.growthLogId " +
-            "WHERE g.isDeleted = false and g.content LIKE %:keyword% AND g.isDeleted = false AND v.userId = :userId")
+    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN GrowthLogVote v ON g.id = v.growthLogEntity.id " +
+            "WHERE g.isDeleted = false and g.content LIKE %:keyword% AND g.isDeleted = false AND v.user.id = :userId")
     Page<GrowthLog> searchWithVotesByContent(@Param("keyword") String keyword, Long userId, Pageable pageable);
 
     // 작성자 닉네임으로 검색
-    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN User u ON g.userId = u.id JOIN GrowthLogVote v ON g.id = v.growthLogId " +
-            "WHERE g.isDeleted = false AND u.nickname LIKE %:keyword% AND v.userId = :userId")
+    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN g.user u JOIN GrowthLogVote v ON g.id = v.growthLogEntity.id " +
+            "WHERE g.isDeleted = false AND u.nickname LIKE %:keyword% AND v.user.id = :userId")
     Page<GrowthLog> searchWithVotesByAuthor(@Param("keyword") String keyword, Long userId, Pageable pageable);
 
     // 태그명으로 검색
-    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN GrowthLogTag gt ON g.id = gt.growthLogId JOIN Tag t ON gt.tagId = t.id JOIN GrowthLogVote v ON g.id = v.growthLogId " +
-            "WHERE g.isDeleted = false and t.name = :keyword AND t.isDeleted = false AND v.userId = :userId")
+    @Query("SELECT DISTINCT g FROM GrowthLog g JOIN GrowthLogTag gt ON g.id = gt.growthLogId JOIN Tag t ON gt.tagId = t.id JOIN GrowthLogVote v ON g.id = v.growthLogEntity.id " +
+            "WHERE g.isDeleted = false and t.name = :keyword AND t.isDeleted = false AND v.user.id = :userId")
     Page<GrowthLog> searchWithVotesByTag(@Param("keyword") String keyword, Long userId, Pageable pageable);
 
     // 사용자별 상태별 성장기록 갯수 조회
-    long countByUserIdAndStatusAndIsDeletedFalse(Long userId, GrowthLogStatus status);
+    long countByUser_IdAndStatusAndIsDeletedFalse(Long userId, GrowthLogStatus status);
 }

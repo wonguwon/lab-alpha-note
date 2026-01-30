@@ -20,8 +20,8 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     Optional<Question> findByIdAndIsDeletedFalse(Long id);
 
     // 사용자별 질문 조회 (Pageable의 sort 사용)
-    Page<Question> findByUserIdAndIsDeletedFalse(Long userId, Pageable pageable);
-    List<Question> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId);
+    Page<Question> findByUser_IdAndIsDeletedFalse(Long userId, Pageable pageable);
+    List<Question> findByUser_IdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId);
 
     // 전체 질문 페이징 조회 (Pageable의 sort 사용)
     Page<Question> findAllByIsDeletedFalse(Pageable pageable);
@@ -33,7 +33,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     Page<Question> findByCategoryAndIsDeletedFalse(QuestionCategory category, Pageable pageable);
 
     // 사용자별 + 카테고리별 질문 조회
-    Page<Question> findByUserIdAndCategoryAndIsDeletedFalse(Long userId, QuestionCategory category, Pageable pageable);
+    Page<Question> findByUser_IdAndCategoryAndIsDeletedFalse(Long userId, QuestionCategory category, Pageable pageable);
 
     // 제목 + 내용 검색 + 카테고리 필터
     @Query("SELECT q FROM Question q WHERE (q.title LIKE %:keyword% OR q.content LIKE %:keyword%) AND q.category = :category AND q.isDeleted = false")
@@ -48,7 +48,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     Page<Question> searchByContentAndCategory(@Param("keyword") String keyword, @Param("category") QuestionCategory category, Pageable pageable);
 
     // 작성자 닉네임으로 검색 + 카테고리 필터
-    @Query("SELECT q FROM Question q JOIN User u ON q.userId = u.id WHERE u.nickname LIKE %:keyword% AND q.category = :category AND q.isDeleted = false")
+    @Query("SELECT q FROM Question q JOIN q.user u WHERE u.nickname LIKE %:keyword% AND q.category = :category AND q.isDeleted = false")
     Page<Question> searchByAuthorAndCategory(@Param("keyword") String keyword, @Param("category") QuestionCategory category, Pageable pageable);
 
     // 제목 + 내용 검색 (JPQL, Pageable의 sort 사용)
@@ -64,7 +64,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     Page<Question> searchByContent(@Param("keyword") String keyword, Pageable pageable);
 
     // 작성자 닉네임으로 검색 (Pageable의 sort 사용)
-    @Query("SELECT q FROM Question q JOIN User u ON q.userId = u.id WHERE u.nickname LIKE %:keyword% AND q.isDeleted = false")
+    @Query("SELECT q FROM Question q JOIN q.user u WHERE u.nickname LIKE %:keyword% AND q.isDeleted = false")
     Page<Question> searchByAuthor(@Param("keyword") String keyword, Pageable pageable);
 
     // 태그별 질문 조회 (태그 ID로, Pageable의 sort 사용)
@@ -93,7 +93,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     long countByIsDeletedFalse();
 
     // 통계: 사용자별 질문 수
-    long countByUserIdAndIsDeletedFalse(Long userId);
+    long countByUser_IdAndIsDeletedFalse(Long userId);
 
     // 통계: 미답변 질문 수
     long countByIsAnsweredFalseAndIsDeletedFalse();

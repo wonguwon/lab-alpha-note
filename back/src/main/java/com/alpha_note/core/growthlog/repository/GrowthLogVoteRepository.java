@@ -11,10 +11,10 @@ import org.springframework.stereotype.Repository;
 public interface GrowthLogVoteRepository extends JpaRepository<GrowthLogVote, Long> {
 
     // 투표 존재 여부 (중복 체크)
-    boolean existsByGrowthLogIdAndUserId(Long growthLogId, Long userId);
+    boolean existsByGrowthLogEntity_IdAndUser_Id(Long growthLogId, Long userId);
 
     // 특정 투표 삭제
     @Modifying
-    @Query("DELETE FROM GrowthLogVote gv WHERE gv.growthLogId = :growthLogId AND gv.userId = :userId")
+    @Query("DELETE FROM GrowthLogVote gv WHERE gv.growthLogEntity.id = :growthLogId AND gv.user.id = :userId")
     void deleteByGrowthLogIdAndUserId(@Param("growthLogId") Long growthLogId, @Param("userId") Long userId);
 }

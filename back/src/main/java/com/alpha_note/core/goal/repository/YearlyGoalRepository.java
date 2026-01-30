@@ -13,12 +13,12 @@ public interface YearlyGoalRepository extends JpaRepository<YearlyGoal, Long> {
     /**
      * 사용자 ID와 연도로 조회
      */
-    Optional<YearlyGoal> findByUserIdAndYear(Long userId, Integer year);
+    Optional<YearlyGoal> findByUser_IdAndYear(Long userId, Integer year);
 
     /**
      * 사용자 ID로 모든 목표 조회 (연도 내림차순)
      */
-    List<YearlyGoal> findAllByUserIdOrderByYearDesc(Long userId);
+    List<YearlyGoal> findAllByUser_IdOrderByYearDesc(Long userId);
 
     /**
      * 특정 연도의 모든 사용자 목표 조회 (메인 페이지용)

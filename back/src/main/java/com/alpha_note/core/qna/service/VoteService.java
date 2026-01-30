@@ -10,6 +10,8 @@ import com.alpha_note.core.qna.repository.AnswerRepository;
 import com.alpha_note.core.qna.repository.AnswerVoteRepository;
 import com.alpha_note.core.qna.repository.QuestionRepository;
 import com.alpha_note.core.qna.repository.QuestionVoteRepository;
+import com.alpha_note.core.user.entity.User;
+import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ public class VoteService {
     private final AnswerVoteRepository answerVoteRepository;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
+    private final UserRepository userRepository;
 
     /**
      * 질문 추천
@@ -34,15 +37,19 @@ public class VoteService {
         Question question = questionRepository.findByIdAndIsDeletedFalse(questionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.QUESTION_NOT_FOUND));
 
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
         // 중복 추천 체크
-        if (questionVoteRepository.existsByQuestionIdAndUserId(questionId, userId)) {
+        if (questionVoteRepository.existsByQuestionEntity_IdAndUser_Id(questionId, userId)) {
             throw new CustomException(ErrorCode.VOTE_ALREADY_EXISTS);
         }
 
         // 추천 생성
         QuestionVote vote = QuestionVote.builder()
-                .questionId(questionId)
-                .userId(userId)
+                .questionEntity(question)
+                .user(user)
                 .build();
         questionVoteRepository.save(vote);
 
@@ -63,7 +70,7 @@ public class VoteService {
                 .orElseThrow(() -> new CustomException(ErrorCode.QUESTION_NOT_FOUND));
 
         // 추천 기록 확인
-        if (!questionVoteRepository.existsByQuestionIdAndUserId(questionId, userId)) {
+        if (!questionVoteRepository.existsByQuestionEntity_IdAndUser_Id(questionId, userId)) {
             throw new CustomException(ErrorCode.VOTE_NOT_FOUND);
         }
 
@@ -86,15 +93,19 @@ public class VoteService {
         Answer answer = answerRepository.findByIdAndIsDeletedFalse(answerId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ANSWER_NOT_FOUND));
 
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
         // 중복 추천 체크
-        if (answerVoteRepository.existsByAnswerIdAndUserId(answerId, userId)) {
+        if (answerVoteRepository.existsByAnswerEntity_IdAndUser_Id(answerId, userId)) {
             throw new CustomException(ErrorCode.VOTE_ALREADY_EXISTS);
         }
 
         // 추천 생성
         AnswerVote vote = AnswerVote.builder()
-                .answerId(answerId)
-                .userId(userId)
+                .answerEntity(answer)
+                .user(user)
                 .build();
         answerVoteRepository.save(vote);
 
@@ -115,7 +126,7 @@ public class VoteService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ANSWER_NOT_FOUND));
 
         // 추천 기록 확인
-        if (!answerVoteRepository.existsByAnswerIdAndUserId(answerId, userId)) {
+        if (!answerVoteRepository.existsByAnswerEntity_IdAndUser_Id(answerId, userId)) {
             throw new CustomException(ErrorCode.VOTE_NOT_FOUND);
         }
 
@@ -134,7 +145,7 @@ public class VoteService {
      */
     @Transactional(readOnly = true)
     public boolean isQuestionVoted(Long questionId, Long userId) {
-        return questionVoteRepository.existsByQuestionIdAndUserId(questionId, userId);
+        return questionVoteRepository.existsByQuestionEntity_IdAndUser_Id(questionId, userId);
     }
 
     /**
@@ -142,6 +153,6 @@ public class VoteService {
      */
     @Transactional(readOnly = true)
     public boolean isAnswerVoted(Long answerId, Long userId) {
-        return answerVoteRepository.existsByAnswerIdAndUserId(answerId, userId);
+        return answerVoteRepository.existsByAnswerEntity_IdAndUser_Id(answerId, userId);
     }
 }

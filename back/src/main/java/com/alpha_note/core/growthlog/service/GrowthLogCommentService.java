@@ -4,9 +4,11 @@ import com.alpha_note.core.growthlog.dto.request.CreateGrowthLogCommentRequest;
 import com.alpha_note.core.growthlog.dto.response.GrowthLogCommentResponse;
 import com.alpha_note.core.growthlog.entity.GrowthLogComment;
 import com.alpha_note.core.growthlog.repository.GrowthLogCommentRepository;
+import com.alpha_note.core.growthlog.entity.GrowthLog;
 import com.alpha_note.core.growthlog.repository.GrowthLogRepository;
 import com.alpha_note.core.common.exception.CustomException;
 import com.alpha_note.core.common.exception.ErrorCode;
+import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,30 +32,26 @@ public class GrowthLogCommentService {
      */
     @Transactional
     public GrowthLogCommentResponse createGrowthLogComment(Long growthLogId, Long userId, CreateGrowthLogCommentRequest request) {
-        // 성장기록 존재 확인
-        if (!growthLogRepository.existsById(growthLogId)) {
-            throw new CustomException(ErrorCode.GROWTH_LOG_NOT_FOUND);
-        }
+        // 성장기록 조회
+        GrowthLog growthLog = growthLogRepository.findByIdAndIsDeletedFalse(growthLogId)
+                .orElseThrow(() -> new CustomException(ErrorCode.GROWTH_LOG_NOT_FOUND));
 
-        // 사용자 검증
-        if (!userRepository.existsById(userId)) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 댓글 생성
         GrowthLogComment comment = GrowthLogComment.builder()
-                .growthLogId(growthLogId)
-                .userId(userId)
+                .growthLogEntity(growthLog)
+                .user(user)
                 .content(request.getContent())
                 .build();
 
         GrowthLogComment savedComment = growthLogCommentRepository.save(comment);
 
         // 성장기록의 마지막 활동 시간 업데이트
-        growthLogRepository.findById(growthLogId).ifPresent(growthLog -> {
-            growthLog.updateLastActivity();
-            growthLogRepository.save(growthLog);
-        });
+        growthLog.updateLastActivity();
+        growthLogRepository.save(growthLog);
 
         log.info("성장기록 댓글 작성 완료 - commentId: {}, growthLogId: {}, userId: {}", savedComment.getId(), growthLogId, userId);
 
@@ -69,7 +67,7 @@ public class GrowthLogCommentService {
             throw new CustomException(ErrorCode.GROWTH_LOG_NOT_FOUND);
         }
 
-        List<GrowthLogComment> comments = growthLogCommentRepository.findByGrowthLogIdAndIsDeletedFalseOrderByCreatedAtDesc(growthLogId);
+        List<GrowthLogComment> comments = growthLogCommentRepository.findByGrowthLogEntity_IdAndIsDeletedFalseOrderByCreatedAtDesc(growthLogId);
         return comments.stream()
                 .map(this::buildGrowthLogCommentResponse)
                 .collect(Collectors.toList());

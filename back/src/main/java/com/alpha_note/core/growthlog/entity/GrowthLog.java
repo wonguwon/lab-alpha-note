@@ -2,6 +2,7 @@ package com.alpha_note.core.growthlog.entity;
 
 import com.alpha_note.core.growthlog.enums.GrowthLogStatus;
 import com.alpha_note.core.growthlog.enums.GrowthLogVisibility;
+import com.alpha_note.core.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -35,8 +36,9 @@ public class GrowthLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "title", nullable = false, length = 100)
     private String title;
@@ -90,7 +92,7 @@ public class GrowthLog {
     @Builder.Default
     private List<GrowthLogTag> growthLogTags = new ArrayList<>();
 
-    @OneToMany(mappedBy = "growthLog", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "growthLogEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<GrowthLogComment> comments = new ArrayList<>();
 
@@ -201,9 +203,16 @@ public class GrowthLog {
     }
 
     /**
+     * 편의 메서드 (하위 호환성)
+     */
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
+
+    /**
      * 작성자 확인
      */
     public boolean isOwnedBy(Long userId) {
-        return this.userId.equals(userId);
+        return this.user != null && this.user.getId().equals(userId);
     }
 }

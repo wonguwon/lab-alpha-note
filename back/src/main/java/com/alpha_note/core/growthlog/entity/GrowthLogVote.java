@@ -1,5 +1,6 @@
 package com.alpha_note.core.growthlog.entity;
 
+import com.alpha_note.core.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -22,20 +23,30 @@ public class GrowthLogVote {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "growth_log_id", nullable = false)
-    private Long growthLogId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "growth_log_id", nullable = false)
+    private GrowthLog growthLogEntity;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    // ========== 관계 매핑 ==========
+    // ========== 편의 메서드 (하위 호환성) ==========
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "growth_log_id", insertable = false, updatable = false)
-    private GrowthLog growthLog;
+    public Long getGrowthLogId() {
+        return growthLogEntity != null ? growthLogEntity.getId() : null;
+    }
+
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
+
+    public GrowthLog getGrowthLog() {
+        return growthLogEntity;
+    }
 
 }
