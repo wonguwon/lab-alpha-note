@@ -154,7 +154,7 @@ const AskQuestionPage = () => {
     <AskContainer>
       <AskCard>
         <AskHeader>
-          <PageTitle>Q n A</PageTitle>
+          <PageTitle>Q & A</PageTitle>
         </AskHeader>
 
         <FormSection onSubmit={handleSubmit}>

@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supportService } from '../../api/services';
+import useAuthStore from '../../store/authStore';
 import {
   ContactContainer,
   ContactHeader,
@@ -25,6 +27,8 @@ import {
 } from './ContactPage.styled';
 
 const ContactPage = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuthStore();
   const [formData, setFormData] = useState({
     type: 'INQUIRY',
     email: '',
@@ -36,6 +40,16 @@ const ContactPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+
+  // 로그인한 사용자인 경우 이메일 자동 세팅
+  useEffect(() => {
+    if (isAuthenticated && user?.email) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email
+      }));
+    }
+  }, [isAuthenticated, user]);
 
   const contactTypes = [
     { value: 'INQUIRY', label: '일반 문의' },
@@ -123,6 +137,7 @@ const ContactPage = () => {
 
   const handleCloseAlert = () => {
     setShowAlert(false);
+    navigate('/');
   };
 
   return (
@@ -142,65 +157,65 @@ const ContactPage = () => {
           </ErrorMessage>
         )}
 
-      <ContactForm onSubmit={handleSubmit}>
-        <FormGroup>
-          <FormLabel htmlFor="type">문의 유형 *</FormLabel>
-          <FormSelect
-            id="type"
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-          >
-            {contactTypes.map(type => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </FormSelect>
-        </FormGroup>
+        <ContactForm onSubmit={handleSubmit}>
+          <FormGroup>
+            <FormLabel htmlFor="type">문의 유형 *</FormLabel>
+            <FormSelect
+              id="type"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+            >
+              {contactTypes.map(type => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </FormSelect>
+          </FormGroup>
 
-        <FormGroup>
-          <FormLabel htmlFor="email">작성자 이메일 *</FormLabel>
-          <FormInput
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="example@email.com"
-          />
-          {errors.email && <FormError>{errors.email}</FormError>}
-        </FormGroup>
+          <FormGroup>
+            <FormLabel htmlFor="email">작성자 이메일 *</FormLabel>
+            <FormInput
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="example@email.com"
+            />
+            {errors.email && <FormError>{errors.email}</FormError>}
+          </FormGroup>
 
-        <FormGroup>
-          <FormLabel htmlFor="subject">제목 *</FormLabel>
-          <FormInput
-            type="text"
-            id="subject"
-            name="subject"
-            value={formData.subject}
-            onChange={handleChange}
-            placeholder="문의 제목을 입력해주세요"
-          />
-          {errors.subject && <FormError>{errors.subject}</FormError>}
-        </FormGroup>
+          <FormGroup>
+            <FormLabel htmlFor="subject">제목 *</FormLabel>
+            <FormInput
+              type="text"
+              id="subject"
+              name="subject"
+              value={formData.subject}
+              onChange={handleChange}
+              placeholder="문의 제목을 입력해주세요"
+            />
+            {errors.subject && <FormError>{errors.subject}</FormError>}
+          </FormGroup>
 
-        <FormGroup>
-          <FormLabel htmlFor="content">내용 *</FormLabel>
-          <FormTextarea
-            id="content"
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            placeholder="문의 내용을 상세히 입력해주세요"
-          />
-          {errors.content && <FormError>{errors.content}</FormError>}
-        </FormGroup>
+          <FormGroup>
+            <FormLabel htmlFor="content">내용 *</FormLabel>
+            <FormTextarea
+              id="content"
+              name="content"
+              value={formData.content}
+              onChange={handleChange}
+              placeholder="문의 내용을 상세히 입력해주세요"
+            />
+            {errors.content && <FormError>{errors.content}</FormError>}
+          </FormGroup>
 
-        <SubmitButton type="submit" disabled={isSubmitting}>
-          {isSubmitting ? '전송 중...' : '문의하기'}
-        </SubmitButton>
-      </ContactForm>
+          <SubmitButton type="submit" disabled={isSubmitting}>
+            {isSubmitting ? '전송 중...' : '문의하기'}
+          </SubmitButton>
+        </ContactForm>
       </ContactContainer>
 
       {/* 성공 알림 팝업 */}

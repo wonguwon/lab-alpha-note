@@ -32,6 +32,7 @@ import com.alpha_note.core.common.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.List;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * Spring Security 설정
@@ -91,6 +92,7 @@ public class SecurityConfig {
             )
             // 요청별 인증 규칙
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/api/v1/support/contact")).permitAll()
                 .requestMatchers(
                     "/api/v1/auth/register",     // 회원가입
                     "/api/v1/auth/login",        // 로그인

@@ -28,6 +28,7 @@ export const HeaderActions = styled.div`
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     width: 100%;
+    justify-content: space-between;
   }
 `;
 
@@ -143,6 +144,8 @@ export const SearchBox = styled.div`
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     width: 100%;
+    flex-wrap: wrap;
+    gap: ${props => props.theme.spacing[2]};
   }
 `;
 
@@ -162,7 +165,7 @@ export const SearchTypeSelect = styled.select`
   }
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    width: 90px;
+    width: calc(50% - ${props => props.theme.spacing[1]});
   }
 `;
 
@@ -182,7 +185,7 @@ export const SortSelect = styled.select`
   }
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    width: 90px;
+    width: calc(50% - ${props => props.theme.spacing[1]});
   }
 `;
 
@@ -204,8 +207,9 @@ export const SearchInput = styled.input`
   }
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    min-width: auto;
+    min-width: 0;
     flex: 1;
+    width: auto;
   }
 `;
 

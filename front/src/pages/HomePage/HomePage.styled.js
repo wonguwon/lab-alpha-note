@@ -117,12 +117,12 @@ export const SectionTitle = styled.h2`
 /* 미리보기 그리드 */
 export const PreviewGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: ${props => props.theme.spacing[6]};
   margin-bottom: ${props => props.theme.spacing[12]};
 
   @media (max-width: ${props => props.theme.breakpoints.md}) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: ${props => props.theme.spacing[6]};
   }
 `;
@@ -133,6 +133,7 @@ export const PreviewSection = styled.div`
   border-radius: ${props => props.theme.borderRadius.xl};
   padding: ${props => props.theme.spacing[6]};
   box-shadow: ${props => props.theme.shadows.sm};
+  min-width: 0;
 `;
 
 /* 미리보기 헤더 */
@@ -169,12 +170,14 @@ export const QuestionList = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${props => props.theme.spacing[3]};
+  min-width: 0;
 `;
 
 export const HabitList = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${props => props.theme.spacing[3]};
+  min-width: 0;
 `;
 
 /* 미리보기 카드 */
@@ -185,6 +188,7 @@ export const QuestionPreviewCard = styled.div`
   border-radius: ${props => props.theme.borderRadius.lg};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.base};
+  min-width: 0;
 
   &:hover {
     background: ${props => props.theme.colors.white};
@@ -200,6 +204,7 @@ export const HabitPreviewCard = styled.div`
   border-radius: ${props => props.theme.borderRadius.lg};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.base};
+  min-width: 0;
 
   &:hover {
     background: ${props => props.theme.colors.white};
@@ -217,6 +222,8 @@ export const CardTitle = styled.h4`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 `;
 
 export const CardMeta = styled.div`
@@ -256,6 +263,7 @@ export const HabitCardHeader = styled.div`
   align-items: center;
   gap: ${props => props.theme.spacing[2]};
   margin-bottom: ${props => props.theme.spacing[2]};
+  min-width: 0;
 `;
 
 export const HabitColorBar = styled.div`

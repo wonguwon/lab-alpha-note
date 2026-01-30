@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { container, flexBetween } from '../../styles/mixins';
+import { container, flexBetween, truncate, lineClamp } from '../../styles/mixins';
 
 export const HabitContainer = styled.div`
   ${container}
@@ -121,6 +121,7 @@ export const HabitInfo = styled.div`
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing[3]};
+  min-width: 0;
 `;
 
 export const HabitColor = styled.div`
@@ -134,6 +135,7 @@ export const HabitTitleSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${props => props.theme.spacing[1]};
+  min-width: 0;
 `;
 
 export const HabitTitle = styled.h3`
@@ -141,18 +143,21 @@ export const HabitTitle = styled.h3`
   font-weight: ${props => props.theme.fonts.weight.semibold};
   color: ${props => props.theme.colors.gray[900]};
   margin: 0;
+  ${truncate}
 `;
 
 export const HabitOwner = styled.span`
   font-size: ${props => props.theme.fonts.size.xs};
   color: ${props => props.theme.colors.gray[500]};
   font-weight: ${props => props.theme.fonts.weight.medium};
+  ${truncate}
 `;
 
 export const HabitDescription = styled.p`
   font-size: ${props => props.theme.fonts.size.sm};
   color: ${props => props.theme.colors.gray[600]};
   margin: 0;
+  ${lineClamp(2)}
 `;
 
 export const StatsAndNavRow = styled.div`
@@ -446,7 +451,7 @@ export const SearchInput = styled.input`
   }
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    min-width: auto;
+    min-width: 0;
     flex: 1;
   }
 `;

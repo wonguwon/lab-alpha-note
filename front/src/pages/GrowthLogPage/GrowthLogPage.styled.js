@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { container, flexBetween } from '../../styles/mixins';
+import { container, flexBetween, truncate } from '../../styles/mixins';
 
 export const GrowthLogContainer = styled.div`
   ${container}
@@ -239,6 +239,7 @@ export const GrowthLogCard = styled.div`
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 
   &:hover {
     border-color: ${props => props.theme.colors.gray[300]};
@@ -260,6 +261,7 @@ export const GrowthLogCardContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 `;
 
 export const GrowthLogTag = styled.span`
@@ -275,6 +277,7 @@ export const GrowthLogTag = styled.span`
 `;
 
 export const GrowthLogTitle = styled.h3`
+  ${truncate}
   font-size: ${props => props.theme.fonts.size.lg};
   font-weight: ${props => props.theme.fonts.weight.bold};
   color: ${props => props.theme.colors.gray[900]};
