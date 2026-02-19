@@ -110,7 +110,8 @@ const GrowthLogEditPage = () => {
             });
 
             alert('임시저장되었습니다');
-            navigate(`/growth-logs/${id}`);
+            loadDraftCount(); // 카운트 갱신
+            // 페이지 이동 없이 현재 수정 페이지에서 계속 작성 가능
         } catch (error) {
             console.error('임시저장 실패:', error);
             alert(error.response?.data?.message || '임시저장 중 오류가 발생했습니다.');
