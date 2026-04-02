@@ -5,6 +5,7 @@ import com.alpha_note.core.qna.dto.request.CreateQuestionRequest;
 import com.alpha_note.core.qna.dto.request.UpdateQuestionRequest;
 import com.alpha_note.core.qna.dto.response.QuestionDetailResponse;
 import com.alpha_note.core.qna.dto.response.QuestionResponse;
+import com.alpha_note.core.qna.enums.QuestionCategory;
 import com.alpha_note.core.qna.enums.SearchType;
 import com.alpha_note.core.qna.service.QuestionService;
 import com.alpha_note.core.user.entity.User;
@@ -72,18 +73,19 @@ public class QuestionController {
     }
 
     /**
-     * 질문 검색 (키워드 + 검색 타입)
-     * GET /api/v1/qna/questions/search?keyword=...&searchType=TITLE
+     * 질문 검색 (키워드 + 검색 타입 + 카테고리 필터)
+     * GET /api/v1/qna/questions/search?keyword=...&searchType=TITLE&category=TECH
      */
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<Page<QuestionResponse>>> searchQuestions(
             @AuthenticationPrincipal User user,
             @RequestParam String keyword,
             @RequestParam(defaultValue = "ALL") SearchType searchType,
+            @RequestParam(required = false) QuestionCategory category,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Long userId = (user != null) ? user.getId() : null;
-        Page<QuestionResponse> response = questionService.searchQuestions(keyword, searchType, pageable, userId);
+        Page<QuestionResponse> response = questionService.searchQuestions(keyword, searchType, category, pageable, userId);
         return ResponseEntity.ok(ApiResponse.success("질문 검색 성공", response));
     }
 
@@ -103,17 +105,18 @@ public class QuestionController {
     }
 
     /**
-     * 사용자별 질문 조회
-     * GET /api/v1/qna/questions/user/{userId}
+     * 사용자별 질문 조회 (카테고리 필터 지원)
+     * GET /api/v1/qna/questions/user/{userId}?category=TECH
      */
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<Page<QuestionResponse>>> getQuestionsByUser(
             @AuthenticationPrincipal User user,
             @PathVariable Long userId,
+            @RequestParam(required = false) QuestionCategory category,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Long currentUserId = (user != null) ? user.getId() : null;
-        Page<QuestionResponse> response = questionService.getQuestionsByUser(userId, pageable, currentUserId);
+        Page<QuestionResponse> response = questionService.getQuestionsByUser(userId, category, pageable, currentUserId);
         return ResponseEntity.ok(ApiResponse.success("사용자별 질문 조회 성공", response));
     }
 
@@ -129,6 +132,21 @@ public class QuestionController {
         Long userId = (user != null) ? user.getId() : null;
         Page<QuestionResponse> response = questionService.getUnansweredQuestions(pageable, userId);
         return ResponseEntity.ok(ApiResponse.success("미답변 질문 조회 성공", response));
+    }
+
+    /**
+     * 카테고리별 질문 조회
+     * GET /api/v1/qna/questions/category/{category}
+     */
+    @GetMapping("/category/{category}")
+    public ResponseEntity<ApiResponse<Page<QuestionResponse>>> getQuestionsByCategory(
+            @AuthenticationPrincipal User user,
+            @PathVariable QuestionCategory category,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Long userId = (user != null) ? user.getId() : null;
+        Page<QuestionResponse> response = questionService.getQuestionsByCategory(category, pageable, userId);
+        return ResponseEntity.ok(ApiResponse.success("카테고리별 질문 조회 성공", response));
     }
 
     /**

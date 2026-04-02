@@ -155,8 +155,7 @@ export const Input = styled.input`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.gray[400]};
-    box-shadow: 0 0 0 1px ${props => props.theme.colors.gray[300]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   &::placeholder {

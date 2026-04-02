@@ -37,6 +37,7 @@ export const API_ENDPOINTS = {
     UPDATE_EMAIL: '/users/me/email',
     UPDATE_PROFILE_IMAGE: '/users/me/profile-image',
     DELETE_PROFILE_IMAGE: '/users/me/profile-image',
+    EMAIL_SUBSCRIPTION: '/users/me/email-subscription',
   },
   // 스토리지 관련
   STORAGE: {
@@ -47,6 +48,7 @@ export const API_ENDPOINTS = {
     QUESTIONS: '/qna/questions',
     QUESTIONS_SEARCH: '/qna/questions/search',
     QUESTIONS_BY_USER: (userId) => `/qna/questions/user/${userId}`,
+    QUESTIONS_BY_CATEGORY: (category) => `/qna/questions/category/${category}`,
     QUESTION_DETAIL: (id) => `/qna/questions/${id}`,
     ANSWERS: (questionId) => `/qna/questions/${questionId}/answers`,
     ANSWER_DETAIL: (answerId) => `/qna/answers/${answerId}`,
@@ -56,6 +58,7 @@ export const API_ENDPOINTS = {
     ANSWER_COMMENT_DETAIL: (commentId) => `/qna/comments/answer/${commentId}`,
     QUESTION_VOTE: (questionId) => `/qna/questions/${questionId}/vote`,
     ANSWER_VOTE: (answerId) => `/qna/answers/${answerId}/vote`,
+    ACCEPT_ANSWER: (questionId, answerId) => `/qna/questions/${questionId}/accept/${answerId}`,
   },
   // Habit 관련
   HABIT: {
@@ -69,6 +72,19 @@ export const API_ENDPOINTS = {
     HABIT_RECORD_DETAIL: (habitId, recordId) => `/habits/${habitId}/records/${recordId}`,
     HABIT_RECORD_BY_DATE: (habitId, date) => `/habits/${habitId}/records/date/${date}`,
     HABIT_CALENDAR: (habitId) => `/habits/${habitId}/records/calendar`,
+  },
+  // GrowthLog 관련
+  GROWTH_LOG: {
+    GROWTH_LOGS: '/growth-logs',
+    GROWTH_LOG_SEARCH: '/growth-logs/search',
+    GROWTH_LOG_DETAIL: (id) => `/growth-logs/${id}`,
+    GROWTH_LOG_COMMENTS: (growthLogId) => `/growth-logs/${growthLogId}/comments`,
+    GROWTH_LOG_COMMENT_DETAIL: (commentId) => `/growth-logs/comments/${commentId}`,
+    GROWTH_LOG_VOTE: (growthLogId) => `/growth-logs/${growthLogId}/vote`,
+    MY_GROWTH_LOGS: '/growth-logs/me',
+    GROWTH_LOG_PUBLISH: (id) => `/growth-logs/${id}/publish`,
+    GROWTH_LOG_VISIBILITY: (id) => `/growth-logs/${id}/visibility`,
+    DRAFT_COUNT: '/growth-logs/me/draft-count',
   },
   // Support 관련
   SUPPORT: {

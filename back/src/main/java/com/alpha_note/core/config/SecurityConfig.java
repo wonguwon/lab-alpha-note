@@ -32,6 +32,7 @@ import com.alpha_note.core.common.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.List;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * Spring Security 설정
@@ -91,6 +92,7 @@ public class SecurityConfig {
             )
             // 요청별 인증 규칙
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/api/v1/support/contact")).permitAll()
                 .requestMatchers(
                     "/api/v1/auth/register",     // 회원가입
                     "/api/v1/auth/login",        // 로그인
@@ -102,7 +104,8 @@ public class SecurityConfig {
                     "/api/public/**",            // 공개 API
                     "/oauth2/**",                // OAuth2 관련 경로 (Google 로그인)
                     "/login/oauth2/**",          // 콜백
-                    "/error"                     // 에러 페이지
+                    "/error",                    // 에러 페이지
+                    "/favicon.ico"               // 파비콘
                 ).permitAll()
                 // QNA 관련 조회 API는 공개 (GET 요청만)
                 .requestMatchers(
@@ -129,6 +132,14 @@ public class SecurityConfig {
                     "/api/v1/habits/*/records/date/*",
                     "/api/v1/habits/*/records/*",
                     "/api/v1/habits/*/records/calendar"
+                ).permitAll()
+                // Growth Logs 관련 조회 API는 공개 (GET 요청만)
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.GET,
+                    "/api/v1/growth-logs",
+                    "/api/v1/growth-logs/*",
+                    "/api/v1/growth-logs/search",
+                    "/api/v1/growth-logs/*/comments"
                 ).permitAll()
                 .anyRequest().authenticated()  // 나머지는 인증 필요 (/api/v1/auth/me 포함)
             )

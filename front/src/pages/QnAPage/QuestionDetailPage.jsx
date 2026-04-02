@@ -76,6 +76,7 @@ const QuestionDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
   // 댓글 토글 상태
   const [showQuestionComments, setShowQuestionComments] = useState(false);
   const [showAnswerComments, setShowAnswerComments] = useState({});
@@ -104,10 +105,36 @@ const QuestionDetailPage = () => {
   const [votingQuestion, setVotingQuestion] = useState(false);
   const [votingAnswers, setVotingAnswers] = useState({});
 
+  // 답변하기 버튼 표시 상태 (스크롤 위치에 따라 제어)
+  const [showAnswerButton, setShowAnswerButton] = useState(true);
+
   // 데이터 로드
   useEffect(() => {
     loadQuestionDetail();
   }, [id]);
+
+  // 스크롤 이벤트 처리 - 하단 도달 시 답변하기 버튼 숨김
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      
+      // 하단에서 100px 이내에 도달하면 버튼 숨김
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
+      
+      setShowAnswerButton(!isNearBottom);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    
+    // 초기 상태 확인
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const loadQuestionDetail = async () => {
     setLoading(true);
@@ -536,6 +563,29 @@ const QuestionDetailPage = () => {
     }
   };
 
+  // 답변 채택
+  const handleAcceptAnswer = async (answerId) => {
+    if (!isAuthenticated) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    if (!window.confirm('이 답변을 채택하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await qnaService.acceptAnswer(question.id, answerId);
+      // 질문 상세 새로고침
+      loadQuestionDetail();
+      alert('답변이 채택되었습니다.');
+    } catch (err) {
+      console.error('답변 채택 실패:', err);
+      alert(err.response?.data?.message || '답변 채택에 실패했습니다.');
+    }
+  };
+
   // 답변하기 페이지로 이동
   const handleAnswerClick = () => {
     if (!isAuthenticated) {
@@ -645,7 +695,6 @@ const QuestionDetailPage = () => {
               👍 {question.voteCount || 0}
             </VoteButton>
           </VoteSection>
-          {console.log(user)}
           {isAuthenticated && user?.id === question.userId && (
             <ActionButtons>
               <ActionButton onClick={handleEditQuestion}>
@@ -807,18 +856,29 @@ const QuestionDetailPage = () => {
                     </VoteButton>
                   </VoteSection>
 
-                  {isAuthenticated && user?.id === answer.userId && (
-                    <ActionButtons>
-                      <ActionButton onClick={() => handleEditAnswer(answer.id)}>
-                        <MdEdit size={16} />
-                        수정
+                  <ActionButtons>
+                    {/* 질문 작성자만 채택 버튼 표시 (현재 답변이 채택되지 않은 경우) */}
+                    {isAuthenticated && user?.id === question.userId && !answer.isAccepted && (
+                      <ActionButton onClick={() => handleAcceptAnswer(answer.id)} $primary>
+                        <FaCheckCircle size={16} />
+                        채택
                       </ActionButton>
-                      <ActionButton onClick={() => handleDeleteAnswer(answer.id)} $danger>
-                        <MdDelete size={16} />
-                        삭제
-                      </ActionButton>
-                    </ActionButtons>
-                  )}
+                    )}
+
+                    {/* 답변 작성자만 수정/삭제 버튼 표시 */}
+                    {isAuthenticated && user?.id === answer.userId && (
+                      <>
+                        <ActionButton onClick={() => handleEditAnswer(answer.id)}>
+                          <MdEdit size={16} />
+                          수정
+                        </ActionButton>
+                        <ActionButton onClick={() => handleDeleteAnswer(answer.id)} $danger>
+                          <MdDelete size={16} />
+                          삭제
+                        </ActionButton>
+                      </>
+                    )}
+                  </ActionButtons>
                 </AnswerActions>
 
                 {/* 답변 댓글 섹션 (토글) */}
@@ -929,7 +989,7 @@ const QuestionDetailPage = () => {
       </Section>
 
       {/* 하단 고정 답변하기 버튼 */}
-      <FixedAnswerButton onClick={handleAnswerClick}>
+      <FixedAnswerButton onClick={handleAnswerClick} $show={showAnswerButton}>
         답변하기
       </FixedAnswerButton>
     </DetailContainer>

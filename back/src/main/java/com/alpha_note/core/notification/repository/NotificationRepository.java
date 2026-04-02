@@ -15,23 +15,23 @@ import java.util.Optional;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
     // 사용자별 알림 목록 조회 (최신순)
-    Page<Notification> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    Page<Notification> findByUser_IdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
     // 사용자별 읽지 않은 알림 목록 조회
-    Page<Notification> findByUserIdAndIsReadFalseOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    Page<Notification> findByUser_IdAndIsReadFalseOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
     // 사용자별 읽은 알림 목록 조회
-    Page<Notification> findByUserIdAndIsReadTrueOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    Page<Notification> findByUser_IdAndIsReadTrueOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
     // 사용자별 읽지 않은 알림 개수
-    long countByUserIdAndIsReadFalse(Long userId);
+    long countByUser_IdAndIsReadFalse(Long userId);
 
     // 특정 알림 조회 (사용자 ID로 검증)
-    Optional<Notification> findByIdAndUserId(Long id, Long userId);
+    Optional<Notification> findByIdAndUser_Id(Long id, Long userId);
 
     // 사용자의 모든 알림을 읽음 처리
     @Modifying
-    @Query("UPDATE Notification n SET n.isRead = true WHERE n.userId = :userId AND n.isRead = false")
+    @Query("UPDATE Notification n SET n.isRead = true WHERE n.user.id = :userId AND n.isRead = false")
     int markAllAsReadByUserId(@Param("userId") Long userId);
 }
 

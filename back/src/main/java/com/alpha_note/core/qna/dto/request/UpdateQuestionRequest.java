@@ -1,5 +1,6 @@
 package com.alpha_note.core.qna.dto.request;
 
+import com.alpha_note.core.qna.enums.QuestionCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -15,6 +16,8 @@ public class UpdateQuestionRequest {
 
     @NotBlank(message = "질문 내용은 필수입니다.")
     private String content;
+
+    private QuestionCategory category;
 
     @Size(max = 5, message = "태그는 최대 5개까지 추가할 수 있습니다.")
     private List<String> tags;

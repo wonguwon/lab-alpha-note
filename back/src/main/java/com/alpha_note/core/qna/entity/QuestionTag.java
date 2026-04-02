@@ -1,5 +1,6 @@
 package com.alpha_note.core.qna.entity;
 
+import com.alpha_note.core.common.entity.Tag;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

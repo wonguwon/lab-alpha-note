@@ -14,6 +14,7 @@ import com.alpha_note.core.habit.enums.HabitStatus;
 import com.alpha_note.core.habit.repository.HabitRecordRepository;
 import com.alpha_note.core.habit.repository.HabitRepository;
 import com.alpha_note.core.habit.repository.HabitSpecification;
+import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -44,14 +45,13 @@ public class HabitService {
      */
     @Transactional
     public HabitResponse createHabit(Long userId, CreateHabitRequest request) {
-        // 사용자 존재 확인
-        if (!userRepository.existsById(userId)) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 습관 생성
         Habit habit = Habit.builder()
-                .userId(userId)
+                .user(user)
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .color(request.getColor() != null ? request.getColor() : "#10B981")
@@ -82,9 +82,9 @@ public class HabitService {
         } else {
             // 특정 사용자의 습관 조회
             if (status != null) {
-                habits = habitRepository.findByUserIdAndStatus(userId, status, pageable);
+                habits = habitRepository.findByUser_IdAndStatus(userId, status, pageable);
             } else {
-                habits = habitRepository.findByUserIdAndStatusNot(userId, HabitStatus.DELETED, pageable);
+                habits = habitRepository.findByUser_IdAndStatusNot(userId, HabitStatus.DELETED, pageable);
             }
         }
 
@@ -273,7 +273,7 @@ public class HabitService {
                 .collect(Collectors.toList());
 
         List<HabitRecord> records = habitRecordRepository
-                .findByHabitIdInAndRecordDateBetweenAndIsDeletedFalse(habitIds, startDate, endDate);
+                .findByHabitEntity_IdInAndRecordDateBetweenAndIsDeletedFalse(habitIds, startDate, endDate);
 
         // 6. 기록을 habitId별로 그룹핑하여 캘린더 데이터 생성
         // Map<habitId, Map<recordDate, count>>

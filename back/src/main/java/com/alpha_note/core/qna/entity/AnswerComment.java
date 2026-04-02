@@ -1,5 +1,6 @@
 package com.alpha_note.core.qna.entity;
 
+import com.alpha_note.core.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,11 +29,13 @@ public class AnswerComment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "answer_id", nullable = false)
-    private Long answerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "answer_id", nullable = false)
+    private Answer answerEntity;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -52,11 +55,19 @@ public class AnswerComment {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    // ========== 관계 매핑 ==========
+    // ========== 편의 메서드 (하위 호환성) ==========
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "answer_id", insertable = false, updatable = false)
-    private Answer answer;
+    public Long getAnswerId() {
+        return answerEntity != null ? answerEntity.getId() : null;
+    }
+
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
+
+    public Answer getAnswer() {
+        return answerEntity;
+    }
 
     // ========== 비즈니스 메소드 ==========
 
@@ -87,6 +98,6 @@ public class AnswerComment {
      * 작성자 확인
      */
     public boolean isOwnedBy(Long userId) {
-        return this.userId.equals(userId);
+        return this.user != null && this.user.getId().equals(userId);
     }
 }

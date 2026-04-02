@@ -37,29 +37,29 @@ public interface HabitRepository extends JpaRepository<Habit, Long>, JpaSpecific
     Page<Habit> findByStatusNot(HabitStatus status, Pageable pageable);
 
     /**
-     * 사용자 ID로 조회 (페이징)
+     * 사용자로 조회 (페이징)
      */
-    Page<Habit> findByUserId(Long userId, Pageable pageable);
+    Page<Habit> findByUser_Id(Long userId, Pageable pageable);
 
     /**
-     * 사용자 ID와 상태로 조회 (페이징)
+     * 사용자로 조회 + 상태 (페이징)
      */
-    Page<Habit> findByUserIdAndStatus(Long userId, HabitStatus status, Pageable pageable);
+    Page<Habit> findByUser_IdAndStatus(Long userId, HabitStatus status, Pageable pageable);
 
     /**
-     * 사용자 ID로 조회 (DELETED 제외, 페이징)
+     * 사용자로 조회 + 상태 제외 (페이징)
      */
-    Page<Habit> findByUserIdAndStatusNot(Long userId, HabitStatus status, Pageable pageable);
+    Page<Habit> findByUser_IdAndStatusNot(Long userId, HabitStatus status, Pageable pageable);
 
     /**
-     * 사용자 ID와 상태로 조회 (리스트)
+     * 사용자로 조회 + 상태 (리스트)
      */
-    List<Habit> findByUserIdAndStatus(Long userId, HabitStatus status);
+    List<Habit> findByUser_IdAndStatus(Long userId, HabitStatus status);
 
     /**
-     * 사용자 ID로 조회 (DELETED 제외, 리스트)
+     * 사용자로 조회 + 상태 제외 (리스트)
      */
-    List<Habit> findByUserIdAndStatusNot(Long userId, HabitStatus status);
+    List<Habit> findByUser_IdAndStatusNot(Long userId, HabitStatus status);
 
     /**
      * 습관 존재 확인
@@ -69,12 +69,12 @@ public interface HabitRepository extends JpaRepository<Habit, Long>, JpaSpecific
     /**
      * 사용자의 습관 개수 조회 (상태별)
      */
-    long countByUserIdAndStatus(Long userId, HabitStatus status);
+    long countByUser_IdAndStatus(Long userId, HabitStatus status);
 
     /**
      * 사용자의 습관 개수 조회 (DELETED 제외)
      */
-    long countByUserIdAndStatusNot(Long userId, HabitStatus status);
+    long countByUser_IdAndStatusNot(Long userId, HabitStatus status);
 
     // ===== 검색 메서드 =====
 
@@ -87,7 +87,7 @@ public interface HabitRepository extends JpaRepository<Habit, Long>, JpaSpecific
     /**
      * 제목으로 검색 + 사용자 ID 필터
      */
-    @Query("SELECT h FROM Habit h WHERE h.userId = :userId AND h.title LIKE %:keyword% AND h.status != 'DELETED'")
+    @Query("SELECT h FROM Habit h WHERE h.user.id = :userId AND h.title LIKE %:keyword% AND h.status != 'DELETED'")
     Page<Habit> searchByTitleAndUserId(@Param("userId") Long userId, @Param("keyword") String keyword, Pageable pageable);
 
     /**
@@ -99,24 +99,24 @@ public interface HabitRepository extends JpaRepository<Habit, Long>, JpaSpecific
     /**
      * 제목으로 검색 + 사용자 ID + 상태 필터
      */
-    @Query("SELECT h FROM Habit h WHERE h.userId = :userId AND h.title LIKE %:keyword% AND h.status = :status")
+    @Query("SELECT h FROM Habit h WHERE h.user.id = :userId AND h.title LIKE %:keyword% AND h.status = :status")
     Page<Habit> searchByTitleAndUserIdAndStatus(@Param("userId") Long userId, @Param("keyword") String keyword, @Param("status") HabitStatus status, Pageable pageable);
 
     /**
      * 작성자 닉네임으로 검색 (DELETED 제외)
      */
-    @Query("SELECT h FROM Habit h JOIN User u ON h.userId = u.id WHERE u.nickname LIKE %:keyword% AND h.status != 'DELETED'")
+    @Query("SELECT h FROM Habit h JOIN h.user u WHERE u.nickname LIKE %:keyword% AND h.status != 'DELETED'")
     Page<Habit> searchByAuthor(@Param("keyword") String keyword, Pageable pageable);
 
     /**
      * 작성자 닉네임으로 검색 + 상태 필터
      */
-    @Query("SELECT h FROM Habit h JOIN User u ON h.userId = u.id WHERE u.nickname LIKE %:keyword% AND h.status = :status")
+    @Query("SELECT h FROM Habit h JOIN h.user u WHERE u.nickname LIKE %:keyword% AND h.status = :status")
     Page<Habit> searchByAuthorAndStatus(@Param("keyword") String keyword, @Param("status") HabitStatus status, Pageable pageable);
 
     /**
      * 제목 또는 작성자 닉네임으로 검색 (ALL 타입)
      */
-    @Query("SELECT h FROM Habit h LEFT JOIN User u ON h.userId = u.id WHERE (h.title LIKE %:keyword% OR u.nickname LIKE %:keyword%) AND h.status != 'DELETED'")
+    @Query("SELECT h FROM Habit h LEFT JOIN h.user u WHERE (h.title LIKE %:keyword% OR u.nickname LIKE %:keyword%) AND h.status != 'DELETED'")
     Page<Habit> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 }

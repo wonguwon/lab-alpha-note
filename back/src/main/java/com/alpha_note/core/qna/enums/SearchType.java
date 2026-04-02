@@ -11,5 +11,6 @@ public enum SearchType {
     ALL,
     TITLE,
     CONTENT,
-    AUTHOR
+    AUTHOR,
+    TAG
 }

@@ -28,6 +28,7 @@ export const HeaderActions = styled.div`
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     width: 100%;
+    justify-content: space-between;
   }
 `;
 
@@ -143,6 +144,8 @@ export const SearchBox = styled.div`
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     width: 100%;
+    flex-wrap: wrap;
+    gap: ${props => props.theme.spacing[2]};
   }
 `;
 
@@ -158,12 +161,31 @@ export const SearchTypeSelect = styled.select`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${props => props.theme.colors.primary[100]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    width: 90px;
+    width: calc(50% - ${props => props.theme.spacing[1]});
+  }
+`;
+
+export const SortSelect = styled.select`
+  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
+  border: 1px solid ${props => props.theme.colors.gray[300]};
+  border-radius: ${props => props.theme.borderRadius.base};
+  font-size: ${props => props.theme.fonts.size.sm};
+  color: ${props => props.theme.colors.gray[700]};
+  background: ${props => props.theme.colors.white};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.gray[300]};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    width: calc(50% - ${props => props.theme.spacing[1]});
   }
 `;
 
@@ -181,13 +203,13 @@ export const SearchInput = styled.input`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${props => props.theme.colors.primary[100]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    min-width: auto;
+    min-width: 0;
     flex: 1;
+    width: auto;
   }
 `;
 
@@ -220,6 +242,7 @@ export const QuestionList = styled.div`
 
 /* 질문 카드 */
 export const QuestionCard = styled.div`
+  position: relative;
   padding: ${props => props.theme.spacing[5]};
   background: ${props => props.theme.colors.white};
   border: 1px solid ${props => props.theme.colors.gray[200]};
@@ -235,10 +258,77 @@ export const QuestionCard = styled.div`
   }
 `;
 
+/* 답변 배지 (왼쪽 상단) */
+export const AnswerBadge = styled.div`
+  position: absolute;
+  top: ${props => props.theme.spacing[4]};
+  left: ${props => props.theme.spacing[4]};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: ${props => props.theme.spacing[2]};
+  background: ${props => {
+    if (props.$hasAccepted) return props.theme.colors.white;
+    if (props.$hasAnswers) return props.theme.colors.primary[500];
+    return props.theme.colors.gray[200];
+  }};
+  color: ${props => {
+    if (props.$hasAccepted) return props.theme.colors.primary[500];
+    if (props.$hasAnswers) return props.theme.colors.white;
+    return props.theme.colors.gray[600];
+  }};
+  border: ${props => props.$hasAccepted
+    ? `2px solid ${props.theme.colors.primary[500]}`
+    : 'none'};
+  border-radius: ${props => props.theme.borderRadius.base};
+  font-weight: ${props => props.theme.fonts.weight.semibold};
+`;
+
+export const AnswerBadgeLabel = styled.div`
+  font-size: ${props => props.theme.fonts.size.xs};
+  line-height: 1;
+  margin-bottom: 2px;
+`;
+
+export const AnswerBadgeCount = styled.div`
+  font-size: ${props => props.theme.fonts.size.lg};
+  line-height: 1;
+`;
+
+export const CheckIcon = styled.div`
+  position: absolute;
+  bottom: -16px;
+  right: 12px;
+  color: ${props => props.theme.colors.primary[500]};
+  font-size: 20px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+`;
+
+/* 해결 배지 */
+export const SolvedBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[1]};
+  padding: ${props => props.theme.spacing[1]} ${props => props.theme.spacing[2]};
+  background: ${props => props.theme.colors.success[100]};
+  color: ${props => props.theme.colors.success[700]};
+  border-radius: ${props => props.theme.borderRadius.base};
+  font-size: ${props => props.theme.fonts.size.xs};
+  font-weight: ${props => props.theme.fonts.weight.semibold};
+`;
+
 /* 질문 내용 영역 */
 export const QuestionContent = styled.div`
   ${flexColumn}
   gap: ${props => props.theme.spacing[3]};
+  margin-left: 64px;
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    margin-left: 56px;
+  }
 `;
 
 /* 질문 푸터 (태그 + 통계) */
@@ -316,6 +406,15 @@ export const Tag = styled.span`
   font-weight: ${props => props.theme.fonts.weight.medium};
 `;
 
+export const CategoryBadge = styled.span`
+  padding: ${props => props.theme.spacing[1]} ${props => props.theme.spacing[3]};
+  background: ${props => props.theme.colors.gray[400]};
+  color: ${props => props.theme.colors.white};
+  border-radius: ${props => props.theme.borderRadius.full};
+  font-size: ${props => props.theme.fonts.size.xs};
+  font-weight: ${props => props.theme.fonts.weight.semibold};
+`;
+
 /* 질문 메타 정보 */
 export const QuestionMeta = styled.div`
   display: flex;
@@ -348,7 +447,9 @@ export const AuthorName = styled.span`
 `;
 
 export const TimeAgo = styled.span`
+  font-size: ${props => props.theme.fonts.size.xs};
   color: ${props => props.theme.colors.gray[500]};
+  align-self: flex-end;
 `;
 
 /* 페이지네이션 */

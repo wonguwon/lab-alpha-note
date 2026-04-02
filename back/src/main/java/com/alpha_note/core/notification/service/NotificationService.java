@@ -7,6 +7,7 @@ import com.alpha_note.core.notification.dto.response.UnreadCountResponse;
 import com.alpha_note.core.notification.entity.Notification;
 import com.alpha_note.core.notification.enums.NotificationType;
 import com.alpha_note.core.notification.repository.NotificationRepository;
+import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,13 +98,12 @@ public class NotificationService {
             String relatedEntityType,
             Long relatedEntityId
     ) {
-        // 사용자 존재 확인
-        if (!userRepository.existsById(userId)) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         Notification notification = Notification.builder()
-                .userId(userId)
+                .user(user)
                 .type(type)
                 .title(title)
                 .content(content)
@@ -150,13 +150,13 @@ public class NotificationService {
         
         if (isRead == null) {
             // 전체 조회
-            notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+            notifications = notificationRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
         } else if (isRead) {
             // 읽은 알림만
-            notifications = notificationRepository.findByUserIdAndIsReadTrueOrderByCreatedAtDesc(userId, pageable);
+            notifications = notificationRepository.findByUser_IdAndIsReadTrueOrderByCreatedAtDesc(userId, pageable);
         } else {
             // 읽지 않은 알림만
-            notifications = notificationRepository.findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId, pageable);
+            notifications = notificationRepository.findByUser_IdAndIsReadFalseOrderByCreatedAtDesc(userId, pageable);
         }
 
         return notifications.map(NotificationResponse::from);
@@ -167,7 +167,7 @@ public class NotificationService {
      */
     @Transactional
     public void markAsRead(Long notificationId, Long userId) {
-        Notification notification = notificationRepository.findByIdAndUserId(notificationId, userId)
+        Notification notification = notificationRepository.findByIdAndUser_Id(notificationId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOTIFICATION_NOT_FOUND));
 
         if (!notification.getIsRead()) {
@@ -191,7 +191,7 @@ public class NotificationService {
      */
     @Transactional(readOnly = true)
     public UnreadCountResponse getUnreadCount(Long userId) {
-        long count = notificationRepository.countByUserIdAndIsReadFalse(userId);
+        long count = notificationRepository.countByUser_IdAndIsReadFalse(userId);
         return UnreadCountResponse.builder()
                 .unreadCount(count)
                 .build();
@@ -235,5 +235,3 @@ public class NotificationService {
         });
     }
 }
-
-

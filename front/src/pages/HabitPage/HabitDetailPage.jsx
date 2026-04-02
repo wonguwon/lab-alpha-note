@@ -5,6 +5,7 @@ import useAuthStore from '../../store/authStore';
 import Modal from '../../components/common/Modal/Modal';
 import { ButtonSpinner } from '../../components/common/Loading';
 import * as S from './HabitDetailPage.styled';
+import { IoCreateOutline, IoTrashOutline } from 'react-icons/io5';
 
 const HabitDetailPage = () => {
   const { habitId } = useParams();
@@ -370,6 +371,36 @@ const HabitDetailPage = () => {
     setSelectedMonth(yearMonth);
   };
 
+  // 습관 수정 페이지로 이동
+  const handleEditHabit = () => {
+    navigate(`/habits/${habitId}/edit`);
+  };
+
+  // 습관 삭제
+  const handleDeleteHabit = async () => {
+    if (!window.confirm('정말로 이 습관을 삭제하시겠습니까?\n모든 기록이 함께 삭제되며 복구할 수 없습니다.')) {
+      return;
+    }
+
+    try {
+      await habitService.deleteHabit(habitId);
+      alert('습관이 성공적으로 삭제되었습니다.');
+      navigate('/habits');
+    } catch (error) {
+      console.error('습관 삭제 실패:', error);
+      if (error.response?.data?.error?.code === 'HABIT_ACCESS_DENIED') {
+        alert('본인의 습관만 삭제할 수 있습니다.');
+      } else if (error.response?.data?.error?.code === 'HABIT_NOT_FOUND') {
+        alert('습관을 찾을 수 없습니다.');
+        navigate('/habits');
+      } else if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      } else {
+        alert('습관 삭제에 실패했습니다. 다시 시도해주세요.');
+      }
+    }
+  };
+
   const calendarView = renderYearCalendar();
 
   if (loading) {
@@ -390,9 +421,24 @@ const HabitDetailPage = () => {
 
   return (
     <S.Container>
-      <S.BackButton onClick={() => navigate('/habits')}>
-        ← 목록으로
-      </S.BackButton>
+      <S.TopBar>
+        <S.BackButton onClick={() => navigate('/habits')}>
+          ← 목록으로
+        </S.BackButton>
+
+        {isMyHabit && (
+          <S.TopActions>
+            <S.EditButton onClick={handleEditHabit}>
+              <IoCreateOutline />
+              <span>수정</span>
+            </S.EditButton>
+            <S.DeleteButton onClick={handleDeleteHabit}>
+              <IoTrashOutline />
+              <span>삭제</span>
+            </S.DeleteButton>
+          </S.TopActions>
+        )}
+      </S.TopBar>
 
       <S.Content>
         {/* 습관 헤더 */}

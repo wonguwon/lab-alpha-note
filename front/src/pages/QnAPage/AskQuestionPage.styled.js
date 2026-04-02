@@ -84,8 +84,7 @@ export const Input = styled.input`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.error ? '#ef4444' : props.theme.colors.primary[600]};
-    box-shadow: 0 0 0 1px ${props => props.error ? '#ef4444' : props.theme.colors.primary[600]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   &::placeholder {
@@ -105,12 +104,30 @@ export const TextArea = styled.textarea`
   transition: all ${props => props.theme.transitions.base};
 
   &:focus {
-    border-color: ${props => props.error ? '#ef4444' : props.theme.colors.primary[600]};
-    box-shadow: 0 0 0 1px ${props => props.error ? '#ef4444' : props.theme.colors.primary[600]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   &::placeholder {
     color: ${props => props.theme.colors.gray[400]};
+  }
+`;
+
+export const CategorySelect = styled.select`
+  padding: ${props => props.theme.spacing[3]};
+  border: 1px solid ${props => props.error ? '#ef4444' : props.theme.colors.gray[300]};
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-size: ${props => props.theme.fonts.size.sm};
+  background: ${props => props.theme.colors.white};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.base};
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.gray[300]};
+  }
+
+  option {
+    padding: ${props => props.theme.spacing[2]};
   }
 `;
 
@@ -128,8 +145,7 @@ export const TagInput = styled.input`
   width: 100%;
 
   &:focus {
-    border-color: ${props => props.theme.colors.primary[600]};
-    box-shadow: 0 0 0 1px ${props => props.theme.colors.primary[600]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   &::placeholder {

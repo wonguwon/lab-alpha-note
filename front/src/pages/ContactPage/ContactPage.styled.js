@@ -66,8 +66,7 @@ export const FormInput = styled.input`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${props => props.theme.colors.primary[100]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   &::placeholder {
@@ -87,8 +86,7 @@ export const FormSelect = styled.select`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${props => props.theme.colors.primary[100]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 `;
 
@@ -108,8 +106,7 @@ export const FormTextarea = styled.textarea`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${props => props.theme.colors.primary[100]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   &::placeholder {

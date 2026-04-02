@@ -26,7 +26,7 @@ api.interceptors.request.use(
 );
 
 // 공개 페이지 목록 (인증 없이 접근 가능한 페이지)
-const PUBLIC_PAGES = ['/login', '/signup', '/', '/qna', '/habits'];
+const PUBLIC_PAGES = ['/login', '/signup', '/', '/qna', '/habits', '/contact'];
 
 // 리프레시 시도하지 않을 엔드포인트 목록
 const REFRESH_EXCLUDED_ENDPOINTS = [
@@ -35,7 +35,8 @@ const REFRESH_EXCLUDED_ENDPOINTS = [
   '/auth/refresh',
   '/auth/oauth2/register',
   '/auth/recover',
-  '/auth/me'  // 초기 인증 직후 호출 시 쿠키 전파 타이밍 이슈 방지
+  '/auth/me',  // 초기 인증 직후 호출 시 쿠키 전파 타이밍 이슈 방지
+  '/support/contact' // 비회원 문의하기 전송 허용
 ];
 
 // 리프레시 토큰 갱신 중 플래그 (무한 루프 방지)

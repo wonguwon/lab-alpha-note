@@ -11,6 +11,7 @@ import com.alpha_note.core.notification.service.NotificationService;
 import com.alpha_note.core.qna.entity.Answer;
 import com.alpha_note.core.qna.entity.Question;
 import com.alpha_note.core.qna.repository.*;
+import com.alpha_note.core.user.entity.User;
 import com.alpha_note.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,42 +38,38 @@ public class CommentService {
      */
     @Transactional
     public CommentResponse createQuestionComment(Long questionId, Long userId, CreateCommentRequest request) {
-        // 질문 존재 확인
-        if (!questionRepository.existsById(questionId)) {
-            throw new CustomException(ErrorCode.QUESTION_NOT_FOUND);
-        }
+        // 질문 조회
+        Question question = questionRepository.findByIdAndIsDeletedFalse(questionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.QUESTION_NOT_FOUND));
 
-        // 사용자 검증
-        if (!userRepository.existsById(userId)) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 댓글 생성
         QuestionComment comment = QuestionComment.builder()
-                .questionId(questionId)
-                .userId(userId)
+                .questionEntity(question)
+                .user(user)
                 .content(request.getContent())
                 .build();
 
         QuestionComment savedComment = questionCommentRepository.save(comment);
 
-        // 질문의 마지막 활동 시간 업데이트 및 알림 생성
-        questionRepository.findById(questionId).ifPresent(question -> {
-            question.updateLastActivity();
-            questionRepository.save(question);
+        // 질문의 마지막 활동 시간 업데이트
+        question.updateLastActivity();
+        questionRepository.save(question);
 
-            // 알림 생성 (질문 작성자에게, 질문 작성자가 댓글 작성자가 아닌 경우)
-            if (!question.getUserId().equals(userId)) {
-                notificationService.createNotification(
-                        question.getUserId(),
-                        NotificationType.NEW_QUESTION_COMMENT,
-                        NotificationType.NEW_QUESTION_COMMENT.getTitle(),
-                        String.format("질문 '%s'에 새로운 댓글이 작성되었습니다.", question.getTitle()),
-                        "QUESTION",
-                        questionId
-                );
-            }
-        });
+        // 알림 생성 (질문 작성자에게, 질문 작성자가 댓글 작성자가 아닌 경우)
+        if (!question.getUserId().equals(userId)) {
+            notificationService.createNotification(
+                    question.getUserId(),
+                    NotificationType.NEW_QUESTION_COMMENT,
+                    NotificationType.NEW_QUESTION_COMMENT.getTitle(),
+                    String.format("질문 '%s'에 새로운 댓글이 작성되었습니다.", question.getTitle()),
+                    "QUESTION",
+                    questionId
+            );
+        }
 
         log.info("질문 댓글 작성 완료 - commentId: {}, questionId: {}, userId: {}", savedComment.getId(), questionId, userId);
 
@@ -84,44 +81,42 @@ public class CommentService {
      */
     @Transactional
     public CommentResponse createAnswerComment(Long answerId, Long userId, CreateCommentRequest request) {
-        // 답변 존재 확인
-        if (!answerRepository.existsById(answerId)) {
-            throw new CustomException(ErrorCode.ANSWER_NOT_FOUND);
-        }
+        // 답변 조회
+        Answer answer = answerRepository.findByIdAndIsDeletedFalse(answerId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ANSWER_NOT_FOUND));
 
-        // 사용자 검증
-        if (!userRepository.existsById(userId)) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 댓글 생성
         AnswerComment comment = AnswerComment.builder()
-                .answerId(answerId)
-                .userId(userId)
+                .answerEntity(answer)
+                .user(user)
                 .content(request.getContent())
                 .build();
 
         AnswerComment savedComment = answerCommentRepository.save(comment);
 
-        // 질문의 마지막 활동 시간 업데이트 (답변의 질문) 및 알림 생성
-        answerRepository.findById(answerId).ifPresent(answer -> {
+        // 질문의 마지막 활동 시간 업데이트 (답변의 질문)
+        if (answer.getQuestionId() != null) {
             questionRepository.findById(answer.getQuestionId()).ifPresent(question -> {
                 question.updateLastActivity();
                 questionRepository.save(question);
             });
+        }
 
-            // 알림 생성 (답변 작성자에게, 답변 작성자가 댓글 작성자가 아닌 경우)
-            if (!answer.getUserId().equals(userId)) {
-                notificationService.createNotification(
-                        answer.getUserId(),
-                        NotificationType.NEW_ANSWER_COMMENT,
-                        NotificationType.NEW_ANSWER_COMMENT.getTitle(),
-                        "답변에 새로운 댓글이 작성되었습니다.",
-                        "ANSWER",
-                        answerId
-                );
-            }
-        });
+        // 알림 생성 (답변 작성자에게, 답변 작성자가 댓글 작성자가 아닌 경우)
+        if (!answer.getUserId().equals(userId)) {
+            notificationService.createNotification(
+                    answer.getUserId(),
+                    NotificationType.NEW_ANSWER_COMMENT,
+                    NotificationType.NEW_ANSWER_COMMENT.getTitle(),
+                    "답변에 새로운 댓글이 작성되었습니다.",
+                    "ANSWER",
+                    answerId
+            );
+        }
 
         log.info("답변 댓글 작성 완료 - commentId: {}, answerId: {}, userId: {}", savedComment.getId(), answerId, userId);
 
@@ -137,7 +132,7 @@ public class CommentService {
             throw new CustomException(ErrorCode.QUESTION_NOT_FOUND);
         }
 
-        List<QuestionComment> comments = questionCommentRepository.findByQuestionIdAndIsDeletedFalseOrderByCreatedAtDesc(questionId);
+        List<QuestionComment> comments = questionCommentRepository.findByQuestionEntity_IdAndIsDeletedFalseOrderByCreatedAtDesc(questionId);
         return comments.stream()
                 .map(this::buildQuestionCommentResponse)
                 .collect(Collectors.toList());
@@ -152,7 +147,7 @@ public class CommentService {
             throw new CustomException(ErrorCode.ANSWER_NOT_FOUND);
         }
 
-        List<AnswerComment> comments = answerCommentRepository.findByAnswerIdAndIsDeletedFalseOrderByCreatedAtDesc(answerId);
+        List<AnswerComment> comments = answerCommentRepository.findByAnswerEntity_IdAndIsDeletedFalseOrderByCreatedAtDesc(answerId);
         return comments.stream()
                 .map(this::buildAnswerCommentResponse)
                 .collect(Collectors.toList());

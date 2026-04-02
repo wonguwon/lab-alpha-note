@@ -1,7 +1,9 @@
 package com.alpha_note.core.security.oauth2;
 
+import com.alpha_note.core.security.jwt.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
@@ -18,7 +20,10 @@ import java.io.IOException;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
+
+    private final JwtUtil jwtUtil;
 
     @Value("${app.oauth2.authorized-redirect-uri:http://localhost:3000/oauth2/redirect}")
     private String redirectUri;
@@ -29,9 +34,20 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
                                         AuthenticationException exception) throws IOException {
 
         String errorCode = "A009"; // 기본값: 일반 OAuth2 에러
+        String recoveryToken = null;
         
         // OAuth2AuthenticationException인 경우 에러 코드 확인
-        if (exception instanceof OAuth2AuthenticationException) {
+        if (exception instanceof OAuth2UserDeletedException) {
+            OAuth2UserDeletedException deletedException = (OAuth2UserDeletedException) exception;
+            com.alpha_note.core.user.entity.User user = deletedException.getUser();
+            
+            if (user.canBeRecovered()) {
+                errorCode = "U009"; // ACCOUNT_IN_GRACE_PERIOD
+                recoveryToken = jwtUtil.generateRecoveryToken(user);
+            } else {
+                errorCode = "U011"; // ACCOUNT_NOT_RECOVERABLE
+            }
+        } else if (exception instanceof OAuth2AuthenticationException) {
             OAuth2AuthenticationException oauth2Exception = (OAuth2AuthenticationException) exception;
             OAuth2Error error = oauth2Exception.getError();
             
@@ -41,11 +57,14 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
             }
         }
 
-        String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("errorCode", errorCode)
-                .build()
-                .encode()
-                .toUriString();
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(redirectUri)
+                .queryParam("errorCode", errorCode);
+        
+        if (recoveryToken != null) {
+            uriBuilder.queryParam("recoveryToken", recoveryToken);
+        }
+
+        String targetUrl = uriBuilder.build().encode().toUriString();
 
         log.error("OAuth2 authentication failed: {} (errorCode: {}, exception: {})", 
                 exception.getMessage(), errorCode, exception.getClass().getSimpleName());

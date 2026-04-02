@@ -98,6 +98,13 @@ const Header = () => {
             </NavLink>
             <NavLink
               as={Link}
+              to="/growth-logs"
+              className={location.pathname.startsWith('/growth-logs') ? 'active' : ''}
+            >
+              Growth
+            </NavLink>
+            <NavLink
+              as={Link}
               to="/goals"
               className={location.pathname.startsWith('/goals') ? 'active' : ''}
             >
@@ -167,6 +174,14 @@ const Header = () => {
           className={location.pathname.startsWith('/habit') ? 'active' : ''}
         >
           Habit
+        </MobileNavLink>
+        <MobileNavLink
+          as={Link}
+          to="/growth-logs"
+          onClick={handleNavLinkClick}
+          className={location.pathname.startsWith('/growth-logs') ? 'active' : ''}
+        >
+          Growth
         </MobileNavLink>
         <MobileNavLink
           as={Link}

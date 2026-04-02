@@ -14,6 +14,7 @@ import {
   HelperText,
   Input,
   TextArea,
+  CategorySelect,
   TagInputWrapper,
   TagInput,
   TagList,
@@ -31,6 +32,7 @@ const AskQuestionPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
+    category: 'TECH',
     tags: []
   });
   const [tagInput, setTagInput] = useState('');
@@ -51,6 +53,13 @@ const AskQuestionPage = () => {
     setFormData({ ...formData, content: html });
     if (errors.content) {
       setErrors({ ...errors, content: '' });
+    }
+  };
+
+  const handleCategoryChange = (e) => {
+    setFormData({ ...formData, category: e.target.value });
+    if (errors.category) {
+      setErrors({ ...errors, category: '' });
     }
   };
 
@@ -100,6 +109,10 @@ const AskQuestionPage = () => {
       newErrors.content = '내용을 입력해주세요.';
     }
 
+    if (!formData.category) {
+      newErrors.category = '카테고리를 선택해주세요.';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -114,6 +127,7 @@ const AskQuestionPage = () => {
       const response = await qnaService.createQuestion({
         title: formData.title.trim(),
         content: formData.content.trim(),
+        category: formData.category,
         tags: formData.tags
       });
 
@@ -127,7 +141,7 @@ const AskQuestionPage = () => {
   };
 
   const handleCancel = () => {
-    if (formData.title || formData.content || formData.tags.length > 0) {
+    if (formData.title || formData.content || formData.category !== 'TECH' || formData.tags.length > 0) {
       if (window.confirm('작성 중인 내용이 있습니다. 정말 취소하시겠습니까?')) {
         navigate('/qna');
       }
@@ -140,7 +154,7 @@ const AskQuestionPage = () => {
     <AskContainer>
       <AskCard>
         <AskHeader>
-          <PageTitle>질문하기</PageTitle>
+          <PageTitle>Q & A</PageTitle>
         </AskHeader>
 
         <FormSection onSubmit={handleSubmit}>
@@ -158,6 +172,24 @@ const AskQuestionPage = () => {
             error={errors.title}
           />
           {errors.title && <ErrorMessage>{errors.title}</ErrorMessage>}
+        </FormGroup>
+
+        {/* 카테고리 */}
+        <FormGroup>
+          <Label>
+            카테고리 <RequiredMark>*</RequiredMark>
+          </Label>
+          <HelperText>질문의 주제에 맞는 카테고리를 선택하세요.</HelperText>
+          <CategorySelect
+            value={formData.category}
+            onChange={handleCategoryChange}
+            error={errors.category}
+          >
+            <option value="TECH">기술</option>
+            <option value="CAREER">커리어</option>
+            <option value="ETC">기타</option>
+          </CategorySelect>
+          {errors.category && <ErrorMessage>{errors.category}</ErrorMessage>}
         </FormGroup>
 
         {/* 내용 */}

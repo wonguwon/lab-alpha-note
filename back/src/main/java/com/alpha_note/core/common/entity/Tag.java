@@ -1,4 +1,4 @@
-package com.alpha_note.core.qna.entity;
+package com.alpha_note.core.common.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,8 +9,10 @@ import java.time.Instant;
 
 /**
  * 태그 엔티티
- * - 질문에 태그를 붙여 분류 및 검색 용이하게 함
- * - N:M 관계 (Question <-> Tag)
+ * - 태그를 붙여 분류 및 검색 용이하게 함
+ * - 공통으로 분리
+ *   - 대상: 질문(Question), 성장기록(GrowthLog)
+ * - N:M 관계 (Target <-> Tag)
  */
 @Entity
 @Table(name = "tags", indexes = {

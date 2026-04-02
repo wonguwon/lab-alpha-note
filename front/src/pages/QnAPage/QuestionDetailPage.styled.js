@@ -272,9 +272,21 @@ export const ActionButton = styled.button`
   align-items: center;
   gap: ${props => props.theme.spacing[1]};
   padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
-  background: ${props => props.$danger ? props.theme.colors.white : props.theme.colors.white};
-  color: ${props => props.$danger ? props.theme.colors.danger[600] : props.theme.colors.gray[600]};
-  border: 1px solid ${props => props.$danger ? props.theme.colors.danger[300] : props.theme.colors.gray[300]};
+  background: ${props => {
+    if (props.$primary) return props.theme.colors.primary[600];
+    if (props.$danger) return props.theme.colors.white;
+    return props.theme.colors.white;
+  }};
+  color: ${props => {
+    if (props.$primary) return props.theme.colors.white;
+    if (props.$danger) return props.theme.colors.danger[600];
+    return props.theme.colors.gray[600];
+  }};
+  border: 1px solid ${props => {
+    if (props.$primary) return props.theme.colors.primary[600];
+    if (props.$danger) return props.theme.colors.danger[300];
+    return props.theme.colors.gray[300];
+  }};
   border-radius: ${props => props.theme.borderRadius.md};
   font-size: ${props => props.theme.fonts.size.sm};
   font-weight: ${props => props.theme.fonts.weight.medium};
@@ -286,9 +298,21 @@ export const ActionButton = styled.button`
   }
 
   &:hover {
-    background: ${props => props.$danger ? props.theme.colors.danger[50] : props.theme.colors.gray[50]};
-    color: ${props => props.$danger ? props.theme.colors.danger[700] : props.theme.colors.gray[900]};
-    border-color: ${props => props.$danger ? props.theme.colors.danger[400] : props.theme.colors.gray[400]};
+    background: ${props => {
+      if (props.$primary) return props.theme.colors.primary[700];
+      if (props.$danger) return props.theme.colors.danger[50];
+      return props.theme.colors.gray[50];
+    }};
+    color: ${props => {
+      if (props.$primary) return props.theme.colors.white;
+      if (props.$danger) return props.theme.colors.danger[700];
+      return props.theme.colors.gray[900];
+    }};
+    border-color: ${props => {
+      if (props.$primary) return props.theme.colors.primary[700];
+      if (props.$danger) return props.theme.colors.danger[400];
+      return props.theme.colors.gray[400];
+    }};
   }
 
   &:active {
@@ -826,7 +850,7 @@ export const FixedAnswerButton = styled.button`
   position: fixed;
   bottom: ${props => props.theme.spacing[8]};
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) ${props => props.$show ? 'translateY(0)' : 'translateY(20px)'};
   padding: ${props => props.theme.spacing[4]} ${props => props.theme.spacing[8]};
   background: ${props => props.theme.colors.primary[600]};
   color: ${props => props.theme.colors.white};
@@ -835,9 +859,11 @@ export const FixedAnswerButton = styled.button`
   font-size: ${props => props.theme.fonts.size.lg};
   font-weight: ${props => props.theme.fonts.weight.bold};
   cursor: pointer;
-  transition: all ${props => props.theme.transitions.base};
+  transition: all 0.3s ease-in-out;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
   z-index: ${props => props.theme.zIndex.sticky};
+  opacity: ${props => props.$show ? '1' : '0'};
+  pointer-events: ${props => props.$show ? 'auto' : 'none'};
 
   &:hover {
     background: ${props => props.theme.colors.primary[700]};

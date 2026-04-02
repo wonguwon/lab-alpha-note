@@ -78,8 +78,7 @@ export const Input = styled.input`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${props => props.theme.colors.primary[100]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   &::placeholder {
@@ -88,10 +87,6 @@ export const Input = styled.input`
 
   ${props => props.$error && `
     border-color: ${props.theme.colors.danger[500]};
-    &:focus {
-      border-color: ${props.theme.colors.danger[500]};
-      box-shadow: 0 0 0 3px ${props.theme.colors.danger[100]};
-    }
   `}
 `;
 
@@ -109,8 +104,7 @@ export const TextArea = styled.textarea`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${props => props.theme.colors.primary[100]};
+    border-color: ${props => props.theme.colors.gray[300]};
   }
 
   &::placeholder {
@@ -119,10 +113,6 @@ export const TextArea = styled.textarea`
 
   ${props => props.$error && `
     border-color: ${props.theme.colors.danger[500]};
-    &:focus {
-      border-color: ${props.theme.colors.danger[500]};
-      box-shadow: 0 0 0 3px ${props.theme.colors.danger[100]};
-    }
   `}
 `;
 

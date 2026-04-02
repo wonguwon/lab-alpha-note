@@ -1,11 +1,14 @@
 package com.alpha_note.core.qna.service;
 
+import com.alpha_note.core.common.entity.Tag;
 import com.alpha_note.core.common.exception.CustomException;
 import com.alpha_note.core.common.exception.ErrorCode;
+import com.alpha_note.core.common.repository.TagRepository;
 import com.alpha_note.core.qna.dto.request.CreateQuestionRequest;
 import com.alpha_note.core.qna.dto.request.UpdateQuestionRequest;
 import com.alpha_note.core.qna.dto.response.*;
 import com.alpha_note.core.qna.entity.*;
+import com.alpha_note.core.qna.enums.QuestionCategory;
 import com.alpha_note.core.qna.enums.SearchType;
 import com.alpha_note.core.notification.enums.NotificationType;
 import com.alpha_note.core.notification.service.NotificationService;
@@ -19,9 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,16 +47,16 @@ public class QuestionService {
      */
     @Transactional
     public QuestionDetailResponse createQuestion(Long userId, CreateQuestionRequest request) {
-        // 사용자 검증
-        if (!userRepository.existsById(userId)) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 질문 생성
         Question question = Question.builder()
-                .userId(userId)
+                .user(user)
                 .title(request.getTitle())
                 .content(request.getContent())
+                .category(request.getCategory())
                 .build();
 
         Question savedQuestion = questionRepository.save(question);
@@ -101,26 +102,44 @@ public class QuestionService {
     }
 
     /**
-     * 질문 검색 (키워드 + 검색 타입)
+     * 질문 검색 (키워드 + 검색 타입 + 카테고리 필터)
      */
     @Transactional(readOnly = true)
-    public Page<QuestionResponse> searchQuestions(String keyword, SearchType searchType, Pageable pageable, Long currentUserId) {
+    public Page<QuestionResponse> searchQuestions(String keyword, SearchType searchType, QuestionCategory category, Pageable pageable, Long currentUserId) {
         Page<Question> questions;
 
-        switch (searchType) {
-            case TITLE:
-                questions = questionRepository.searchByTitle(keyword, pageable);
-                break;
-            case CONTENT:
-                questions = questionRepository.searchByContent(keyword, pageable);
-                break;
-            case AUTHOR:
-                questions = questionRepository.searchByAuthor(keyword, pageable);
-                break;
-            case ALL:
-            default:
-                questions = questionRepository.searchByKeyword(keyword, pageable);
-                break;
+        if (category != null) {
+            switch (searchType) {
+                case TITLE:
+                    questions = questionRepository.searchByTitleAndCategory(keyword, category, pageable);
+                    break;
+                case CONTENT:
+                    questions = questionRepository.searchByContentAndCategory(keyword, category, pageable);
+                    break;
+                case AUTHOR:
+                    questions = questionRepository.searchByAuthorAndCategory(keyword, category, pageable);
+                    break;
+                case ALL:
+                default:
+                    questions = questionRepository.searchByKeywordAndCategory(keyword, category, pageable);
+                    break;
+            }
+        } else {
+            switch (searchType) {
+                case TITLE:
+                    questions = questionRepository.searchByTitle(keyword, pageable);
+                    break;
+                case CONTENT:
+                    questions = questionRepository.searchByContent(keyword, pageable);
+                    break;
+                case AUTHOR:
+                    questions = questionRepository.searchByAuthor(keyword, pageable);
+                    break;
+                case ALL:
+                default:
+                    questions = questionRepository.searchByKeyword(keyword, pageable);
+                    break;
+            }
         }
 
         return questions.map(q -> buildQuestionResponse(q, currentUserId));
@@ -136,11 +155,16 @@ public class QuestionService {
     }
 
     /**
-     * 사용자별 질문 조회
+     * 사용자별 질문 조회 (카테고리 필터 지원)
      */
     @Transactional(readOnly = true)
-    public Page<QuestionResponse> getQuestionsByUser(Long userId, Pageable pageable, Long currentUserId) {
-        Page<Question> questions = questionRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
+    public Page<QuestionResponse> getQuestionsByUser(Long userId, QuestionCategory category, Pageable pageable, Long currentUserId) {
+        Page<Question> questions;
+        if (category != null) {
+            questions = questionRepository.findByUser_IdAndCategoryAndIsDeletedFalse(userId, category, pageable);
+        } else {
+            questions = questionRepository.findByUser_IdAndIsDeletedFalse(userId, pageable);
+        }
         return questions.map(q -> buildQuestionResponse(q, currentUserId));
     }
 
@@ -150,6 +174,15 @@ public class QuestionService {
     @Transactional(readOnly = true)
     public Page<QuestionResponse> getUnansweredQuestions(Pageable pageable, Long currentUserId) {
         Page<Question> questions = questionRepository.findByIsAnsweredAndIsDeletedFalseOrderByCreatedAtDesc(false, pageable);
+        return questions.map(q -> buildQuestionResponse(q, currentUserId));
+    }
+
+    /**
+     * 카테고리별 질문 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> getQuestionsByCategory(QuestionCategory category, Pageable pageable, Long currentUserId) {
+        Page<Question> questions = questionRepository.findByCategoryAndIsDeletedFalse(category, pageable);
         return questions.map(q -> buildQuestionResponse(q, currentUserId));
     }
 
@@ -167,7 +200,7 @@ public class QuestionService {
         }
 
         // 질문 업데이트
-        question.update(request.getTitle(), request.getContent());
+        question.update(request.getTitle(), request.getContent(), request.getCategory());
         questionRepository.save(question);
 
         // 태그 업데이트
@@ -301,14 +334,14 @@ public class QuestionService {
      */
     private void softDeleteRelatedEntities(Long questionId) {
         // 답변들 Soft Delete
-        List<Answer> answers = answerRepository.findByQuestionIdAndIsDeletedFalse(questionId);
+        List<Answer> answers = answerRepository.findByQuestionEntity_IdAndIsDeletedFalse(questionId);
         answers.forEach(answer -> {
             answer.markAsDeleted();
             answerRepository.save(answer);
         });
 
         // 댓글들 Soft Delete
-        List<QuestionComment> comments = questionCommentRepository.findByQuestionId(questionId);
+        List<QuestionComment> comments = questionCommentRepository.findByQuestionEntity_Id(questionId);
         comments.forEach(comment -> {
             comment.markAsDeleted();
             questionCommentRepository.save(comment);
@@ -353,7 +386,7 @@ public class QuestionService {
 
         // 추천 여부 (현재 사용자)
         if (currentUserId != null) {
-            boolean isVoted = questionVoteRepository.existsByQuestionIdAndUserId(question.getId(), currentUserId);
+            boolean isVoted = questionVoteRepository.existsByQuestionEntity_IdAndUser_Id(question.getId(), currentUserId);
             response.setIsVotedByCurrentUser(isVoted);
         }
 
@@ -367,7 +400,7 @@ public class QuestionService {
         response.setTags(tags);
 
         // 댓글 개수
-        long commentCount = questionCommentRepository.countByQuestionIdAndIsDeletedFalse(question.getId());
+        long commentCount = questionCommentRepository.countByQuestionEntity_IdAndIsDeletedFalse(question.getId());
         response.setCommentCount((int) commentCount);
 
         // 답변 목록 (채택 답변 우선 정렬)
@@ -394,12 +427,12 @@ public class QuestionService {
 
         // 추천 여부
         if (currentUserId != null) {
-            boolean isVoted = answerVoteRepository.existsByAnswerIdAndUserId(answer.getId(), currentUserId);
+            boolean isVoted = answerVoteRepository.existsByAnswerEntity_IdAndUser_Id(answer.getId(), currentUserId);
             response.setIsVotedByCurrentUser(isVoted);
         }
 
         // 댓글 개수
-        long commentCount = answerCommentRepository.countByAnswerIdAndIsDeletedFalse(answer.getId());
+        long commentCount = answerCommentRepository.countByAnswerEntity_IdAndIsDeletedFalse(answer.getId());
         response.setCommentCount((int) commentCount);
 
         return response;

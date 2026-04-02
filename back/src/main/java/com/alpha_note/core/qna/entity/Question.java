@@ -1,5 +1,7 @@
 package com.alpha_note.core.qna.entity;
 
+import com.alpha_note.core.qna.enums.QuestionCategory;
+import com.alpha_note.core.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -23,7 +25,8 @@ import java.util.List;
         @Index(name = "idx_vote_count", columnList = "vote_count"),
         @Index(name = "idx_last_activity_at", columnList = "last_activity_at"),
         @Index(name = "idx_is_answered", columnList = "is_answered"),
-        @Index(name = "idx_accepted_answer_id", columnList = "accepted_answer_id")
+        @Index(name = "idx_accepted_answer_id", columnList = "accepted_answer_id"),
+        @Index(name = "idx_category", columnList = "category")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -35,14 +38,20 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "title", nullable = false)
     private String title;
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", length = 20)
+    @Builder.Default
+    private QuestionCategory category = QuestionCategory.TECH;
 
     @Column(name = "view_count", nullable = false)
     @Builder.Default
@@ -84,15 +93,15 @@ public class Question {
 
     // ========== 관계 매핑 (양방향) ==========
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "questionEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Answer> answers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "questionEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<QuestionComment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "questionEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<QuestionVote> votes = new ArrayList<>();
 
@@ -180,6 +189,21 @@ public class Question {
     }
 
     /**
+     * 질문 수정 (카테고리 포함)
+     * @param title 제목
+     * @param content 내용
+     * @param category 카테고리
+     */
+    public void update(String title, String content, QuestionCategory category) {
+        this.title = title;
+        this.content = content;
+        if (category != null) {
+            this.category = category;
+        }
+        this.updateLastActivity();
+    }
+
+    /**
      * Soft Delete (연쇄 삭제는 Service에서 처리)
      */
     public void markAsDeleted() {
@@ -196,10 +220,17 @@ public class Question {
     }
 
     /**
+     * 편의 메서드 (하위 호환성)
+     */
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
+
+    /**
      * 작성자 확인
      */
     public boolean isOwnedBy(Long userId) {
-        return this.userId.equals(userId);
+        return this.user != null && this.user.getId().equals(userId);
     }
 
     /**

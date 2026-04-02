@@ -99,6 +99,21 @@ public class UserService {
     }
 
     /**
+     * 이메일 수신동의 설정 변경
+     */
+    @Transactional
+    public UserResponse updateEmailSubscription(Long userId, boolean emailSubscribed) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        user.updateEmailSubscribed(emailSubscribed);
+        User updatedUser = userRepository.save(user);
+
+        log.info("Email subscription updated for user: {}, subscribed: {}", user.getEmail(), emailSubscribed);
+        return UserResponse.from(updatedUser);
+    }
+
+    /**
      * 프로필 이미지 삭제
      */
     @Transactional
@@ -147,6 +162,9 @@ public class UserService {
 
         // LOCAL 사용자인 경우 비밀번호 검증
         if (user.getProvider() == AuthProvider.LOCAL) {
+            if (request.getPassword() == null || request.getPassword().isBlank()) {
+                throw new CustomException(ErrorCode.INCORRECT_PASSWORD); // 또는 전용 에러 코드 사용
+            }
             if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
                 throw new CustomException(ErrorCode.INCORRECT_PASSWORD);
             }

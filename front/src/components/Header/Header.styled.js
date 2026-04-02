@@ -4,11 +4,21 @@ import { flexBetween, flexCenter } from '../../styles/mixins';
 /* 헤더 메인 컨테이너 */
 export const HeaderContainer = styled.div`
   ${flexBetween}
-  height: 60px;
+  height: 75px;
   padding: 0 ${props => props.theme.spacing[4]};
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+
+  /* 중간 화면 (1440px 이상) */
+  @media (min-width: 1440px) {
+    max-width: 1376px;
+  }
+
+  /* 큰 화면 (1920px 이상) */
+  @media (min-width: 1920px) {
+    max-width: 1728px;
+  }
 `;
 
 /* 로고 영역 */
@@ -20,7 +30,7 @@ export const LogoSection = styled.div`
 
 /* 로고 텍스트 */
 export const LogoText = styled.h1`
-  font-size: ${props => props.theme.fonts.size.lg};
+  font-size: ${props => props.theme.fonts.size['2xl']};
   font-weight: ${props => props.theme.fonts.weight.bold};
   color: ${props => props.theme.colors.primary[600]};
   margin: 0;
@@ -55,7 +65,7 @@ export const Navigation = styled.nav`
 export const NavLink = styled.a`
   color: ${props => props.theme.colors.gray[600]};
   font-weight: ${props => props.theme.fonts.weight.medium};
-  font-size: ${props => props.theme.fonts.size.sm};
+  font-size: ${props => props.theme.fonts.size.base};
   text-decoration: none;
   padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
   transition: color ${props => props.theme.transitions.base};
@@ -103,10 +113,10 @@ export const UserButton = styled.button`
   background: ${props => props.theme.colors.white};
   color: ${props => props.theme.colors.gray[700]};
   font-weight: ${props => props.theme.fonts.weight.medium};
-  font-size: ${props => props.theme.fonts.size.sm};
+  font-size: ${props => props.theme.fonts.size.base};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.base};
-  height: 36px;
+  height: 42px;
   white-space: nowrap;
 
   &:hover {
@@ -128,8 +138,8 @@ export const UserButton = styled.button`
 
 /* 프로필 이미지 버튼 */
 export const ProfileButton = styled.button`
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: 2px solid ${props => props.theme.colors.gray[200]};
   background: ${props => props.theme.colors.white};
@@ -152,8 +162,8 @@ export const ProfileImage = styled.img`
 
 /* 아이콘 버튼 */
 export const IconButton = styled.button`
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: ${props => props.theme.borderRadius.base};
   border: 1px solid ${props => props.theme.colors.gray[200]};
   background: ${props => props.theme.colors.white};
@@ -166,8 +176,8 @@ export const IconButton = styled.button`
   position: relative;
 
   svg {
-    width: 18px;
-    height: 18px;
+    width: 21px;
+    height: 21px;
   }
 
   &:hover {
@@ -222,7 +232,7 @@ export const MobileMenuButton = styled.button`
 export const MobileMenu = styled.div`
   display: none;
   position: fixed;
-  top: 60px;
+  top: 75px;
   left: 0;
   right: 0;
   background: ${props => props.theme.colors.white};
@@ -230,7 +240,7 @@ export const MobileMenu = styled.div`
   padding: ${props => props.theme.spacing[4]};
   flex-direction: column;
   gap: ${props => props.theme.spacing[1]};
-  max-height: calc(100vh - 60px);
+  max-height: calc(100vh - 75px);
   overflow-y: auto;
   z-index: ${props => props.theme.zIndex.dropdown || 100};
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);

@@ -18,30 +18,30 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
     Optional<Answer> findByIdAndIsDeletedFalse(Long id);
 
     // 질문별 답변 조회
-    List<Answer> findByQuestionIdAndIsDeletedFalse(Long questionId);
-    Page<Answer> findByQuestionIdAndIsDeletedFalse(Long questionId, Pageable pageable);
+    List<Answer> findByQuestionEntity_IdAndIsDeletedFalse(Long questionId);
+    Page<Answer> findByQuestionEntity_IdAndIsDeletedFalse(Long questionId, Pageable pageable);
 
     // 질문별 답변 조회 (투표수 내림차순)
-    List<Answer> findByQuestionIdAndIsDeletedFalseOrderByVoteCountDesc(Long questionId);
+    List<Answer> findByQuestionEntity_IdAndIsDeletedFalseOrderByVoteCountDesc(Long questionId);
 
     // 질문별 답변 조회 (채택된 답변 먼저, 그 다음 최신순)
-    @Query("SELECT a FROM Answer a WHERE a.questionId = :questionId AND a.isDeleted = false ORDER BY a.isAccepted DESC, a.createdAt DESC")
+    @Query("SELECT a FROM Answer a WHERE a.questionEntity.id = :questionId AND a.isDeleted = false ORDER BY a.isAccepted DESC, a.createdAt DESC")
     List<Answer> findByQuestionIdOrderByAcceptedAndVotes(@Param("questionId") Long questionId);
 
     // 사용자별 답변 조회 (최신순)
-    Page<Answer> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId, Pageable pageable);
-    List<Answer> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId);
+    Page<Answer> findByUser_IdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    List<Answer> findByUser_IdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId);
 
     // 채택된 답변 조회
-    Optional<Answer> findByQuestionIdAndIsAcceptedTrueAndIsDeletedFalse(Long questionId);
+    Optional<Answer> findByQuestionEntity_IdAndIsAcceptedTrueAndIsDeletedFalse(Long questionId);
 
     // 답변 수 카운트
-    long countByQuestionIdAndIsDeletedFalse(Long questionId);
-    long countByUserIdAndIsDeletedFalse(Long userId);
+    long countByQuestionEntity_IdAndIsDeletedFalse(Long questionId);
+    long countByUser_IdAndIsDeletedFalse(Long userId);
 
     // 채택된 답변 수 (사용자별)
-    long countByUserIdAndIsAcceptedTrueAndIsDeletedFalse(Long userId);
+    long countByUser_IdAndIsAcceptedTrueAndIsDeletedFalse(Long userId);
 
     // 질문별 답변 존재 여부
-    boolean existsByQuestionIdAndIsDeletedFalse(Long questionId);
+    boolean existsByQuestionEntity_IdAndIsDeletedFalse(Long questionId);
 }

@@ -1,6 +1,7 @@
 package com.alpha_note.core.notification.entity;
 
 import com.alpha_note.core.notification.enums.NotificationType;
+import com.alpha_note.core.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -26,8 +27,14 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId; // 수신자
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user; // 수신자
+
+    // 편의 메서드 (하위 호환성)
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 50)
@@ -62,5 +69,3 @@ public class Notification {
         this.isRead = true;
     }
 }
-
-

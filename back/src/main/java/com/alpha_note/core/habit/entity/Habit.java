@@ -1,6 +1,7 @@
 package com.alpha_note.core.habit.entity;
 
 import com.alpha_note.core.habit.enums.HabitStatus;
+import com.alpha_note.core.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -27,8 +28,9 @@ public class Habit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "title", nullable = false, length = 100)
     private String title;
@@ -80,7 +82,7 @@ public class Habit {
     private Instant deletedAt;
 
     // 양방향 관계 (optional)
-    @OneToMany(mappedBy = "habit", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "habitEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<HabitRecord> records = new ArrayList<>();
 
@@ -120,10 +122,17 @@ public class Habit {
     }
 
     /**
+     * 편의 메서드 (하위 호환성)
+     */
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
+
+    /**
      * 권한 확인
      */
     public boolean isOwnedBy(Long userId) {
-        return this.userId.equals(userId);
+        return this.user != null && this.user.getId().equals(userId);
     }
 
     /**

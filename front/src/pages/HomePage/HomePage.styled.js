@@ -11,25 +11,30 @@ export const HomeContainer = styled.div`
 export const HeroSection = styled.section`
   ${flexCenter}
   ${flexColumn}
-  min-height: 60vh;
-  background: linear-gradient(135deg, 
-    ${props => props.theme.colors.primary[50]} 0%, 
+  min-height: 35vh;
+  background: linear-gradient(135deg,
+    ${props => props.theme.colors.primary[50]} 0%,
     ${props => props.theme.colors.primary[100]} 100%
   );
   text-align: center;
-  padding: ${props => props.theme.spacing[16]} 0;
+  padding: ${props => props.theme.spacing[12]} 0;
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    min-height: 40vh;
+    padding: ${props => props.theme.spacing[8]} 0;
+  }
 `;
 
 /* 히어로 제목 */
 export const HeroTitle = styled.h1`
-  font-size: ${props => props.theme.fonts.size['5xl']};
+  font-size: ${props => props.theme.fonts.size['4xl']};
   font-weight: ${props => props.theme.fonts.weight.bold};
   color: ${props => props.theme.colors.gray[900]};
-  margin-bottom: ${props => props.theme.spacing[6]};
+  margin-bottom: ${props => props.theme.spacing[4]};
   line-height: ${props => props.theme.fonts.lineHeight.tight};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.md}) {
-    font-size: ${props => props.theme.fonts.size['3xl']};
+    font-size: ${props => props.theme.fonts.size['2xl']};
   }
 `;
 
@@ -112,12 +117,12 @@ export const SectionTitle = styled.h2`
 /* 미리보기 그리드 */
 export const PreviewGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: ${props => props.theme.spacing[8]};
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: ${props => props.theme.spacing[6]};
   margin-bottom: ${props => props.theme.spacing[12]};
 
   @media (max-width: ${props => props.theme.breakpoints.md}) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: ${props => props.theme.spacing[6]};
   }
 `;
@@ -128,6 +133,7 @@ export const PreviewSection = styled.div`
   border-radius: ${props => props.theme.borderRadius.xl};
   padding: ${props => props.theme.spacing[6]};
   box-shadow: ${props => props.theme.shadows.sm};
+  min-width: 0;
 `;
 
 /* 미리보기 헤더 */
@@ -164,12 +170,14 @@ export const QuestionList = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${props => props.theme.spacing[3]};
+  min-width: 0;
 `;
 
 export const HabitList = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${props => props.theme.spacing[3]};
+  min-width: 0;
 `;
 
 /* 미리보기 카드 */
@@ -180,6 +188,7 @@ export const QuestionPreviewCard = styled.div`
   border-radius: ${props => props.theme.borderRadius.lg};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.base};
+  min-width: 0;
 
   &:hover {
     background: ${props => props.theme.colors.white};
@@ -195,6 +204,7 @@ export const HabitPreviewCard = styled.div`
   border-radius: ${props => props.theme.borderRadius.lg};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.base};
+  min-width: 0;
 
   &:hover {
     background: ${props => props.theme.colors.white};
@@ -212,6 +222,8 @@ export const CardTitle = styled.h4`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 `;
 
 export const CardMeta = styled.div`
@@ -251,6 +263,7 @@ export const HabitCardHeader = styled.div`
   align-items: center;
   gap: ${props => props.theme.spacing[2]};
   margin-bottom: ${props => props.theme.spacing[2]};
+  min-width: 0;
 `;
 
 export const HabitColorBar = styled.div`
@@ -319,72 +332,4 @@ export const FeatureTitle = styled.h3`
 export const FeatureDescription = styled.p`
   color: ${props => props.theme.colors.gray[600]};
   line-height: ${props => props.theme.fonts.lineHeight.relaxed};
-`;
-
-/* 목표 섹션 */
-export const GoalSection = styled.div`
-  background: ${props => props.theme.colors.white};
-  border-radius: ${props => props.theme.borderRadius.xl};
-  padding: ${props => props.theme.spacing[6]};
-  box-shadow: ${props => props.theme.shadows.sm};
-  margin-bottom: ${props => props.theme.spacing[8]};
-`;
-
-export const GoalUserTitle = styled.h4`
-  font-size: ${props => props.theme.fonts.size.lg};
-  font-weight: ${props => props.theme.fonts.weight.semibold};
-  color: ${props => props.theme.colors.gray[900]};
-  margin: 0 0 ${props => props.theme.spacing[4]} 0;
-`;
-
-export const GoalListHome = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: ${props => props.theme.spacing[4]};
-
-  @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    grid-template-columns: 1fr;
-    gap: ${props => props.theme.spacing[3]};
-  }
-`;
-
-export const GoalItemHome = styled.div`
-  position: relative;
-  background: ${props => props.$completed ? props.theme.colors.success[50] : props.theme.colors.white};
-  border: 2px solid ${props => props.$completed ? props.theme.colors.success[300] : props.theme.colors.gray[300]};
-  border-radius: ${props => props.theme.borderRadius.lg};
-  padding: ${props => props.theme.spacing[5]};
-  cursor: pointer;
-  transition: all ${props => props.theme.transitions.base};
-  min-height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    border-color: ${props => props.$completed ? props.theme.colors.success[400] : props.theme.colors.primary[500]};
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transform: translateY(-2px);
-  }
-
-  ${props => props.$completed && `
-    box-shadow: 0 2px 4px -1px rgba(5, 150, 105, 0.1), 0 1px 2px -1px rgba(5, 150, 105, 0.06);
-  `}
-`;
-
-export const GoalCheckboxHome = styled.input`
-  width: 18px;
-  height: 18px;
-  cursor: ${props => props.$disabled ? 'not-allowed' : 'pointer'};
-  flex-shrink: 0;
-`;
-
-export const GoalTextHome = styled.span`
-  text-align: center;
-  font-size: ${props => props.theme.fonts.size.base};
-  color: ${props => props.$completed ? props.theme.colors.success[700] : props.theme.colors.gray[900]};
-  font-weight: ${props => props.$completed ? props.theme.fonts.weight.semibold : props.theme.fonts.weight.medium};
-  text-decoration: none;
-  line-height: 1.5;
-  word-break: break-word;
 `;
