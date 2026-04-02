@@ -22,19 +22,19 @@ CREATE DATABASE alpha_note CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 ### 2.2 데이터베이스 접속 정보
-`application-local.yml` 참고:
+`application-local.yml` 설정 예시:
 - **URL**: `jdbc:mysql://localhost:3306/alpha_note`
 - **Username**: `root`
-- **Password**: `root123`
+- **Password**: `your_db_password`
 
 **참고**: JPA의 `ddl-auto: create` 설정으로 애플리케이션 시작 시 테이블이 자동 생성됩니다.
 
 ## 3. 외부 서비스 설정
 
 ### 3.1 Gmail SMTP 설정 (이메일 인증 기능)
-현재 `application-local.yml`에 다음 정보가 설정되어 있습니다:
-- **Username**: `wonguwon25@gmail.com`
-- **Password**: `pzjd ppro vsxf zfyo` (Gmail 앱 비밀번호)
+`application-local.yml`에 다음 정보를 설정합니다:
+- **Username**: `your_email@gmail.com`
+- **Password**: `xxxx xxxx xxxx xxxx` (Gmail 앱 비밀번호)
 
 **자체 Gmail 계정 사용 시**:
 1. Gmail 계정에서 2단계 인증 활성화
@@ -42,9 +42,9 @@ CREATE DATABASE alpha_note CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 3. `application-local.yml`의 `spring.mail.username`과 `password` 수정
 
 ### 3.2 Google OAuth2 설정 (소셜 로그인)
-현재 설정된 값:
-- **Client ID**: `369640263527-7or890epae7mv8vuhnsehnumjabqoa9v.apps.googleusercontent.com`
-- **Client Secret**: `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`
+설정 예시:
+- **Client ID**: `your_google_client_id.apps.googleusercontent.com`
+- **Client Secret**: `your_google_client_secret`
 - **Redirect URI**: `http://localhost:8080/login/oauth2/code/google`
 
 **자체 OAuth2 앱 생성 시**:
@@ -54,12 +54,12 @@ CREATE DATABASE alpha_note CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 4. `application-local.yml`의 `client-id`와 `client-secret` 수정
 
 ### 3.3 AWS S3 설정 (파일 업로드)
-현재 설정된 값:
-- **Access Key**: `AKIAVFIWJB4MTSWDXVBF`
-- **Secret Key**: `JBoi021EUZCCslKS3JfYvJgR8/DOvwtBHJMHBnF/`
-- **Bucket**: `alphanote-uploads-prod`
+설정 예시:
+- **Access Key**: `your_aws_access_key`
+- **Secret Key**: `your_aws_secret_key`
+- **Bucket**: `your_s3_bucket_name`
 - **Region**: `ap-northeast-2` (서울)
-- **CDN Base URL**: `https://uploads.alpha-note.co.kr`
+- **CDN Base URL**: `https://your_cdn_domain.example.com`
 
 **자체 S3 버킷 사용 시**:
 1. AWS IAM에서 S3 접근 권한을 가진 사용자 생성
@@ -67,9 +67,9 @@ CREATE DATABASE alpha_note CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 3. `application-local.yml`의 AWS 설정 수정
 
 ### 3.4 JWT 시크릿 키
-현재 설정된 Base64 인코딩 시크릿:
+Base64 인코딩된 256비트 이상의 랜덤 시크릿 키를 설정합니다:
 ```
-181jcmHWSZchv/cNBe65ltYfaBG7cjiPsrHyWOiwd+8/nTgyd+YC/EqpQb79q+l81yAMdp2QM1X+f5Z2QiQyLw==
+your_base64_encoded_jwt_secret_key_256bit_or_more
 ```
 
 **자체 시크릿 생성 시**: 256비트 이상의 안전한 랜덤 문자열을 Base64로 인코딩하여 사용
